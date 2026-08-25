@@ -425,12 +425,16 @@ export function ConcesionarioModal({
               />
             </label>
             <label className="block">
-              <span className="mb-1 block text-sm font-medium text-mm-gray-300">RIF *</span>
+              <span className="mb-1 block text-sm font-medium text-mm-gray-300">
+                RIF {concesionario && <span className="text-xs font-normal text-mm-gray-500">(no modificable)</span>}
+              </span>
               <input
-                className="input-dark"
+                className="input-dark disabled:opacity-60 disabled:cursor-not-allowed"
                 value={form.rif}
                 onChange={(e) => actualizar('rif', e.target.value)}
                 placeholder="J-12345678-9"
+                readOnly={!!concesionario}
+                disabled={!!concesionario}
               />
             </label>
             <label className="block">

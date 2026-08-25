@@ -230,9 +230,8 @@ export async function updateConcesionario(
   if (input.razon_social !== undefined) {
     updates.razon_social = validateRequiredString(input.razon_social, 'razon_social');
   }
-  if (input.rif !== undefined) {
-    updates.rif = validateRIF(input.rif, 'rif');
-  }
+  // El RIF no es modificable tras la creación: se ignora si llega en el payload
+  // (la RPC actualizar_concesionario_con_historial lo rechazaría).
   if (input.email !== undefined) {
     updates.email = validateRequiredString(input.email, 'email');
   }
