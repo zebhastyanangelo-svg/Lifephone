@@ -27,6 +27,7 @@ export function DetalleConcesionarioModal({
   onCerrar,
 }: DetalleConcesionarioModalProps) {
   const [pestana, setPestana] = useState<Pestana>('informacion')
+  const [isFullViewOpen, setIsFullViewOpen] = useState(false)
   if (!concesionario) return null
 
   const esEstadoExpansion = ['proximo', 'en_ejecucion', 'completado'].includes(
@@ -85,7 +86,34 @@ export function DetalleConcesionarioModal({
 
         <div className="flex flex-col gap-6 px-6 py-5">
           {pestana === 'informacion' && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <>
+              {concesionario.image_url ? (
+                <button
+                  type="button"
+                  onClick={() => setIsFullViewOpen(true)}
+                  className="self-start rounded-xl border border-mm-gray-600 bg-mm-gray-900 p-1.5 transition-colors hover:border-mm-yellow cursor-pointer"
+                  aria-label={`Ampliar foto de ${concesionario.nombre}`}
+                  title="Ver en tamaño completo"
+                >
+                  <img
+                    src={concesionario.image_url}
+                    alt={concesionario.nombre}
+                    className="h-40 w-full max-w-xs rounded-lg object-cover sm:h-48"
+                    loading="lazy"
+                  />
+                </button>
+              ) : (
+                <div className="flex h-40 w-full max-w-xs items-center justify-center self-start rounded-xl border border-dashed border-mm-gray-600 bg-mm-gray-900">
+                  <span className="flex flex-col items-center gap-2 text-mm-gray-500">
+                    <Building2 className="h-8 w-8" />
+                    <span className="text-sm font-bold tracking-wide text-mm-gray-400">
+                      {concesionario.nombre.slice(0, 2).toUpperCase()}
+                    </span>
+                    <span className="text-xs">Sin foto registrada</span>
+                  </span>
+                </div>
+              )}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <p className="text-xs font-medium text-mm-gray-400">Estado operativo</p>
                 <span
@@ -141,7 +169,8 @@ export function DetalleConcesionarioModal({
                   </p>
                 </div>
               )}
-            </div>
+              </div>
+            </>
           )}
 
           {pestana === 'interacciones' && (
@@ -157,6 +186,28 @@ export function DetalleConcesionarioModal({
           )}
         </div>
       </div>
+
+      {isFullViewOpen && concesionario.image_url && (
+        <div
+          className="fixed inset-0 z-[1100] flex items-center justify-center bg-black/90 p-4"
+          onClick={() => setIsFullViewOpen(false)}
+        >
+          <button
+            type="button"
+            onClick={() => setIsFullViewOpen(false)}
+            className="absolute right-4 top-4 z-[1110] rounded-full bg-mm-gray-800/80 border border-mm-gray-600 p-2 text-mm-gray-200 hover:bg-mm-yellow hover:text-mm-black hover:border-mm-yellow transition-colors cursor-pointer"
+            aria-label="Cerrar vista ampliada"
+          >
+            <X className="h-6 w-6" />
+          </button>
+          <img
+            src={concesionario.image_url}
+            alt={`${concesionario.nombre} - tamaño completo`}
+            className="max-h-[92vh] max-w-full rounded-xl object-contain shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          />
+        </div>
+      )}
     </div>
   )
 }
