@@ -265,6 +265,18 @@ export function DashboardConcesionarios() {
                             : 'border-mm-gray-700 bg-mm-gray-900 hover:bg-mm-gray-700'
                         }`}
                       >
+                        {concesionario.image_url ? (
+                          <img
+                            src={concesionario.image_url}
+                            alt={concesionario.nombre}
+                            className="h-9 w-9 shrink-0 rounded-lg object-cover border border-mm-gray-600"
+                            loading="lazy"
+                          />
+                        ) : (
+                          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-mm-gray-700 text-xs font-bold text-mm-yellow">
+                            {concesionario.nombre.slice(0, 2).toUpperCase()}
+                          </span>
+                        )}
                         <button
                           type="button"
                           onClick={() => seleccionar(concesionario)}

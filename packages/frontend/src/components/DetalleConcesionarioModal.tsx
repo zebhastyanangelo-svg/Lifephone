@@ -44,7 +44,15 @@ export function DetalleConcesionarioModal({
       >
         <div className="flex items-center justify-between border-b-2 border-mm-yellow px-6 py-4">
           <div className="flex items-center gap-2">
-            <Building2 className="h-5 w-5 text-mm-yellow" />
+            {concesionario.image_url ? (
+              <img
+                src={concesionario.image_url}
+                alt={concesionario.nombre}
+                className="h-8 w-8 rounded-lg object-cover border border-mm-gray-600"
+              />
+            ) : (
+              <Building2 className="h-5 w-5 text-mm-yellow" />
+            )}
             <h2 className="text-lg font-bold text-mm-yellow">{concesionario.nombre}</h2>
           </div>
           <button

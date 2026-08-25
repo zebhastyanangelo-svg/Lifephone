@@ -119,6 +119,46 @@ export async function deleteConcesionario(
   }
 }
 
+/** POST /api/v1/concesionarios/:id/imagen - sube/reemplaza la imagen (solo admin). */
+export async function subirImagenConcesionario(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const file = req.file;
+    if (!file) {
+      res.status(400).json({ success: false, message: 'El archivo de imagen es requerido' });
+      return;
+    }
+    const concesionario = await concesionarioService.subirImagenConcesionario(
+      req.params.id,
+      file,
+      extraerToken(req)
+    );
+    sendSuccess(res, concesionario, 'Imagen del concesionario actualizada');
+  } catch (error) {
+    next(error);
+  }
+}
+
+/** DELETE /api/v1/concesionarios/:id/imagen - quita la imagen (solo admin). */
+export async function quitarImagenConcesionario(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const concesionario = await concesionarioService.quitarImagenConcesionario(
+      req.params.id,
+      extraerToken(req)
+    );
+    sendSuccess(res, concesionario, 'Imagen del concesionario eliminada');
+  } catch (error) {
+    next(error);
+  }
+}
+
 /** GET /api/v1/concesionarios/:id/historial-estados - historial de cambios de estado. */
 export async function getHistorialEstados(
   req: Request,

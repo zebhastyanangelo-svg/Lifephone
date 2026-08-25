@@ -232,8 +232,29 @@ class ApiService {
     }
   }
 
-  /** GET /api/v1/concesionarios/:id/historial-estados - historial de cambios de estado. */
-  async getHistorialEstados(concesionarioId: string): Promise<HistorialEstado[]> {
+  /** POST /api/v1/concesionarios/:id/imagen - sube/reemplaza la imagen (solo admin). */
+  async subirImagenConcesionario(id: string, archivo: File): Promise<Concesionario> {
+    const formData = new FormData()
+    formData.append('imagen', archivo)
+    const response = await this.post<Concesionario>(`/concesionarios/${id}/imagen`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    })
+    if (!response.success || !response.data) {
+      throw new Error(response.error || 'Error al subir la imagen del concesionario')
+    }
+    return response.data
+  }
+
+  /** DELETE /api/v1/concesionarios/:id/imagen - quita la imagen (solo admin). */
+  async quitarImagenConcesionario(id: string): Promise<Concesionario> {
+    const response = await this.delete<Concesionario>(`/concesionarios/${id}/imagen`)
+    if (!response.success || !response.data) {
+      throw new Error(response.error || 'Error al quitar la imagen del concesionario')
+    }
+    return response.data
+  }
+
+  /** GET /api/v1/concesionarios/:id/historial-estados - historial de cambios de estado. */  async getHistorialEstados(concesionarioId: string): Promise<HistorialEstado[]> {
     const response = await this.get<HistorialEstado[]>(
       `/concesionarios/${concesionarioId}/historial-estados`
     )

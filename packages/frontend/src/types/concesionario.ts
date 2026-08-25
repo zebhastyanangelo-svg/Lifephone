@@ -28,6 +28,7 @@ export interface Concesionario {
   fecha_apertura_programada: string | null;
   tipo_expansion: string;
   metadatos: Record<string, unknown> | null;
+  image_url?: string | null;
   created_at: string;
   updated_at: string;
   deleted_at: string | null;

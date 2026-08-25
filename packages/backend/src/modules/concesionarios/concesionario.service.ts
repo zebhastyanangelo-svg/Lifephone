@@ -19,6 +19,7 @@ import {
   HistorialEstado,
 } from './concesionario.model';
 import { sincronizarExpansion } from '../expansiones/expansion.service';
+import { subirImagen } from '../../services/imgbb.service';
 
 const TABLE = 'concesionarios';
 const ESTADOS_VALIDOS: EstadoOperativo[] = [
@@ -328,7 +329,62 @@ export async function getHistorialEstados(concesionarioId: string, token: string
 }
 
 /**
- * Elimina físicamente un concesionario. El historial de interacciones CRM y las
+ * Sube (o reemplaza) la imagen de un concesionario a ImgBB y guarda la URL.
+ * La imagen anterior queda huérfana en ImgBB (la API no ofrece borrado).
+ */
+export async function subirImagenConcesionario(
+  id: string,
+  file: Express.Multer.File,
+  token: string
+): Promise<Concesionario> {
+  if (!id) {
+    throw new ApiError('El identificador del concesionario es requerido', 400);
+  }
+  await getConcesionarioById(id, token);
+
+  const image_url = await subirImagen(file);
+
+  const cliente = getSupabaseConToken(token);
+  const { data, error } = await cliente
+    .from(TABLE)
+    .update({ image_url, updated_at: new Date().toISOString() })
+    .eq('id', id)
+    .select()
+    .single()
+    .returns<Concesionario>();
+
+  if (error) {
+    throw mapSupabaseError(error, 'Error al guardar la imagen del concesionario');
+  }
+  return data as Concesionario;
+}
+
+/** Quita la imagen de un concesionario (image_url = null). */
+export async function quitarImagenConcesionario(id: string, token: string): Promise<Concesionario> {
+  if (!id) {
+    throw new ApiError('El identificador del concesionario es requerido', 400);
+  }
+
+  const cliente = getSupabaseConToken(token);
+  const { data, error } = await cliente
+    .from(TABLE)
+    .update({ image_url: null, updated_at: new Date().toISOString() })
+    .eq('id', id)
+    .is('deleted_at', null)
+    .select()
+    .maybeSingle()
+    .returns<Concesionario | null>();
+
+  if (error) {
+    throw mapSupabaseError(error, 'Error al quitar la imagen del concesionario');
+  }
+  if (!data) {
+    throw new ApiError('Concesionario no encontrado', 404);
+  }
+  return data as Concesionario;
+}
+
+/** Elimina físicamente un concesionario. El historial de interacciones CRM y las
  * expansiones vinculadas (cronograma/calendario) se eliminan en cascada
  * (ON DELETE CASCADE en interacciones_crm y expansiones.concesionario_id).
  */

@@ -133,6 +133,10 @@ export function ConcesionarioModal({
   const [enlaceMaps, setEnlaceMaps] = useState('')
   const [procesandoEnlace, setProcesandoEnlace] = useState(false)
   const [errorEnlace, setErrorEnlace] = useState<string | null>(null)
+  const [archivoImagen, setArchivoImagen] = useState<File | null>(null)
+  const [previewImagen, setPreviewImagen] = useState<string | null>(concesionario?.image_url ?? null)
+  const [quitarImagen, setQuitarImagen] = useState(false)
+  const inputImagenRef = useRef<HTMLInputElement | null>(null)
   const arrastrandoRef = useRef(false)
   const marcadorRef = useRef<L.Marker | null>(null)
   const inversoRef = useRef<AbortController | null>(null)
@@ -141,6 +145,10 @@ export function ConcesionarioModal({
     if (abierto) {
       setForm(concesionario ? aFormulario(concesionario) : FORM_INICIAL)
       setError(null)
+      setArchivoImagen(null)
+      setPreviewImagen(concesionario?.image_url ?? null)
+      setQuitarImagen(false)
+      if (inputImagenRef.current) inputImagenRef.current.value = ''
       setGeocodificando(false)
       setEnlaceMaps('')
       setProcesandoEnlace(false)
@@ -242,6 +250,26 @@ export function ConcesionarioModal({
     fijarUbicacion(coords.lat, coords.lng)
   }
 
+  function seleccionarImagen(e: React.ChangeEvent<HTMLInputElement>) {
+    const archivo = e.target.files?.[0] ?? null
+    setArchivoImagen(archivo)
+    setQuitarImagen(false)
+    if (previewImagen && previewImagen.startsWith('blob:')) {
+      URL.revokeObjectURL(previewImagen)
+    }
+    setPreviewImagen(archivo ? URL.createObjectURL(archivo) : (concesionario?.image_url ?? null))
+  }
+
+  function descartarImagen() {
+    setArchivoImagen(null)
+    setQuitarImagen(true)
+    if (previewImagen && previewImagen.startsWith('blob:')) {
+      URL.revokeObjectURL(previewImagen)
+    }
+    setPreviewImagen(null)
+    if (inputImagenRef.current) inputImagenRef.current.value = ''
+  }
+
   async function manejarEnvio(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
     const { nombre, razon_social, rif, email, ciudad, departamento, direccion } = form
@@ -290,12 +318,20 @@ export function ConcesionarioModal({
       const guardado = concesionario
         ? await apiService.updateConcesionario(concesionario.id, payload)
         : await apiService.createConcesionario(payload)
+
+      let final = guardado
+      if (quitarImagen && guardado.image_url) {
+        final = await apiService.quitarImagenConcesionario(guardado.id)
+      } else if (archivoImagen) {
+        final = await apiService.subirImagenConcesionario(guardado.id, archivoImagen)
+      }
+
       toast.success(
         concesionario
           ? 'Concesionario actualizado exitosamente'
           : 'Concesionario creado exitosamente'
       )
-      onGuardado(guardado)
+      onGuardado(final)
     } catch (e) {
       const mensaje = e instanceof Error ? e.message : 'Error al guardar el concesionario'
       setError(mensaje)
@@ -333,6 +369,42 @@ export function ConcesionarioModal({
         </div>
 
         <form onSubmit={manejarEnvio} className="flex flex-col gap-4 px-6 py-5">
+          <div className="rounded-lg border border-mm-gray-700 p-4">
+            <span className="mb-2 block text-sm font-medium text-mm-gray-300">Foto del concesionario</span>
+            <div className="flex items-center gap-4">
+              {previewImagen ? (
+                <img
+                  src={previewImagen}
+                  alt="Previsualización"
+                  className="h-20 w-20 rounded-lg object-cover border border-mm-gray-600"
+                />
+              ) : (
+                <div className="flex h-20 w-20 items-center justify-center rounded-lg border border-dashed border-mm-gray-600 text-xs text-mm-gray-500">
+                  Sin foto
+                </div>
+              )}
+              <div className="flex flex-col gap-2">
+                <input
+                  ref={inputImagenRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={seleccionarImagen}
+                  className="block w-full max-w-xs text-sm text-mm-gray-300 file:mr-3 file:rounded-lg file:border-0 file:bg-mm-yellow file:px-3 file:py-1.5 file:text-sm file:font-semibold file:text-mm-black hover:file:bg-mm-yellow-dark"
+                />
+                {(archivoImagen || (previewImagen && !previewImagen.startsWith('blob:'))) && (
+                  <button
+                    type="button"
+                    onClick={descartarImagen}
+                    className="self-start text-xs font-semibold text-mm-error hover:underline"
+                  >
+                    Quitar imagen
+                  </button>
+                )}
+                <p className="text-xs text-mm-gray-500">JPG o PNG, máx. 5 MB.</p>
+              </div>
+            </div>
+          </div>
+
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <label className="block">
               <span className="mb-1 block text-sm font-medium text-mm-gray-300">Nombre *</span>
