@@ -45,21 +45,22 @@ async function resolverEmail(identifier: string): Promise<string> {
     throw new ApiError('Cliente de Supabase no configurado', 500);
   }
 
-  const { data, error } = await supabase
-    .from('profiles')
-    .select('email')
-    .ilike('username', username)
-    .maybeSingle();
+  // Usar el RPC resolver_email (SECURITY DEFINER) en vez de consultar profiles
+  // directamente. La consulta directa falla porque RLS requiere auth.uid() = id
+  // o is_admin(), y sin sesión auth.uid() es NULL → retorna vacío → login falla.
+  const { data, error } = await supabase.rpc('resolver_email', {
+    p_username: username,
+  });
 
   if (error) {
     throw new ApiError('Error al buscar el usuario', 500);
   }
 
-  if (!data?.email) {
+  if (!data) {
     throw new ApiError('Usuario o contraseña incorrectos', 401);
   }
 
-  return data.email;
+  return data as string;
 }
 
 /**

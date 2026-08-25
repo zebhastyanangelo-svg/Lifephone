@@ -59,10 +59,11 @@ BEGIN
     RAISE EXCEPTION 'usuario_existe';
   END IF;
 
-  v_id := gen_random_uuid();
+  v_id := extensions.gen_random_uuid();
 
   -- Hash con pgcrypto nativo — compatible con GoTrue's signInWithPassword
-  v_hash := crypt(p_password, gen_salt('bf', 10));
+  -- Usar extensions.crypt/extensions.gen_salt para compatibilidad con Supabase
+  v_hash := extensions.crypt(p_password, extensions.gen_salt('bf'));
 
   INSERT INTO auth.users (
     instance_id, id, aud, role, email, encrypted_password,
