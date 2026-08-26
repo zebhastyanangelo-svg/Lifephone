@@ -1,4 +1,4 @@
-import { AnalyticsEvent } from '@types/analytics'
+import { AnalyticsEvent } from '../../types/analytics'
 import { Loader2 } from 'lucide-react'
 
 interface HistorialAnaliticasProps {

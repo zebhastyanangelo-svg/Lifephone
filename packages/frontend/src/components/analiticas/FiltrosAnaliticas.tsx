@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Search, X } from 'lucide-react'
-import { AnalyticsHistoryFilters } from '@types/analytics'
+import { AnalyticsHistoryFilters } from '../../types/analytics'
 
 interface FiltrosAnaliticasProps {
   filtros: AnalyticsHistoryFilters

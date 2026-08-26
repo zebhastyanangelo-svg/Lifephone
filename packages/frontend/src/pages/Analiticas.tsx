@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import { Activity, Users, BarChart3, Loader2 } from 'lucide-react'
 import { apiService } from '@services/api'
-import { DashboardSummary, AnalyticsEvent, AnalyticsHistoryFilters } from '@types/analytics'
+import { DashboardSummary, AnalyticsEvent, AnalyticsHistoryFilters } from '../types/analytics'
 import { KPICard } from '@components/analiticas/KPICard'
 import { FiltrosAnaliticas } from '@components/analiticas/FiltrosAnaliticas'
 import { HistorialAnaliticas } from '@components/analiticas/HistorialAnaliticas'
