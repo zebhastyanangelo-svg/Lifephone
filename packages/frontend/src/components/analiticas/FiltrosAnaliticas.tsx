@@ -1,6 +1,8 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Search, X } from 'lucide-react'
 import { AnalyticsHistoryFilters } from '../../types/analytics'
+import { apiService } from '@services/api'
+import { Usuario } from '../../types/usuario'
 
 interface FiltrosAnaliticasProps {
   filtros: AnalyticsHistoryFilters
@@ -22,6 +24,11 @@ export function FiltrosAnaliticas({ filtros, onFiltrar, onLimpiar }: FiltrosAnal
   const [desde, setDesde] = useState(filtros.desde ?? '')
   const [hasta, setHasta] = useState(filtros.hasta ?? '')
   const [user_id, setUserId] = useState(filtros.user_id ?? '')
+  const [usuarios, setUsuarios] = useState<Usuario[]>([])
+
+  useEffect(() => {
+    apiService.getUsuarios().then(setUsuarios).catch(() => {})
+  }, [])
 
   const aplicar = () => {
     onFiltrar({ event_type: event_type || undefined, desde: desde || undefined, hasta: hasta || undefined, user_id: user_id || undefined, page: 1 })
@@ -71,14 +78,19 @@ export function FiltrosAnaliticas({ filtros, onFiltrar, onLimpiar }: FiltrosAnal
       </div>
 
       <div className="flex flex-col gap-1">
-        <label className="text-xs font-semibold text-mm-gray-400">User ID</label>
-        <input
-          type="text"
+        <label className="text-xs font-semibold text-mm-gray-400">Usuario</label>
+        <select
           value={user_id}
           onChange={(e) => setUserId(e.target.value)}
-          placeholder="UUID del usuario"
-          className="rounded-lg border border-mm-gray-600 bg-mm-gray-700 px-3 py-2 text-sm text-white placeholder:text-mm-gray-500"
-        />
+          className="rounded-lg border border-mm-gray-600 bg-mm-gray-700 px-3 py-2 text-sm text-white"
+        >
+          <option value="">Todos los usuarios</option>
+          {usuarios.map((u) => (
+            <option key={u.id} value={u.id}>
+              {u.nombre} {u.apellido}
+            </option>
+          ))}
+        </select>
       </div>
 
       <button
