@@ -194,7 +194,7 @@ export function MapaConcesionarios({
   onClicUbicacion,
 }: MapaConcesionariosProps) {
   return (
-    <div className="relative z-0 h-full w-full">
+    <div className="relative z-0 h-[50vh] min-h-[320px] w-full lg:h-full lg:min-h-0">
       <MapContainer
         center={CENTRO_VENEZUELA}
         zoom={5}

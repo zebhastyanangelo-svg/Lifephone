@@ -143,7 +143,7 @@ export function DashboardConcesionarios() {
 
       {/* Mapa + panel lateral */}
       <div className="flex flex-col lg:flex-row gap-6">
-        <div className="relative z-0 lg:flex-1 min-h-[420px] lg:min-h-[560px] overflow-hidden rounded-xl border border-mm-gray-700 bg-mm-gray-800">
+        <div className="relative z-0 h-[50vh] min-h-[320px] lg:h-auto lg:min-h-[560px] lg:flex-1 overflow-hidden rounded-xl border border-mm-gray-700 bg-mm-gray-800">
           <MapaConcesionarios
             concesionarios={concesionarios}
             seleccionado={seleccionado}
