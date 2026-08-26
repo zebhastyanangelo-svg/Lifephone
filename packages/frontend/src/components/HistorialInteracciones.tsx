@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useState } from 'react'
+import { FormEvent, useState } from 'react'
 import { History, Loader2, MessageSquarePlus, Send } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { format } from 'date-fns'
@@ -7,7 +7,6 @@ import { apiService } from '@services/api'
 import { useInteracciones } from '@hooks/useInteracciones'
 import { useAuthStore } from '@store/auth'
 import { TipoInteraccion } from '../types/interaccion'
-import { Usuario } from '../types/usuario'
 
 const TIPO_CONFIG: Record<TipoInteraccion, { label: string; className: string }> = {
   llamada: { label: 'Llamada', className: 'bg-mm-yellow/15 text-mm-yellow border-mm-yellow/30' },
@@ -26,46 +25,20 @@ export interface HistorialInteraccionesProps {
 }
 
 /**
- * Historial de interacciones de un concesionario: form rápido (tipo, usuario
- * responsable y detalles) + listado cronológico de las interacciones.
+ * Historial de interacciones de un concesionario: form rápido (tipo y detalles)
+ * + listado cronológico de las interacciones. El usuario responsable se asigna
+ * automáticamente desde la sesión activa.
  */
 export function HistorialInteracciones({ concesionarioId }: HistorialInteraccionesProps) {
   const esAdmin = useAuthStore((s) => s.esAdmin)
+  const usuario = useAuthStore((s) => s.usuario)
   const { interacciones, cargando, error, recargar } = useInteracciones(concesionarioId)
-  const [usuarios, setUsuarios] = useState<Usuario[]>([])
-  const [errorUsuarios, setErrorUsuarios] = useState<string | null>(null)
   const [tipo, setTipo] = useState<TipoInteraccion>('llamada')
-  const [usuarioResponsable, setUsuarioResponsable] = useState('')
   const [detalles, setDetalles] = useState('')
   const [enviando, setEnviando] = useState(false)
 
-  useEffect(() => {
-    let activo = true
-    apiService
-      .getUsuarios()
-      .then((lista) => {
-        if (!activo) return
-        setUsuarios(lista)
-        if (lista.length > 0) {
-          setUsuarioResponsable((prev) => prev || lista[0].id)
-        }
-      })
-      .catch((e) => {
-        if (activo) {
-          setErrorUsuarios(e instanceof Error ? e.message : 'Error al cargar los usuarios')
-        }
-      })
-    return () => {
-      activo = false
-    }
-  }, [])
-
   async function guardar(e: FormEvent) {
     e.preventDefault()
-    if (!usuarioResponsable) {
-      toast.error('Selecciona el usuario responsable')
-      return
-    }
     if (!detalles.trim()) {
       toast.error('Escribe los detalles de la interacción')
       return
@@ -76,7 +49,6 @@ export function HistorialInteracciones({ concesionarioId }: HistorialInteraccion
         concesionario_id: concesionarioId,
         tipo,
         detalles: detalles.trim(),
-        usuario_responsable: usuarioResponsable,
       })
       toast.success('Interacción registrada')
       setDetalles('')
@@ -106,7 +78,7 @@ export function HistorialInteracciones({ concesionarioId }: HistorialInteraccion
           <MessageSquarePlus className="h-4 w-4" />
           Nueva interacción
         </p>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 gap-3">
           <label className="block">
             <span className="mb-1 block text-xs font-medium text-mm-gray-400">Tipo</span>
             <select
@@ -121,23 +93,6 @@ export function HistorialInteracciones({ concesionarioId }: HistorialInteraccion
               ))}
             </select>
           </label>
-          <label className="block">
-            <span className="mb-1 block text-xs font-medium text-mm-gray-400">
-              Usuario responsable
-            </span>
-            <select
-              className="input-dark"
-              value={usuarioResponsable}
-              onChange={(e) => setUsuarioResponsable(e.target.value)}
-            >
-              {usuarios.length === 0 && !errorUsuarios && <option value="">Cargando usuarios...</option>}
-              {usuarios.map((u) => (
-                <option key={u.id} value={u.id}>
-                  {u.nombre} {u.apellido} · {u.rol}
-                </option>
-              ))}
-            </select>
-          </label>
         </div>
         <label className="block">
           <span className="mb-1 block text-xs font-medium text-mm-gray-400">Detalles</span>
@@ -148,7 +103,6 @@ export function HistorialInteracciones({ concesionarioId }: HistorialInteraccion
             placeholder="Describe la llamada, visita, nota o incidencia..."
           />
         </label>
-        {errorUsuarios && <p className="text-xs text-mm-error">{errorUsuarios}</p>}
         <div className="flex justify-end">
           <button
             type="submit"
@@ -189,7 +143,6 @@ export function HistorialInteracciones({ concesionarioId }: HistorialInteraccion
         <ul className="max-h-72 space-y-3 overflow-y-auto pr-1">
           {interacciones.map((interaccion) => {
             const config = TIPO_CONFIG[interaccion.tipo]
-            const usuario = usuarios.find((u) => u.id === interaccion.usuario_responsable)
             return (
               <li
                 key={interaccion.id}
@@ -209,9 +162,6 @@ export function HistorialInteracciones({ concesionarioId }: HistorialInteraccion
                 </div>
                 <p className="mt-2 whitespace-pre-wrap text-sm text-mm-gray-200">
                   {interaccion.detalles}
-                </p>
-                <p className="mt-2 text-xs text-mm-gray-400">
-                  {usuario ? `${usuario.nombre} ${usuario.apellido}` : 'Usuario no disponible'}
                 </p>
               </li>
             )

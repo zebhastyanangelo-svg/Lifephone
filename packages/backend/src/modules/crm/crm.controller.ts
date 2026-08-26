@@ -7,7 +7,7 @@
  */
 
 import { Request, Response, NextFunction } from 'express';
-import { sendPaginated, sendSuccess } from '@utils/helpers';
+import { sendPaginated, sendSuccess, sendError } from '@utils/helpers';
 import * as crmService from './crm.service';
 import { InteraccionFilters, TipoInteraccion } from './crm.model';
 
@@ -64,7 +64,16 @@ export async function createInteraccion(
   next: NextFunction
 ): Promise<void> {
   try {
-    const interaccion = await crmService.createInteraccion(req.body, extraerToken(req));
+    const user = (req as any).user;
+    if (!user?.id) {
+      sendError(res, 'No autorizado', 401);
+      return;
+    }
+    const input = {
+      ...req.body,
+      usuario_responsable: user.id,
+    };
+    const interaccion = await crmService.createInteraccion(input, extraerToken(req));
     sendSuccess(res, interaccion, 'Interacción registrada exitosamente', 201);
   } catch (error) {
     next(error);

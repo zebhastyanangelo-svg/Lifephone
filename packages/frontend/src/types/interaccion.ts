@@ -20,5 +20,4 @@ export interface CreateInteraccionInput {
   concesionario_id: string
   tipo: TipoInteraccion
   detalles: string
-  usuario_responsable: string
 }
