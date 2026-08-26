@@ -1,19 +1,17 @@
 /**
  * Servicio del módulo Auth.
  *
- * Crea usuarios SIN depender de la SERVICE ROLE KEY: usa el RPC
- * `public.crear_usuario_auth` (SECURITY DEFINER, solo admin) que inserta el
- * registro en `auth.users` con `email_confirmed_at` fijado, y el trigger
- * `handle_new_user` crea el perfil. Para listar, usa un cliente autenticado
- * con el token del admin (la policy RLS `profiles_admin_all` permite leerlos).
+ * Creación de usuarios: usa la Auth Admin API de Supabase (`supabaseAdmin.auth.admin.createUser`)
+ * con SERVICE_ROLE_KEY. GoTrue gestiona el cifrado de contraseñas nativamente.
+ * El trigger `handle_new_user` crea el perfil en `public.profiles` automáticamente.
  *
- * La contraseña se envía en texto plano al RPC, que la hashea con
- * PostgreSQL's native `crypt()` + `gen_salt('bf')` (pgcrypto). Esto
- * garantiza compatibilidad con GoTrue/Supabase Auth signInWithPassword.
- * NO usar bcryptjs de JavaScript — produce hashes incompatibles con GoTrue.
+ * Login: resuelve username → email via RPC `resolver_email` (SECURITY DEFINER),
+ * luego llama a `signInWithPassword` con el cliente anon.
+ *
+ * Listar/eliminar: usa el cliente autenticado con token del admin (RLS lo permite).
  */
 
-import { supabase, getSupabaseConToken } from '@config/supabase';
+import { supabase, supabaseAdmin, getSupabaseConToken } from '@config/supabase';
 import { ApiError } from '@utils/helpers';
 import { CrearUsuarioInput, LoginInput, LoginResponse, PerfilUsuario } from './auth.model';
 
@@ -124,9 +122,9 @@ export async function login(input: LoginInput): Promise<LoginResponse> {
 
 /**
  * Crea un acceso de solo lectura a partir de un nombre de usuario único.
- * El email interno se genera como `username@internal.mundomotos.com`.
- * La contraseña se envía en texto plano al RPC, que la hashea con
- * PostgreSQL's native `crypt()` (pgcrypto) para compatibilidad con GoTrue.
+ * Usa la Auth Admin API de Supabase (`supabaseAdmin.auth.admin.createUser`).
+ * GoTrue gestiona el hash de contraseña nativamente (sin gen_salt manual).
+ * El trigger `handle_new_user` crea el perfil en `public.profiles` automáticamente.
  */
 export async function crearUsuario(input: CrearUsuarioInput, token: string): Promise<PerfilUsuario> {
   const nombre = input.nombre?.trim() ?? '';
@@ -140,9 +138,24 @@ export async function crearUsuario(input: CrearUsuarioInput, token: string): Pro
     );
   }
 
+  if (!supabaseAdmin) {
+    throw new ApiError('Servicio de administración no configurado. Falta SUPABASE_SERVICE_ROLE_KEY.', 500);
+  }
+
   const cliente = getSupabaseConToken(token);
 
-  // Verificación previa de duplicados antes de llamar al RPC
+  // Verificar que el admin tenga permisos (consulta con token del admin)
+  const { data: adminCheck } = await cliente
+    .from('profiles')
+    .select('rol')
+    .eq('id', (await cliente.auth.getUser()).data.user?.id ?? '')
+    .maybeSingle();
+
+  if (adminCheck?.rol !== 'admin') {
+    throw new ApiError('Acceso restringido: se requiere rol de administrador', 403);
+  }
+
+  // Verificación previa de duplicados
   const vEmail = `${username}@internal.mundomotos.com`;
 
   const { data: existenteUsername } = await cliente
@@ -165,35 +178,39 @@ export async function crearUsuario(input: CrearUsuarioInput, token: string): Pro
     throw new ApiError('El correo interno ya se encuentra registrado', 409);
   }
 
-  const { data, error } = await cliente.rpc('crear_usuario_auth', {
-    p_username: username,
-    p_password: input.password,
-    p_nombre: nombre,
-    p_email_respaldo: emailRespaldo,
+  // Crear usuario via Auth Admin API — GoTrue hashea la contraseña nativamente
+  const { data, error } = await supabaseAdmin.auth.admin.createUser({
+    email: vEmail,
+    password: input.password,
+    email_confirm: true,
+    user_metadata: {
+      username,
+      nombre,
+      rol: 'lectura',
+      email_respaldo: emailRespaldo,
+    },
   });
 
   if (error) {
     const msg = error.message || '';
-    if (/no_admin/i.test(msg)) {
-      throw new ApiError('Acceso restringido: se requiere rol de administrador', 403);
-    }
-    if (/usuario_existe/i.test(msg)) {
-      throw new ApiError('Ya existe un usuario con ese nombre de usuario', 409);
-    }
-    if (/usuario_invalido|password_invalida/i.test(msg)) {
-      throw new ApiError('Datos de usuario inválidos', 400);
+    if (/already exists/i.test(msg)) {
+      throw new ApiError('Ya existe un usuario con ese correo o nombre de usuario', 409);
     }
     throw new ApiError(msg || 'Error al crear el usuario', 500);
   }
 
+  if (!data?.user) {
+    throw new ApiError('No se pudo crear el usuario', 500);
+  }
+
   return {
-    id: (data as { id: string }).id,
-    email: (data as { email: string }).email,
+    id: data.user.id,
+    email: vEmail,
     nombre,
     username,
     email_respaldo: emailRespaldo,
     rol: 'lectura',
-  } as PerfilUsuario;
+  };
 }
 
 /**

@@ -1,8 +1,9 @@
 /**
  * Cliente de Supabase configurado con variables de entorno.
  *
- * Usa SUPABASE_ANON_KEY (pública) para operaciones con RLS.
- * No requiere SERVICE_ROLE_KEY. Las operaciones admin usan RPCs SECURITY DEFINER.
+ * - `supabase`: cliente con ANON_KEY para operaciones con RLS (queries, login).
+ * - `supabaseAdmin`: cliente con SERVICE_ROLE_KEY para operaciones admin
+ *   (crear/eliminar usuarios vía Auth Admin API). SOLO usar en backend.
  */
 
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
@@ -12,15 +13,30 @@ dotenv.config();
 
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseAnonKey = process.env.SUPABASE_ANON_KEY;
+const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 if (!supabaseUrl || !supabaseAnonKey) {
-  // No lanzar error al importar: permitir que el servidor inicie y falle en requests
   console.warn('⚠️ SUPABASE_URL o SUPABASE_ANON_KEY no configuradas. Algunas funcionalidades fallarán.');
+}
+
+if (!serviceRoleKey) {
+  console.warn('⚠️ SUPABASE_SERVICE_ROLE_KEY no configurada. La creación de usuarios no estará disponible.');
 }
 
 // Cliente base con anon key (pública) para operaciones con RLS
 export const supabase: SupabaseClient = supabaseUrl && supabaseAnonKey
   ? createClient(supabaseUrl, supabaseAnonKey, {
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false,
+      },
+    })
+  : null as any;
+
+// Cliente admin con service_role — SOLO para operaciones server-side
+// (crear/eliminar usuarios via Auth Admin API). NUNCA exponer al frontend.
+export const supabaseAdmin: SupabaseClient = supabaseUrl && serviceRoleKey
+  ? createClient(supabaseUrl, serviceRoleKey, {
       auth: {
         persistSession: false,
         autoRefreshToken: false,
