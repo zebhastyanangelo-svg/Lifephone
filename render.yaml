@@ -65,7 +65,7 @@ services:
       - key: VITE_API_BASE_URL
         value: https://mundo-motos-backend.onrender.com/api/v1
     # SPA routing: servir index.html para todas las rutas que no sean archivos estáticos
-    redirects:
-      - source: /*
+    routes:
+      - type: rewrite
+        source: /*
         destination: /index.html
-        status: 200
