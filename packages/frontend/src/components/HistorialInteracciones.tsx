@@ -39,6 +39,10 @@ export function HistorialInteracciones({ concesionarioId }: HistorialInteraccion
 
   async function guardar(e: FormEvent) {
     e.preventDefault()
+    if (!usuario?.id) {
+      toast.error('Debes iniciar sesión para registrar interacciones')
+      return
+    }
     if (!detalles.trim()) {
       toast.error('Escribe los detalles de la interacción')
       return
