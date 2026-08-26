@@ -21,6 +21,9 @@ import ProtectedRoute from '@components/ProtectedRoute'
 import GestionUsuariosModal from '@components/GestionUsuariosModal'
 import { ErrorBoundary } from '@components/ErrorBoundary'
 import InstallPWA from '@components/InstallPWA'
+import AdminRoute from '@components/AdminRoute'
+import Analiticas from '@pages/Analiticas'
+import { useAnalytics } from '@hooks/useAnalytics'
 
 interface LinkNav {
   to: string
@@ -34,12 +37,14 @@ const LINKS: LinkNav[] = [
   { to: '/concesionarios', etiqueta: 'Concesionarios', icono: MapPin },
   { to: '/expansiones', etiqueta: 'Cronograma 2026', icono: CalendarDays },
   { to: '/reportes', etiqueta: 'Reportes', icono: BarChart3 },
+  { to: '/analiticas', etiqueta: 'Analíticas', icono: BarChart3 },
 ]
 
 function Navegacion() {
   const { usuario, esAdmin, logout } = useAuthStore()
   const navegar = useNavigate()
   const [gestionUsuarios, setGestionUsuarios] = useState(false)
+  useAnalytics()
 
   const inicial = (nombre: string, email: string): string => {
     const limpio = (nombre ?? '').trim()
@@ -71,7 +76,7 @@ function Navegacion() {
           </div>
 
           <nav className="flex w-fit flex-wrap gap-1 rounded-xl border border-mm-gray-700 bg-mm-gray-800 p-1">
-            {LINKS.map(({ to, etiqueta, icono: Icono, fin }) => (
+            {LINKS.filter((link) => link.to !== '/analiticas' || esAdmin).map(({ to, etiqueta, icono: Icono, fin }) => (
               <NavLink
                 key={to}
                 to={to}
@@ -166,6 +171,14 @@ function App() {
                       <Route path="/concesionarios" element={<DashboardConcesionarios />} />
                       <Route path="/expansiones" element={<CronogramaExpansions />} />
                       <Route path="/reportes" element={<ReportesView />} />
+                      <Route
+                        path="/analiticas"
+                        element={
+                          <AdminRoute>
+                            <Analiticas />
+                          </AdminRoute>
+                        }
+                      />
                     </Routes>
                   </main>
                   <footer className="mt-auto border-t-4 border-mm-yellow bg-black">

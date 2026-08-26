@@ -17,6 +17,7 @@ import {
 } from '../types/expansion'
 import { ReporteData, ReporteFilters } from '../types/reporte'
 import { PerfilUsuario, CrearUsuarioInput } from '../types/auth'
+import { AnalyticsEvent, DashboardSummary, AnalyticsHistoryFilters } from '../types/analytics'
 
 /**
  * Valida que un string tenga estructura de JWT de Supabase (tres partes
@@ -379,6 +380,41 @@ class ApiService {
     if (!response.success) {
       throw new Error(response.error || 'Error al eliminar el usuario')
     }
+  }
+
+  /** POST /api/v1/analytics/event - registra eventos de tracking. */
+  async trackEvents(events: Array<{ event_type: string; details?: Record<string, unknown> }>): Promise<void> {
+    const response = await this.post<null>('/analytics/event', { events })
+    if (!response.success) {
+      // Fire-and-forget: no lanzar error al usuario
+      console.error('[analytics] Error al registrar eventos:', response.error)
+    }
+  }
+
+  /** GET /api/v1/analytics/dashboard - KPIs del dashboard (solo admin). */
+  async getAnalyticsDashboard(): Promise<DashboardSummary> {
+    const response = await this.get<DashboardSummary>('/analytics/dashboard')
+    if (!response.success || !response.data) {
+      throw new Error(response.error || 'Error al obtener el dashboard de analíticas')
+    }
+    return response.data
+  }
+
+  /** GET /api/v1/analytics/history - historial paginado y filtrable (solo admin). */
+  async getAnalyticsHistory(
+    filters: AnalyticsHistoryFilters = {}
+  ): Promise<{ data: AnalyticsEvent[]; total: number; page: number; limit: number; hasMore: boolean }> {
+    const response = await this.get<{
+      data: AnalyticsEvent[]
+      total: number
+      page: number
+      limit: number
+      hasMore: boolean
+    }>('/analytics/history', { params: filters })
+    if (!response.success || !response.data) {
+      throw new Error(response.error || 'Error al obtener el historial de analíticas')
+    }
+    return response.data
   }
 
   /** POST /api/v1/auth/login - inicia sesión con usuario o email + contraseña. */
