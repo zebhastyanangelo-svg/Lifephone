@@ -45,6 +45,9 @@ services:
       # Opcional: el backend usa la anon key como fallback si no está definida.
       - key: SUPABASE_SERVICE_ROLE_KEY
         sync: false
+      # ImgBB (subida de imágenes de concesionarios)
+      - key: IMGBB_API_KEY
+        sync: false
 
   # ------------------------------------------------------------
   # 2) Frontend (React/Vite/PWA -> estático)
