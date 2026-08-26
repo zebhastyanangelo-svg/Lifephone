@@ -18,10 +18,12 @@ CREATE INDEX IF NOT EXISTS idx_user_analytics_type_date ON public.user_analytics
 -- Habilitar RLS
 ALTER TABLE public.user_analytics ENABLE ROW LEVEL SECURITY;
 
--- Solo service role puede insertar (backend usa supabaseAdmin)
-CREATE POLICY " service_role_insert" ON public.user_analytics
-  FOR INSERT TO service_role
-  WITH CHECK (true);
+-- Cualquier usuario autenticado puede insertar sus propios eventos
+-- (el backend usa supabaseAdmin que bypasea RLS, pero esto permite
+-- inserciones directas desde el cliente autenticado si fuera necesario)
+CREATE POLICY "authenticated_insert" ON public.user_analytics
+  FOR INSERT TO authenticated
+  WITH CHECK (auth.uid() = user_id);
 
 -- Solo usuarios admin pueden leer
 CREATE POLICY "admin_select" ON public.user_analytics

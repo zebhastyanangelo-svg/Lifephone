@@ -98,18 +98,21 @@ export function useAnalytics() {
     startTimeRef.current = Date.now()
   }, [ubicacion.pathname, usuario, trackEvent])
 
-  // Flush on page close
+  // Flush on page close — fetch con keepalive para enviar auth headers
   useEffect(() => {
     const handleBeforeUnload = () => {
       if (bufferRef.current.length > 0 && usuario) {
-        // Usar sendBeacon para fire-and-forget en cierre
         const token = localStorage.getItem('authToken')
         if (!token) return
         const payload = JSON.stringify({ events: bufferRef.current })
-        navigator.sendBeacon(
-          `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api/v1'}/analytics/event`,
-          new Blob([payload], { type: 'application/json' })
-        )
+        const url = `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api/v1'}/analytics/event`
+        // fetch con keepalive funciona como sendBeacon pero soporta headers
+        fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          body: payload,
+          keepalive: true,
+        }).catch(() => {})
         bufferRef.current = []
       }
     }
