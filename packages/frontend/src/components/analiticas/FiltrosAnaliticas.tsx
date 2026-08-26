@@ -87,7 +87,7 @@ export function FiltrosAnaliticas({ filtros, onFiltrar, onLimpiar }: FiltrosAnal
           <option value="">Todos los usuarios</option>
           {usuarios.map((u) => (
             <option key={u.id} value={u.id}>
-              {u.nombre} {u.apellido}
+              {u.nombre ? `${u.nombre} ${u.apellido}`.trim() : u.email}
             </option>
           ))}
         </select>
