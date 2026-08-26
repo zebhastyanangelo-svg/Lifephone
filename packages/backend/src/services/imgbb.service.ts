@@ -44,10 +44,11 @@ export async function subirImagen(file: Express.Multer.File): Promise<string> {
   }
 
   const base64 = file.buffer.toString('base64');
+  const body = new URLSearchParams({ image: base64 }).toString();
+
   try {
-    const respuesta = await axios.post<ImgbbResponse>(IMGBB_UPLOAD_URL, null, {
+    const respuesta = await axios.post<ImgbbResponse>(IMGBB_UPLOAD_URL, body, {
       params: { key: obtenerApiKey() },
-      data: new URLSearchParams({ image: base64 }).toString(),
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       timeout: 30000,
     });
@@ -60,6 +61,20 @@ export async function subirImagen(file: Express.Multer.File): Promise<string> {
   } catch (error) {
     if (error instanceof ApiError) {
       throw error;
+    }
+    if (axios.isAxiosError(error)) {
+      const status = error.response?.status;
+      const msg = error.response?.data?.error?.message ?? error.message;
+      if (status === 400) {
+        throw new ApiError(`ImgBB rechazó la imagen: ${msg}`, 400);
+      }
+      if (status === 403) {
+        throw new ApiError('Clave de API de ImgBB inválida o sin acceso', 403);
+      }
+      if (status) {
+        throw new ApiError(`Error de ImgBB (HTTP ${status}): ${msg}`, 502);
+      }
+      throw new ApiError(`Error de conexión con ImgBB: ${msg}`, 502);
     }
     throw new ApiError('Error al subir la imagen a ImgBB', 502);
   }
