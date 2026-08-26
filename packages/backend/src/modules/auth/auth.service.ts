@@ -14,6 +14,7 @@
 import { supabase, supabaseAdmin, getSupabaseConToken } from '@config/supabase';
 import { ApiError } from '@utils/helpers';
 import { CrearUsuarioInput, LoginInput, LoginResponse, PerfilUsuario } from './auth.model';
+import { insertSingleEvent } from '../analytics/analytics.service';
 
 /** Lista los accesos creados (exclusivo admin). */
 export async function listarUsuarios(token: string): Promise<PerfilUsuario[]> {
@@ -98,6 +99,11 @@ export async function login(input: LoginInput): Promise<LoginResponse> {
   }
 
   console.log('[login] login exitoso para:', data.user.email);
+
+  // Registrar evento de login (fire-and-forget, no bloquear respuesta)
+  insertSingleEvent(data.user.id, 'login', { method: 'password' }).catch(
+    (err) => console.error('[login] Error al registrar evento de analytics:', err)
+  );
 
   const cliente = getSupabaseConToken(data.session.access_token);
   const { data: perfil } = await cliente
