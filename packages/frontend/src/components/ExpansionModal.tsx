@@ -1,7 +1,7 @@
 import { FormEvent, useEffect, useState } from 'react'
-import { CalendarPlus, X } from 'lucide-react'
+import { CalendarPlus, Pencil, X } from 'lucide-react'
 import toast from 'react-hot-toast'
-import { CreateExpansionInput, EstadoExpansion, Expansion, TipoExpansion } from '../types/expansion'
+import { CreateExpansionInput, EstadoExpansion, Expansion, TipoExpansion, UpdateExpansionInput } from '../types/expansion'
 
 const FECHA_MIN = '2026-01-01'
 const FECHA_MAX = '2026-12-31'
@@ -43,31 +43,56 @@ export interface ExpansionModalProps {
   abierto: boolean
   onCerrar: () => void
   crear: (input: CreateExpansionInput) => Promise<Expansion>
+  actualizar?: (id: string, input: UpdateExpansionInput) => Promise<Expansion>
+  expansion?: Expansion | null
   onCreada: (expansion: Expansion) => void
+  onActualizada?: (expansion: Expansion) => void
 }
 
 /**
- * Modal de creación de una nueva expansión. El padre (CronogramaExpansions)
- * posee el hook `useExpansiones` y le inyecta su método `crear`, de modo que
- * la lista local se refresca en la misma instancia tras el POST a Supabase.
+ * Modal de creación/edición de una expansión. El padre (CronogramaExpansions)
+ * posee el hook `useExpansiones` y le inyecta sus métodos `crear`/`actualizar`,
+ * de modo que la lista local se refresca en la misma instancia tras el
+ * POST/PUT a Supabase.
  * Identidad corporativa estricta: fondo negro absoluto, acentos amarillos y
  * textos blancos (cero azul/cian).
  */
-export function ExpansionModal({ abierto, onCerrar, crear, onCreada }: ExpansionModalProps) {
+export function ExpansionModal({
+  abierto,
+  onCerrar,
+  crear,
+  actualizar,
+  expansion,
+  onCreada,
+  onActualizada,
+}: ExpansionModalProps) {
+  const esEdicion = Boolean(expansion && actualizar)
   const [form, setForm] = useState<FormExpansion>(FORM_INICIAL)
   const [error, setError] = useState<string | null>(null)
   const [enviando, setEnviando] = useState(false)
 
   useEffect(() => {
     if (abierto) {
-      setForm(FORM_INICIAL)
+      if (expansion) {
+        setForm({
+          concesionario: expansion.concesionario,
+          fecha_apertura: expansion.fecha_apertura,
+          ciudad: expansion.ciudad,
+          departamento: expansion.departamento,
+          estado: expansion.estado as EstadoExpansion,
+          tipo: (expansion.tipo || 'apertura') as TipoExpansion,
+          observaciones: expansion.observaciones ?? '',
+        })
+      } else {
+        setForm(FORM_INICIAL)
+      }
       setError(null)
     }
-  }, [abierto])
+  }, [abierto, expansion])
 
   if (!abierto) return null
 
-  function actualizar(campo: keyof FormExpansion, valor: string) {
+  function actualizarCampo(campo: keyof FormExpansion, valor: string) {
     setForm((prev) => ({ ...prev, [campo]: valor }))
   }
 
@@ -90,21 +115,41 @@ export function ExpansionModal({ abierto, onCerrar, crear, onCreada }: Expansion
     setEnviando(true)
     setError(null)
     try {
-      const payload: CreateExpansionInput = {
-        concesionario: concesionario.trim(),
-        fecha_apertura,
-        estado: form.estado,
-        tipo: form.tipo,
-        ciudad: ciudad.trim(),
-        departamento: departamento.trim(),
-        avance: form.estado === 'completado' ? 100 : 0,
-        observaciones: form.observaciones.trim() || null,
+      if (esEdicion && expansion && actualizar) {
+        const payload: UpdateExpansionInput = {
+          concesionario: concesionario.trim(),
+          fecha_apertura,
+          estado: form.estado,
+          tipo: form.tipo,
+          ciudad: ciudad.trim(),
+          departamento: departamento.trim(),
+          observaciones: form.observaciones.trim() || null,
+        }
+        const actualizada = await actualizar(expansion.id, payload)
+        toast.success('Expansión actualizada exitosamente')
+        onActualizada?.(actualizada)
+      } else {
+        const payload: CreateExpansionInput = {
+          concesionario: concesionario.trim(),
+          fecha_apertura,
+          estado: form.estado,
+          tipo: form.tipo,
+          ciudad: ciudad.trim(),
+          departamento: departamento.trim(),
+          avance: form.estado === 'completado' ? 100 : 0,
+          observaciones: form.observaciones.trim() || null,
+        }
+        const creada = await crear(payload)
+        toast.success('Expansión creada exitosamente')
+        onCreada(creada)
       }
-      const creada = await crear(payload)
-      toast.success('Expansión creada exitosamente')
-      onCreada(creada)
     } catch (e) {
-      const mensaje = e instanceof Error ? e.message : 'Error al crear la expansión'
+      const mensaje =
+        e instanceof Error
+          ? e.message
+          : esEdicion
+            ? 'Error al actualizar la expansión'
+            : 'Error al crear la expansión'
       setError(mensaje)
       toast.error(mensaje)
     } finally {
@@ -123,8 +168,14 @@ export function ExpansionModal({ abierto, onCerrar, crear, onCreada }: Expansion
       >
         <div className="flex items-center justify-between border-b-2 border-mm-yellow px-6 py-4">
           <div className="flex items-center gap-2">
-            <CalendarPlus className="h-5 w-5 text-mm-yellow" />
-            <h2 className="text-lg font-bold text-mm-yellow">Nueva expansión</h2>
+            {esEdicion ? (
+              <Pencil className="h-5 w-5 text-mm-yellow" />
+            ) : (
+              <CalendarPlus className="h-5 w-5 text-mm-yellow" />
+            )}
+            <h2 className="text-lg font-bold text-mm-yellow">
+              {esEdicion ? 'Editar expansión' : 'Nueva expansión'}
+            </h2>
           </div>
           <button
             type="button"
@@ -145,7 +196,7 @@ export function ExpansionModal({ abierto, onCerrar, crear, onCreada }: Expansion
               <input
                 className="input-dark"
                 value={form.concesionario}
-                onChange={(e) => actualizar('concesionario', e.target.value)}
+                onChange={(e) => actualizarCampo('concesionario', e.target.value)}
                 placeholder="Apertura Concesionario Guatire"
               />
             </label>
@@ -159,7 +210,7 @@ export function ExpansionModal({ abierto, onCerrar, crear, onCreada }: Expansion
                 value={form.fecha_apertura}
                 min={FECHA_MIN}
                 max={FECHA_MAX}
-                onChange={(e) => actualizar('fecha_apertura', e.target.value)}
+                onChange={(e) => actualizarCampo('fecha_apertura', e.target.value)}
               />
             </label>
             <label className="block">
@@ -169,7 +220,7 @@ export function ExpansionModal({ abierto, onCerrar, crear, onCreada }: Expansion
               <select
                 className="input-dark"
                 value={form.estado}
-                onChange={(e) => actualizar('estado', e.target.value)}
+                onChange={(e) => actualizarCampo('estado', e.target.value)}
               >
                 {ESTADO_OPTIONS.map((opcion) => (
                   <option key={opcion.valor} value={opcion.valor}>
@@ -183,7 +234,7 @@ export function ExpansionModal({ abierto, onCerrar, crear, onCreada }: Expansion
               <input
                 className="input-dark"
                 value={form.ciudad}
-                onChange={(e) => actualizar('ciudad', e.target.value)}
+                onChange={(e) => actualizarCampo('ciudad', e.target.value)}
                 placeholder="Guatire"
               />
             </label>
@@ -194,7 +245,7 @@ export function ExpansionModal({ abierto, onCerrar, crear, onCreada }: Expansion
               <input
                 className="input-dark"
                 value={form.departamento}
-                onChange={(e) => actualizar('departamento', e.target.value)}
+                onChange={(e) => actualizarCampo('departamento', e.target.value)}
                 placeholder="Miranda"
               />
             </label>
@@ -203,7 +254,7 @@ export function ExpansionModal({ abierto, onCerrar, crear, onCreada }: Expansion
               <select
                 className="input-dark"
                 value={form.tipo}
-                onChange={(e) => actualizar('tipo', e.target.value)}
+                onChange={(e) => actualizarCampo('tipo', e.target.value)}
               >
                 {TIPO_OPTIONS.map((opcion) => (
                   <option key={opcion.valor} value={opcion.valor}>
@@ -217,7 +268,7 @@ export function ExpansionModal({ abierto, onCerrar, crear, onCreada }: Expansion
               <textarea
                 className="input-dark min-h-24 resize-y"
                 value={form.observaciones}
-                onChange={(e) => actualizar('observaciones', e.target.value)}
+                onChange={(e) => actualizarCampo('observaciones', e.target.value)}
                 placeholder="Detalles de la apertura (opcional)"
               />
             </label>
@@ -242,7 +293,13 @@ export function ExpansionModal({ abierto, onCerrar, crear, onCreada }: Expansion
               disabled={enviando}
               className="rounded-lg bg-mm-yellow px-4 py-2 text-sm font-bold text-mm-black hover:bg-mm-yellow-dark disabled:opacity-50 transition-colors"
             >
-              {enviando ? 'Guardando...' : 'Guardar expansión'}
+              {enviando
+                ? esEdicion
+                  ? 'Actualizando...'
+                  : 'Guardando...'
+                : esEdicion
+                  ? 'Guardar cambios'
+                  : 'Guardar expansión'}
             </button>
           </div>
         </form>

@@ -26,8 +26,10 @@ import {
 } from 'lucide-react'
 import { useExpansiones } from '@hooks/useExpansiones'
 import { useAuthStore } from '@store/auth'
+import { ConfirmarEliminarModal } from './ConfirmarEliminarModal'
+import { ExpansionDetalleModal } from './ExpansionDetalleModal'
 import { ExpansionModal } from './ExpansionModal'
-import { EstadoExpansion, Expansion } from '../types/expansion'
+import { EstadoExpansion, Expansion, UpdateExpansionInput } from '../types/expansion'
 
 const DIAS_SEMANA = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom']
 
@@ -83,14 +85,52 @@ function BadgeEstado({ estado }: { estado: EstadoExpansion }) {
 }
 
 export function CronogramaExpansions() {
-  const { expansiones, cargando, error, recargar, crear } = useExpansiones()
+  const { expansiones, cargando, error, recargar, crear, actualizar, eliminar } = useExpansiones()
   const esAdmin = useAuthStore((s) => s.esAdmin)
   const [mesVisible, setMesVisible] = useState(() => new Date())
   const [diaSeleccionado, setDiaSeleccionado] = useState<string | null>(null)
   const [modalAbierto, setModalAbierto] = useState(false)
+  const [expansionSeleccionada, setExpansionSeleccionada] = useState<Expansion | null>(null)
+  const [detalleAbierto, setDetalleAbierto] = useState(false)
+  const [editando, setEditando] = useState(false)
+  const [eliminarAbierto, setEliminarAbierto] = useState(false)
+  const [eliminando, setEliminando] = useState(false)
 
   function manejarCreada(expansion: Expansion) {
     setModalAbierto(false)
+    setMesVisible(parseISO(expansion.fecha_apertura))
+    setDiaSeleccionado(expansion.fecha_apertura)
+  }
+
+  function manejarClickExpansion(expansion: Expansion) {
+    setExpansionSeleccionada(expansion)
+    setDetalleAbierto(true)
+  }
+
+  function manejarEditar(expansion: Expansion) {
+    setDetalleAbierto(false)
+    setExpansionSeleccionada(expansion)
+    setEditando(true)
+  }
+
+  async function manejarEliminarConfirmado() {
+    if (!expansionSeleccionada) return
+    setEliminando(true)
+    try {
+      await eliminar(expansionSeleccionada.id)
+      setDetalleAbierto(false)
+      setEliminarAbierto(false)
+      setExpansionSeleccionada(null)
+    } catch {
+      // Error handled by the hook
+    } finally {
+      setEliminando(false)
+    }
+  }
+
+  function manejarActualizada(expansion: Expansion) {
+    setEditando(false)
+    setExpansionSeleccionada(null)
     setMesVisible(parseISO(expansion.fecha_apertura))
     setDiaSeleccionado(expansion.fecha_apertura)
   }
@@ -287,14 +327,19 @@ export function CronogramaExpansions() {
                 </span>
                 <div className="flex w-full flex-col gap-1">
                   {aperturas.slice(0, 2).map((expansion) => (
-                    <span
+                    <button
                       key={expansion.id}
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        manejarClickExpansion(expansion)
+                      }}
                       className={`flex items-center gap-1 truncate rounded-md border px-1.5 py-0.5 text-[10px] font-medium leading-tight ${ESTADO_CHIP[expansion.estado]}`}
                       title={expansion.concesionario}
                     >
                       <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${ESTADO_DOT[expansion.estado]}`} />
                       <span className="truncate">{expansion.locacion.split(',')[0]}</span>
-                    </span>
+                    </button>
                   ))}
                   {aperturas.length > 2 && (
                     <span className="text-[10px] font-medium text-mm-gray-400">
@@ -346,7 +391,8 @@ export function CronogramaExpansions() {
               return (
                 <li
                   key={expansion.id}
-                  className="rounded-lg border border-mm-gray-700 bg-mm-gray-900 p-3"
+                  className="cursor-pointer rounded-lg border border-mm-gray-700 bg-mm-gray-900 p-3 hover:border-mm-yellow/40 transition-colors"
+                  onClick={() => manejarClickExpansion(expansion)}
                 >
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <div className="min-w-0">
@@ -391,6 +437,45 @@ export function CronogramaExpansions() {
         onCerrar={() => setModalAbierto(false)}
         crear={crear}
         onCreada={manejarCreada}
+      />
+
+      <ExpansionDetalleModal
+        abierto={detalleAbierto}
+        expansion={expansionSeleccionada}
+        onCerrar={() => {
+          setDetalleAbierto(false)
+          setExpansionSeleccionada(null)
+        }}
+        onEditar={manejarEditar}
+        onEliminar={(exp) => {
+          setDetalleAbierto(false)
+          setExpansionSeleccionada(exp)
+          setEliminarAbierto(true)
+        }}
+      />
+
+      <ExpansionModal
+        abierto={editando}
+        onCerrar={() => {
+          setEditando(false)
+          setExpansionSeleccionada(null)
+        }}
+        crear={crear}
+        actualizar={actualizar}
+        expansion={expansionSeleccionada}
+        onCreada={manejarCreada}
+        onActualizada={manejarActualizada}
+      />
+
+      <ConfirmarEliminarModal
+        abierto={eliminarAbierto}
+        onCerrar={() => {
+          setEliminarAbierto(false)
+          setExpansionSeleccionada(null)
+        }}
+        onConfirmar={manejarEliminarConfirmado}
+        titulo={expansionSeleccionada?.concesionario ?? ''}
+        enviando={eliminando}
       />
     </div>
   )
