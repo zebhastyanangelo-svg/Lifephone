@@ -1,4 +1,4 @@
-# 📋 RESUMEN DE CREACIÓN - Mundo Motos CRM
+# 📋 RESUMEN DEL PROYECTO - LifePhone
 
 Fecha: 2026-02-13
 Versión: 1.0.0
@@ -8,17 +8,19 @@ Versión: 1.0.0
 ## ✅ Completado
 
 ### 1. Estructura de Directorios
+
 ```
-✅ Directorio raíz: /mundo-motos-expancion
+✅ Directorio raíz: /LifePhone
 ✅ Frontend: /packages/frontend (React + Vite)
 ✅ Backend: /packages/backend (Node.js + Express)
 ✅ Documentación: /docs (Arquitectura, BD, API)
 ```
 
 ### 2. Configuración Frontend
+
 ```
 ✅ vite.config.ts           - Vite con plugin PWA configurado
-✅ tailwind.config.js       - Colores corporativos (Negro #000 + Amarillo #FFCC00)
+✅ tailwind.config.js       - Tema LifePhone blanco/negro
 ✅ postcss.config.js        - Procesamiento de CSS
 ✅ tsconfig.json            - TypeScript configuration
 ✅ tsconfig.app.json        - TypeScript app-specific config
@@ -27,12 +29,14 @@ Versión: 1.0.0
 ✅ src/App.tsx              - Componente raíz
 ✅ src/styles/index.css     - Estilos globales
 ✅ src/types/index.ts       - Tipos TypeScript
-✅ src/services/api.ts      - Cliente API con Axios
+✅ src/services/api.ts      - Cliente API legacy con Axios
+✅ src/services/storeApi.ts - Cliente tRPC para tiendas
 ✅ Dockerfile               - Containerización (Nginx)
 ✅ nginx.conf               - Configuración de servidor web
 ```
 
 ### 3. Configuración Backend
+
 ```
 ✅ tsconfig.json            - TypeScript configuration
 ✅ src/index.ts             - Servidor Express
@@ -40,6 +44,7 @@ Versión: 1.0.0
 ✅ src/types/index.ts       - Tipos globales
 ✅ src/utils/helpers.ts     - Funciones utilidad
 ✅ Módulos del Monolito:
+   ✅ /modules/stores       - Store CRUD, filtros y métricas vía tRPC
    ✅ /modules/concesionarios/controller.ts  - CRUD Concesionarios
    ✅ /modules/ubicaciones/controller.ts     - Geolocalización
    ✅ /modules/crm/controller.ts             - Gestión de CRM
@@ -47,6 +52,7 @@ Versión: 1.0.0
 ```
 
 ### 4. Configuración de Workspace
+
 ```
 ✅ package.json (raíz)      - Workspace npm con Turbo
 ✅ package.json (frontend)  - Dependencias React/Vite
@@ -54,6 +60,7 @@ Versión: 1.0.0
 ```
 
 ### 5. Archivos de Configuración
+
 ```
 ✅ .env.example             - Plantilla de variables de entorno
 ✅ .gitignore               - Archivos a ignorar en Git
@@ -64,6 +71,7 @@ Versión: 1.0.0
 ```
 
 ### 6. Documentación Técnica
+
 ```
 ✅ README.md                    - Guía completa y profesional
 ✅ QUICKSTART.md                - Guía rápida (5 minutos)
@@ -77,11 +85,13 @@ Versión: 1.0.0
 ## 📊 Estadísticas del Proyecto
 
 ### Estructura de Archivos
+
 - **Total de archivos creados**: 30+
 - **Líneas de código/configuración**: 5,000+
 - **Documentación**: 3 archivos técnicos completos
 
 ### Stack Tecnológico Configurado
+
 - **Frontend**: React 18, TypeScript 5.3, Vite 5, Tailwind CSS 3.4, PWA
 - **Backend**: Node.js 18+, Express 4.18, TypeScript 5.3
 - **Base de Datos**: PostgreSQL 15 (via Supabase)
@@ -89,43 +99,52 @@ Versión: 1.0.0
 - **Herramientas**: Turbo (monorepo), ESLint, Prettier, Vitest
 
 ### Módulos del Monolito
-1. **Concesionarios**: CRUD completo, gestión de concesionarios
-2. **Ubicaciones**: Geolocalización, búsqueda de proximidad (Haversine)
-3. **CRM**: Gestión de contactos, pipeline de ventas
+
+1. **Store**: gestión aislada de tiendas de tecnología y telefonía móvil
+2. **Ubicaciones**: geolocalización y búsqueda de proximidad (Haversine)
+3. **CRM legacy**: gestión de contactos, pipeline e historial sobre contratos existentes
 
 ---
 
 ## 🎨 Especificaciones Técnicas
 
-### Colores Corporativos Configurados
-- **Negro**: `#000000` (mm-black)
-- **Amarillo**: `#FFCC00` (mm-yellow)
+### Identidad Visual LifePhone
+
+- **Fondo principal**: `#F5F5F7`
+- **Tarjetas y contenedores**: `#FFFFFF`
+- **Texto y acentos**: `#000000` y `#1D1D1F`
+- **Tipografía**: sans-serif limpia, con preferencia por Inter/SF Pro
 - **Escala de grises**: mm-gray-{50..900}
 - **Colores de estado**: success, error, warning, info
 
 ### Arquitectura
+
 - **Patrón**: Monolito Modular (Modular Monolith)
 - **Capas**: Controller → Service → Repository → Database
 - **Type Safety**: 100% TypeScript strict mode
 - **Seguridad**: JWT, RLS (Row Level Security), RBAC
 
 ### Base de Datos
+
 - **Motor**: PostgreSQL 15
 - **Tablas**: users, concesionarios, ubicaciones, crm_contacts, actividades_crm
 - **Características**: UUID v4, JSONB para metadatos, soft deletes, RLS habilitado
 - **Índices**: Geométricos (GIST) para búsquedas de proximidad
 
 ### PWA Configurado
+
 - Service Workers habilitados
 - Offline-first capabilities
 - Instalable como app nativa
 - Caché de API y assets
+- Instalación nativa mediante `usePWAInstall` e `InstallPWAButton`
 
 ---
 
 ## 🚀 Scripts Disponibles
 
 ### Desarrollo
+
 ```bash
 npm run dev              # Frontend + Backend
 npm run dev:frontend     # Solo Frontend (5173)
@@ -133,6 +152,7 @@ npm run dev:backend      # Solo Backend (3000)
 ```
 
 ### Build
+
 ```bash
 npm run build            # Build completo
 npm run build:frontend   # Build React + Vite
@@ -140,6 +160,7 @@ npm run build:backend    # Build Node.js
 ```
 
 ### Calidad
+
 ```bash
 npm run type-check       # TypeScript validation
 npm run lint             # ESLint
@@ -148,12 +169,14 @@ npm run format:check     # Prettier (check)
 ```
 
 ### Testing
+
 ```bash
 npm run test             # Ejecutar tests
 npm run test:watch       # Tests en watch mode
 ```
 
 ### Database
+
 ```bash
 npm run migrate          # Ejecutar migraciones
 npm run seed             # Seed con datos
@@ -164,21 +187,26 @@ npm run seed             # Seed con datos
 ## 📝 Variables de Entorno Configuradas
 
 ### Supabase
+
 - `SUPABASE_URL`
 - `SUPABASE_ANON_KEY`
 - `SUPABASE_SERVICE_ROLE_KEY`
 
 ### Servidor
+
 - `PORT` (default: 3000)
 - `NODE_ENV` (development/production)
 - `CORS_ORIGIN`
 
 ### Frontend
+
 - `VITE_API_BASE_URL`
+- `VITE_TRPC_URL`
 - `VITE_APP_NAME`
 - `VITE_MAP_*` (configuración de mapas)
 
 ### Mapas
+
 - `VITE_MAP_PROVIDER` (openstreetmap)
 - `VITE_MAP_CENTER_LAT/LON`
 - `VITE_MAP_ZOOM`
@@ -203,6 +231,7 @@ Ver `.env.example` para lista completa.
 ## 📚 Documentación Incluida
 
 ### README.md
+
 - Características completas
 - Tech stack detallado
 - Requisitos e instalación
@@ -212,12 +241,14 @@ Ver `.env.example` para lista completa.
 - Troubleshooting
 
 ### QUICKSTART.md
+
 - Guía de 5 minutos
 - Setup rápido
 - Primeros pasos
 - Comandos útiles
 
 ### docs/arquitectura.md
+
 - Visión general
 - Esquema ER
 - Flujo de datos
@@ -225,6 +256,7 @@ Ver `.env.example` para lista completa.
 - Escalabilidad
 
 ### docs/base-de-datos.md
+
 - Tablas y campos
 - Índices
 - RLS policies
@@ -232,6 +264,7 @@ Ver `.env.example` para lista completa.
 - Migrations
 
 ### docs/api-endpoints.md
+
 - Autenticación
 - Endpoints CRUD
 - Filtros y paginación
@@ -243,6 +276,7 @@ Ver `.env.example` para lista completa.
 ## 🎯 Próximos Pasos Recomendados
 
 ### Fase 1: Configuración Inicial
+
 1. ✅ Clonar repositorio
 2. ✅ Instalar dependencias: `npm install`
 3. ✅ Configurar `.env.local` con credenciales Supabase
@@ -250,6 +284,7 @@ Ver `.env.example` para lista completa.
 5. ✅ Iniciar desarrollo: `npm run dev`
 
 ### Fase 2: Desarrollo
+
 1. Implementar autenticación (JWT)
 2. Conectar CRUD endpoints con frontend
 3. Agregar componentes React
@@ -257,12 +292,14 @@ Ver `.env.example` para lista completa.
 5. Agregar validaciones y error handling
 
 ### Fase 3: Testing
+
 1. Escribir tests unitarios
 2. Tests de integración
 3. Testing de API
 4. E2E testing
 
 ### Fase 4: Producción
+
 1. Build optimizado
 2. Deploy en Vercel (frontend)
 3. Deploy en Railway/Render (backend)
@@ -274,6 +311,7 @@ Ver `.env.example` para lista completa.
 ## 🤝 Contribuciones
 
 El proyecto está listo para:
+
 - Agregar nuevos módulos
 - Expandir funcionalidades
 - Convertir a microservicios (arquitectura preparada)
@@ -286,6 +324,7 @@ Ver documentación para detalles de extensión.
 ## 📞 Soporte
 
 Para dudas o problemas:
+
 - Revisar [README.md](README.md#troubleshooting)
 - Ver [docs/](docs/) para detalles técnicos
 - Revisar código comentado en controladores/servicios
@@ -305,4 +344,4 @@ Para dudas o problemas:
 - ✅ Documentación completa
 - ✅ Estilos corporativos
 
-**Proyecto listo para producción. ¡Bienvenido a Mundo Motos CRM!** 🏍️
+**Proyecto listo para producción. Bienvenido a LifePhone.**

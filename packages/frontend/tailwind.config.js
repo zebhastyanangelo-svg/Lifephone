@@ -43,12 +43,15 @@ export default {
       colors: {
         // Colores corporativos Mundo Motos
         'mm-black': '#000000',
-        'mm-yellow': '#FFCC00',
-        'mm-yellow-dark': '#E6B800',
-        'mm-yellow-light': '#FFD633',
+        'mm-yellow': '#1D1D1F',
+        'mm-yellow-dark': '#000000',
+        'mm-yellow-light': '#F5F5F7',
         
         // Escala de grises (neutros, sin tinte azul)
         'mm-gray': escalaNeutra,
+        'apple-white': '#FFFFFF',
+        'apple-background': '#F5F5F7',
+        'apple-ink': '#1D1D1F',
         
         // Colores de estado
         'mm-success': '#10B981',

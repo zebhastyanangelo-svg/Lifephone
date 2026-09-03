@@ -16,6 +16,7 @@ export interface User {
 }
 
 export type { Concesionario, ConcesionarioFilters, CreateConcesionarioInput, UpdateConcesionarioInput, PaginatedConcesionarios, EstadoOperativo } from './concesionario'
+export type { Store, StoreFilters, CreateStoreInput, UpdateStoreInput, StoreMetrics, StoreStatus, StoreListResult } from './store'
 export type { EstadoExpansion, Expansion, CreateExpansionInput, UpdateExpansionInput, ExpansionFilters, PaginatedExpansiones } from './expansion'
 
 export interface Ubicacion {

@@ -1,6 +1,7 @@
-# 🗄️ Documentación de Base de Datos - Mundo Motos CRM
+# 🗄️ Documentación de Base de Datos - LifePhone
 
 ## 📋 Tabla de Contenidos
+
 1. [Introducción](#introducción)
 2. [Esquema ER](#esquema-er)
 3. [Tablas y Columnas](#tablas-y-columnas)
@@ -13,6 +14,7 @@
 ## Introducción
 
 ### Stack Tecnológico
+
 - **Base de Datos**: PostgreSQL 15+
 - **Hosting**: Supabase (PostgreSQL como servicio)
 - **Tipos de Datos**: UUID, JSONB, ARRAY, ENUM
@@ -21,13 +23,13 @@
 
 ### Decisiones Arquitectónicas
 
-| Decisión | Razón |
-|----------|--------|
-| **UUID como PK** | Mejor para distributed systems, seguridad |
-| **JSONB para metadatos** | Flexibilidad sin migrations frecuentes |
-| **RLS habilitado** | Seguridad a nivel de fila |
-| **Soft deletes** | Auditabilidad y recuperabilidad |
-| **Timestamps** | Auditabilidad y ordenamiento |
+| Decisión                 | Razón                                     |
+| ------------------------ | ----------------------------------------- |
+| **UUID como PK**         | Mejor para distributed systems, seguridad |
+| **JSONB para metadatos** | Flexibilidad sin migrations frecuentes    |
+| **RLS habilitado**       | Seguridad a nivel de fila                 |
+| **Soft deletes**         | Auditabilidad y recuperabilidad           |
+| **Timestamps**           | Auditabilidad y ordenamiento              |
 
 ---
 
@@ -99,6 +101,7 @@ CREATE INDEX idx_users_estado ON users(estado);
 ```
 
 **Campos**:
+
 - `id`: Identificador único (UUID v4)
 - `email`: Email único del usuario
 - `nombre`, `apellido`: Información personal
@@ -111,7 +114,7 @@ CREATE INDEX idx_users_estado ON users(estado);
 
 ---
 
-### 2. Tabla: `concesionarios` (Concesionarios Mundo Motos)
+### 2. Tabla legacy: `concesionarios` (compatibilidad histórica)
 
 ```sql
 CREATE TABLE concesionarios (
@@ -144,6 +147,7 @@ CREATE INDEX idx_concesionarios_geom ON concesionarios USING GIST(
 ```
 
 **Campos Clave**:
+
 - `latitud`, `longitud`: Coordenadas para mapas
 - `metadatos`: JSONB para datos flexibles como:
   ```json
@@ -185,10 +189,11 @@ CREATE INDEX idx_ubicaciones_geom ON ubicaciones USING GIST(
 ```
 
 **Uso de metadatos**:
+
 ```json
 {
-  "horario": {"abierto": true, "horaApertura": "08:00", "horaCierre": "18:00"},
-  "responsable": {"nombre": "Juan", "telefono": "3001234567"},
+  "horario": { "abierto": true, "horaApertura": "08:00", "horaCierre": "18:00" },
+  "responsable": { "nombre": "Juan", "telefono": "3001234567" },
   "capacidad_visitantes": 50,
   "servicios_disponibles": ["espera", "cafeteria", "parking"]
 }
@@ -225,6 +230,7 @@ CREATE INDEX idx_crm_contacts_email ON crm_contacts(email);
 ```
 
 **Metadatos de ejemplo**:
+
 ```json
 {
   "valor_oportunidad": 5000000,
@@ -272,18 +278,18 @@ CREATE INDEX idx_actividades_crm_tipo ON actividades_crm(tipo);
 
 ### Estrategia de Indexación
 
-| Tabla | Índice | Razón |
-|-------|--------|--------|
-| users | email | Búsquedas por login |
-| users | rol | Filtrados por perfil |
-| concesionarios | nit | Búsqueda única |
-| concesionarios | gerente_id | Filtrados por gerente |
-| concesionarios | geom (GIST) | Proximidad geográfica |
-| ubicaciones | concesionario_id | Listado por concesionario |
-| ubicaciones | geom (GIST) | Búsqueda de ubicaciones cercanas |
-| crm_contacts | estado | Pipeline CRM |
-| crm_contacts | concesionario_id | Filtrado |
-| crm_contacts | asignado_a | Mis contactos |
+| Tabla          | Índice           | Razón                            |
+| -------------- | ---------------- | -------------------------------- |
+| users          | email            | Búsquedas por login              |
+| users          | rol              | Filtrados por perfil             |
+| concesionarios | nit              | Búsqueda única                   |
+| concesionarios | gerente_id       | Filtrados por gerente            |
+| concesionarios | geom (GIST)      | Proximidad geográfica            |
+| ubicaciones    | concesionario_id | Listado por concesionario        |
+| ubicaciones    | geom (GIST)      | Búsqueda de ubicaciones cercanas |
+| crm_contacts   | estado           | Pipeline CRM                     |
+| crm_contacts   | concesionario_id | Filtrado                         |
+| crm_contacts   | asignado_a       | Mis contactos                    |
 
 ---
 
@@ -292,16 +298,18 @@ CREATE INDEX idx_actividades_crm_tipo ON actividades_crm(tipo);
 ### Políticas de Seguridad
 
 #### 1. Usuarios solo ven sus datos
+
 ```sql
 ALTER TABLE users ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Ver propio usuario"
   ON users FOR SELECT
-  USING (auth.uid()::uuid = id OR 
+  USING (auth.uid()::uuid = id OR
          (SELECT rol FROM users WHERE id = auth.uid()::uuid) = 'admin');
 ```
 
 #### 2. Gerentes ven solo sus concesionarios
+
 ```sql
 ALTER TABLE concesionarios ENABLE ROW LEVEL SECURITY;
 
@@ -314,6 +322,7 @@ CREATE POLICY "Gerente ve sus concesionarios"
 ```
 
 #### 3. Contactos por concesionario asignado
+
 ```sql
 ALTER TABLE crm_contacts ENABLE ROW LEVEL SECURITY;
 
@@ -466,13 +475,13 @@ VALUES ('admin@mundomotos.com', 'Admin', 'Sistema', 'admin', 'activo');
 
 -- Insertar gerentes
 INSERT INTO users (email, nombre, apellido, rol, estado)
-VALUES 
+VALUES
   ('gerente1@mundomotos.com', 'Carlos', 'García', 'gerente', 'activo'),
   ('gerente2@mundomotos.com', 'María', 'López', 'gerente', 'activo');
 
 -- Insertar concesionarios
 INSERT INTO concesionarios (nombre, razon_social, nit, email, ciudad, departamento, direccion, latitud, longitud, gerente_id, estado)
-SELECT 'Mundo Motos Bogotá', 'Mundo Motos S.A.S', '123456789', 'info@bogota.mundomotos.com', 
+SELECT 'LifePhone Bogotá', 'LifePhone S.A.S', '123456789', 'contacto@bogota.lifephone.com',
        'Bogotá', 'Cundinamarca', 'Cra 7 #120-50', 4.7110, -74.0721, id, 'activo'
 FROM users WHERE email = 'gerente1@mundomotos.com' LIMIT 1;
 ```
@@ -497,7 +506,7 @@ psql -h supabase-host -U postgres -d postgres -f backup.sql
 
 ```sql
 -- Tamaño de tablas
-SELECT schemaname, tablename, pg_size_pretty(pg_total_relation_size(schemaname||'.'||tablename)) 
+SELECT schemaname, tablename, pg_size_pretty(pg_total_relation_size(schemaname||'.'||tablename))
 FROM pg_tables WHERE schemaname = 'public' ORDER BY pg_total_relation_size(schemaname||'.'||tablename) DESC;
 
 -- Índices no utilizados

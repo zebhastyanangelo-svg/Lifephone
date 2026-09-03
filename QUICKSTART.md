@@ -1,4 +1,4 @@
-# 🚀 Quick Start - Mundo Motos CRM
+# 🚀 Quick Start - LifePhone
 
 Guía rápida para comenzar en 5 minutos.
 
@@ -85,13 +85,13 @@ Health:    http://localhost:3000/health
 ```bash
 # Mediante SQL en Supabase o PostgreSQL
 INSERT INTO users (email, nombre, apellido, rol, estado)
-VALUES ('admin@mundomotos.com', 'Admin', 'Sistema', 'admin', 'activo');
+VALUES ('admin@lifephone.com', 'Admin', 'Sistema', 'admin', 'activo');
 ```
 
 ### 2. Login en la App
 
 ```
-Email: admin@mundomotos.com
+Email: admin@lifephone.com
 Contraseña: (según tu BD)
 ```
 
@@ -100,10 +100,10 @@ Contraseña: (según tu BD)
 Ir a Dashboard → Concesionarios → Nuevo
 
 ```
-Nombre: Mundo Motos Bogotá
-Razón Social: Mundo Motos S.A.S
+Nombre: LifePhone Bogotá
+Razón Social: LifePhone S.A.S
 NIT: 123456789
-Email: info@bogota.mundomotos.com
+Email: contacto@bogota.lifephone.com
 Latitud: 4.7110
 Longitud: -74.0721
 ```
@@ -154,12 +154,12 @@ docker-compose down
 
 ## Troubleshooting Rápido
 
-| Problema | Solución |
-|----------|----------|
-| `Puerto 3000 en uso` | `PORT=3001 npm run dev:backend` |
+| Problema                     | Solución                               |
+| ---------------------------- | -------------------------------------- |
+| `Puerto 3000 en uso`         | `PORT=3001 npm run dev:backend`        |
 | `Error de conexión Supabase` | Verificar URL y ANON_KEY en .env.local |
-| `node_modules corrupto` | `npm run clean && npm install` |
-| `TypeScript errors` | `npm run type-check` |
+| `node_modules corrupto`      | `npm run clean && npm install`         |
+| `TypeScript errors`          | `npm run type-check`                   |
 
 ## Documentación Completa
 

@@ -1,15 +1,15 @@
-# 🏍️ Mundo Motos CRM - Sistema de Gestión y Geolocalización de Concesionarios
+# LifePhone - Gestor de Tiendas y CRM
 
 <div align="center">
 
-![Mundo Motos](https://img.shields.io/badge/Mundo-Motos-000000?style=for-the-badge&logo=motorcycle)
+![LifePhone](https://img.shields.io/badge/LifePhone-000000?style=for-the-badge&logo=apple)
 ![Node.js](https://img.shields.io/badge/Node.js-18+-green?style=for-the-badge&logo=node.js)
 ![React](https://img.shields.io/badge/React-18+-blue?style=for-the-badge&logo=react)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.3-3178c6?style=for-the-badge&logo=typescript)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15+-336791?style=for-the-badge&logo=postgresql)
 ![License](https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge)
 
-**CRM y Dashboard de gestión y geolocalización de concesionarios Mundo Motos**
+**Plataforma de gestión, CRM y geolocalización de tiendas de tecnología y telefonía móvil**
 
 [Características](#características) • [Instalación](#instalación) • [Uso](#uso) • [Documentación](#documentación) • [Contribuir](#contribuir)
 
@@ -37,7 +37,20 @@
 
 ## 🎯 Características
 
+### 🏪 Dominio de Tiendas (`Store`)
+
+- ✅ Capa aislada para crear, consultar, editar y eliminar tiendas
+- ✅ CUIT único, gerente asignable y metadatos flexibles almacenados como `JSONB`
+- ✅ Estados `ACTIVE`, `INACTIVE`, `OPERATIONAL` y `MAINTENANCE`
+- ✅ Búsqueda por CUIT, estado, gerente y radio geográfico en kilómetros
+- ✅ Métricas consolidadas para el panel de gestión
+- ✅ API tRPC disponible bajo `/trpc` mediante `storeRouter`
+
+La nueva capa usa la tabla `stores` y no modifica los contratos SQL existentes de CRM,
+expansiones ni historial.
+
 ### 🏢 Gestión de Concesionarios
+
 - ✅ CRUD completo de concesionarios
 - ✅ Información detallada con metadatos flexibles
 - ✅ Asignación de gerentes
@@ -45,6 +58,7 @@
 - ✅ Búsqueda y filtrado avanzado
 
 ### 📍 Geolocalización
+
 - ✅ Mapas interactivos con OpenStreetMap/Leaflet
 - ✅ Búsqueda de ubicaciones cercanas (radio en km)
 - ✅ Cálculo de distancias (Fórmula Haversine)
@@ -52,6 +66,7 @@
 - ✅ Clasificación (principal, secundaria, almacén, taller)
 
 ### 💼 Sistema CRM
+
 - ✅ Gestión de contactos y leads
 - ✅ Pipeline de ventas (4 estados: nuevo → en progreso → calificado → descartado)
 - ✅ Asignación de contactos a vendedores
@@ -60,6 +75,7 @@
 - ✅ Historial de interacciones
 
 ### 🛡️ Seguridad
+
 - ✅ Autenticación con JWT
 - ✅ Row Level Security (RLS) en base de datos
 - ✅ Control de acceso basado en roles (RBAC)
@@ -68,12 +84,21 @@
 - ✅ CORS configurado
 
 ### 📱 Progressive Web App (PWA)
+
 - ✅ Capacidades offline con Service Workers
 - ✅ Instalable como aplicación nativa
 - ✅ Sincronización en segundo plano
 - ✅ Soporte para dispositivos móviles
+- ✅ Instalación desde `InstallPWAButton`, usando el hook `usePWAInstall`
+
+### 🎨 Interfaz y mapas
+
+- ✅ Tema minimalista inspirado en iPhone/Apple: fondo `#F5F5F7`, contenedores `#FFFFFF`
+- ✅ Textos y acentos en `#000000` y `#1D1D1F`, con tipografía sans-serif `Inter`
+- ✅ Mapa de tiendas con Leaflet y teselas de OpenStreetMap
 
 ### ⚙️ Arquitectura
+
 - ✅ Monolito Modular escalable
 - ✅ Separación en dominios (concesionarios, ubicaciones, CRM)
 - ✅ TypeScript en todo el stack
@@ -84,6 +109,7 @@
 ## 🛠️ Tech Stack
 
 ### Frontend
+
 ```
 React 18+               - UI Framework
 TypeScript 5.3+         - Lenguaje tipado
@@ -94,9 +120,11 @@ Axios 1.6+             - HTTP client
 Zustand 4.4+           - State management
 React Leaflet 4.2+      - Mapas
 Vite PWA Plugin 0.17+   - Progressive Web App
+@trpc/client 10.45+     - Cliente tRPC para Store
 ```
 
 ### Backend
+
 ```
 Node.js 18+            - Runtime
 Express 4.18+          - Web framework
@@ -106,9 +134,11 @@ Supabase               - Backend as a Service
 Pino 8.17+             - Logging
 JWT 9.1+               - Autenticación
 Zod 3.22+              - Validación
+@trpc/server 10.45+    - API tRPC para Store
 ```
 
 ### DevOps & Tools
+
 ```
 Docker                 - Containerización
 Docker Compose         - Orquestación local
@@ -125,17 +155,20 @@ Vitest 1.0+            - Testing
 ## 📋 Requisitos Previos
 
 ### Obligatorios
+
 - **Node.js** >= 18.0.0 ([Descargar](https://nodejs.org/))
 - **npm** >= 9.0.0 (incluido con Node.js)
 - **Git** ([Descargar](https://git-scm.com/))
 
 ### Opcionales pero Recomendados
+
 - **Docker** >= 20.0 y **Docker Compose** >= 2.0 para desarrollo en contenedor
 - **Supabase CLI** para gestión de base de datos
 - **Postman** o **Insomnia** para testing de API
 - **VS Code** con extensiones recomendadas
 
 ### Credenciales Requeridas
+
 - Cuenta en [Supabase](https://supabase.com) (gratuita)
 - (Opcional) Cuenta en servicios de email para SMTP
 
@@ -190,6 +223,7 @@ NODE_ENV=development
 
 # Frontend
 VITE_API_BASE_URL=http://localhost:3000/api
+VITE_TRPC_URL=http://localhost:3000/trpc
 ```
 
 ### 4. Crear Base de Datos
@@ -217,7 +251,35 @@ sudo apt-get install postgresql postgresql-contrib
 # Crear base de datos
 createdb mundo_motos_crm
 psql mundo_motos_crm < docs/base-de-datos.md
+# Aplicar también el esquema aislado de tiendas:
+psql mundo_motos_crm < packages/backend/src/database/migrations/019_stores.sql
 ```
+
+## 🚀 Verificación y ejecución local
+
+Desde la raíz del repositorio:
+
+```bash
+npm install
+
+# Verificación de tipos
+./node_modules/.bin/tsc --noEmit -p packages/frontend/tsconfig.app.json
+./node_modules/.bin/tsc --noEmit -p packages/backend/tsconfig.json
+
+# Builds de producción
+npm run build --workspace=@mundo-motos/frontend
+npm run build --workspace=@mundo-motos/backend
+```
+
+Para desarrollo, inicia cada workspace en una terminal separada:
+
+```bash
+npm run dev --workspace=@mundo-motos/backend   # http://localhost:3000
+npm run dev --workspace=@mundo-motos/frontend  # http://localhost:5173
+```
+
+Ejecuta [019_stores.sql](packages/backend/src/database/migrations/019_stores.sql) en el
+SQL Editor de Supabase o contra PostgreSQL local antes de usar `/stores` y `storeRouter`.
 
 ---
 
@@ -237,7 +299,8 @@ NODE_ENV=development
 # FRONTEND (Vite)
 # ============================================
 VITE_API_BASE_URL=http://localhost:3000/api
-VITE_APP_NAME=Mundo Motos CRM
+VITE_TRPC_URL=http://localhost:3000/trpc
+VITE_APP_NAME=LifePhone
 
 # ============================================
 # BASE DE DATOS - Supabase
@@ -481,7 +544,7 @@ export const MyComponent: FC<MyComponentProps> = ({ title, onClick }) => {
   return (
     <div className="p-4 bg-mm-black text-mm-yellow">
       <h1>{title}</h1>
-      <button 
+      <button
         onClick={onClick}
         className="btn-secondary"
       >
@@ -498,29 +561,29 @@ export default MyComponent
 
 ```typescript
 // packages/backend/src/modules/ejemplo/controller.ts
-import { Router } from 'express'
-import { sendSuccess, ApiError } from '@utils/helpers'
+import { Router } from 'express';
+import { sendSuccess, ApiError } from '@utils/helpers';
 
 export async function getEjemplo(req, res, next) {
   try {
     // Lógica
-    sendSuccess(res, { mensaje: 'ok' })
+    sendSuccess(res, { mensaje: 'ok' });
   } catch (error) {
-    next(error)
+    next(error);
   }
 }
 
-export const ejemploRouter = Router()
-ejemploRouter.get('/', getEjemplo)
+export const ejemploRouter = Router();
+ejemploRouter.get('/', getEjemplo);
 
-export default ejemploRouter
+export default ejemploRouter;
 ```
 
 ### Integración con Backend
 
 ```typescript
 // src/services/ejemplo.ts
-import { apiService } from '@services/api'
+import { apiService } from '@services/api';
 
 export const ejemploService = {
   getAll: () => apiService.get('/ejemplo'),
@@ -528,7 +591,7 @@ export const ejemploService = {
   create: (data: any) => apiService.post('/ejemplo', data),
   update: (id: string, data: any) => apiService.put(`/ejemplo/${id}`, data),
   delete: (id: string) => apiService.delete(`/ejemplo/${id}`),
-}
+};
 ```
 
 ### Usar en Componente
@@ -624,13 +687,13 @@ git push origin main
 
 ```bash
 # Buildear imagen
-docker build -t mundo-motos-crm .
+docker build -t lifephone-crm .
 
 # Ejecutar
 docker run -p 3000:3000 \
   -e SUPABASE_URL=... \
   -e SUPABASE_ANON_KEY=... \
-  mundo-motos-crm
+  lifephone-crm
 ```
 
 ### Monitoreo
@@ -772,7 +835,7 @@ feat(crm): agregar búsqueda de contactos por email
 Este proyecto está bajo licencia [MIT](LICENSE).
 
 ```
-MIT License © 2026 Mundo Motos
+MIT License © 2026 LifePhone
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -808,9 +871,10 @@ R: Ver sección [Producción](#producción)
 
 ## 🎉 Agradecimientos
 
-Proyecto desarrollado con ❤️ para **Mundo Motos**.
+Proyecto desarrollado para **LifePhone**.
 
 Tecnologías principales:
+
 - [React](https://react.dev)
 - [Express](https://expressjs.com)
 - [TypeScript](https://www.typescriptlang.org)
@@ -822,8 +886,8 @@ Tecnologías principales:
 
 <div align="center">
 
-**[⬆ Volver al Top](#-mundo-motos-crm---sistema-de-gestión-y-geolocalización-de-concesionarios)**
+**[⬆ Volver al Top](#lifephone---gestor-de-tiendas-y-crm)**
 
-Hecho con 🏍️ para Mundo Motos | [GitHub](https://github.com/mundomotos) | [Web](https://mundomotos.com)
+Hecho para LifePhone | [GitHub](https://github.com/anye000/mundo-motos-expancion)
 
 </div>

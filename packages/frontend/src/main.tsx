@@ -6,15 +6,10 @@ import { ErrorBoundary } from './components/ErrorBoundary'
 import './styles/index.css'
 
 if ('serviceWorker' in navigator) {
-  import('virtual:pwa-register/react').then(({ useRegisterSW }) => {
-    useRegisterSW({
+  import('virtual:pwa-register').then(({ registerSW }) => {
+    registerSW({
       onNeedRefresh() {
-        if (confirm('Hay una nueva versión disponible. ¿Recargar ahora?')) {
-          window.location.reload()
-        }
-      },
-      onOfflineReady() {
-        console.log('App lista para funcionar offline')
+        if (confirm('Hay una nueva versión disponible. ¿Recargar ahora?')) window.location.reload()
       },
     })
   })

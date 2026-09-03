@@ -1,6 +1,7 @@
-# 🔌 Documentación de API Endpoints - Mundo Motos CRM
+# 🔌 Documentación de API Endpoints - LifePhone
 
 ## 📋 Tabla de Contenidos
+
 1. [Introducción](#introducción)
 2. [Autenticación](#autenticación)
 3. [Endpoints de Concesionarios](#endpoints-de-concesionarios)
@@ -14,12 +15,14 @@
 ## Introducción
 
 ### Base URL
+
 ```
 Development:  http://localhost:3000/api/v1
 Production:   https://api.mundomotos.com/api/v1
 ```
 
 ### Headers Requeridos
+
 ```http
 Content-Type: application/json
 Authorization: Bearer <JWT_TOKEN>
@@ -27,10 +30,11 @@ Accept: application/json
 ```
 
 ### Formato de Respuesta
+
 ```json
 {
   "success": true,
-  "data": { /* datos */ },
+  "data": {/* datos */},
   "message": "Operación exitosa"
 }
 ```
@@ -40,9 +44,11 @@ Accept: application/json
 ## Autenticación
 
 ### POST `/auth/login`
+
 Autenticar usuario y obtener JWT token.
 
 **Request:**
+
 ```json
 {
   "email": "usuario@mundomotos.com",
@@ -51,6 +57,7 @@ Autenticar usuario y obtener JWT token.
 ```
 
 **Response (200):**
+
 ```json
 {
   "success": true,
@@ -70,6 +77,7 @@ Autenticar usuario y obtener JWT token.
 ```
 
 **Errores:**
+
 - `401`: Credenciales inválidas
 - `404`: Usuario no encontrado
 
@@ -78,14 +86,17 @@ Autenticar usuario y obtener JWT token.
 ## Endpoints de Concesionarios
 
 ### GET `/concesionarios`
+
 Obtener lista de concesionarios con paginación.
 
 **Query Parameters:**
+
 ```
 ?page=1&limit=10
 ```
 
 **Response (200):**
+
 ```json
 {
   "success": true,
@@ -93,20 +104,20 @@ Obtener lista de concesionarios con paginación.
     "data": [
       {
         "id": "550e8400-e29b-41d4-a716-446655440000",
-        "nombre": "Mundo Motos Bogotá",
-        "razonSocial": "Mundo Motos S.A.S",
+        "nombre": "LifePhone Bogotá",
+        "razonSocial": "LifePhone S.A.S",
         "nit": "123456789",
         "email": "info@bogota.mundomotos.com",
         "telefono": "3001234567",
         "ciudad": "Bogotá",
         "departamento": "Cundinamarca",
         "direccion": "Cra 7 #120-50",
-        "latitud": 4.7110,
+        "latitud": 4.711,
         "longitud": -74.0721,
         "gerente": "550e8400-e29b-41d4-a716-446655440001",
         "estado": "activo",
         "metadatos": {
-          "horarios": {"lunes": "8:00-18:00"},
+          "horarios": { "lunes": "8:00-18:00" },
           "servicios": ["venta", "mantenimiento"]
         },
         "createdAt": "2026-01-15T10:30:00Z",
@@ -124,36 +135,42 @@ Obtener lista de concesionarios con paginación.
 ---
 
 ### GET `/concesionarios/:id`
+
 Obtener detalles de un concesionario específico.
 
 **Parameters:**
+
 - `id` (path): UUID del concesionario
 
 **Response (200):**
+
 ```json
 {
   "success": true,
   "data": {
     "id": "550e8400-e29b-41d4-a716-446655440000",
-    "nombre": "Mundo Motos Bogotá",
+    "nombre": "LifePhone Bogotá"
     // ... resto de campos
   }
 }
 ```
 
 **Errores:**
+
 - `404`: Concesionario no encontrado
 
 ---
 
 ### POST `/concesionarios`
+
 Crear nuevo concesionario.
 
 **Request Body:**
+
 ```json
 {
-  "nombre": "Mundo Motos Medellín",
-  "razonSocial": "Mundo Motos S.A.S",
+  "nombre": "LifePhone Medellín",
+  "razonSocial": "LifePhone S.A.S",
   "nit": "987654321",
   "email": "info@medellin.mundomotos.com",
   "telefono": "3104567890",
@@ -164,18 +181,19 @@ Crear nuevo concesionario.
   "longitud": -75.5898,
   "gerente": "550e8400-e29b-41d4-a716-446655440001",
   "metadatos": {
-    "horarios": {"lunes": "8:00-18:00", "sabado": "9:00-14:00"},
+    "horarios": { "lunes": "8:00-18:00", "sabado": "9:00-14:00" },
     "servicios": ["venta", "mantenimiento", "repuestos"]
   }
 }
 ```
 
 **Response (201):**
+
 ```json
 {
   "success": true,
   "data": {
-    "id": "660e8400-e29b-41d4-a716-446655440002",
+    "id": "660e8400-e29b-41d4-a716-446655440002"
     // ... campos completos
   },
   "message": "Concesionario creado exitosamente"
@@ -183,6 +201,7 @@ Crear nuevo concesionario.
 ```
 
 **Validaciones:**
+
 - `nombre`: Requerido, mínimo 3 caracteres
 - `nit`: Único, requerido
 - `email`: Formato válido
@@ -192,25 +211,28 @@ Crear nuevo concesionario.
 ---
 
 ### PUT `/concesionarios/:id`
+
 Actualizar concesionario.
 
 **Request Body:**
+
 ```json
 {
-  "nombre": "Mundo Motos Medellín (Actualizado)",
+  "nombre": "LifePhone Medellín (Actualizado)",
   "telefono": "3104567891",
   "metadatos": {
-    "horarios": {"lunes": "8:00-20:00"},
+    "horarios": { "lunes": "8:00-20:00" },
     "servicios": ["venta", "mantenimiento", "repuestos", "accesorios"]
   }
 }
 ```
 
 **Response (200):**
+
 ```json
 {
   "success": true,
-  "data": { /* concesionario actualizado */ },
+  "data": {/* concesionario actualizado */},
   "message": "Concesionario actualizado"
 }
 ```
@@ -218,13 +240,15 @@ Actualizar concesionario.
 ---
 
 ### DELETE `/concesionarios/:id`
+
 Eliminar concesionario (soft delete).
 
 **Response (200):**
+
 ```json
 {
   "success": true,
-  "data": { /* concesionario eliminado */ },
+  "data": {/* concesionario eliminado */},
   "message": "Concesionario eliminado"
 }
 ```
@@ -234,14 +258,17 @@ Eliminar concesionario (soft delete).
 ## Endpoints de Ubicaciones
 
 ### GET `/ubicaciones`
+
 Obtener todas las ubicaciones.
 
 **Query Parameters:**
+
 ```
 ?page=1&limit=10&concesionarioId=550e8400-e29b-41d4-a716-446655440000&tipo=principal
 ```
 
 **Response (200):**
+
 ```json
 {
   "success": true,
@@ -251,7 +278,7 @@ Obtener todas las ubicaciones.
         "id": "770e8400-e29b-41d4-a716-446655440003",
         "concesionarioId": "550e8400-e29b-41d4-a716-446655440000",
         "nombre": "Showroom Principal",
-        "latitud": 4.7110,
+        "latitud": 4.711,
         "longitud": -74.0721,
         "direccion": "Cra 7 #120-50, Bogotá",
         "tipo": "principal",
@@ -271,17 +298,21 @@ Obtener todas las ubicaciones.
 ---
 
 ### GET `/ubicaciones/geo/cercanas`
+
 Obtener ubicaciones cercanas a una coordenada.
 
 **Query Parameters:**
+
 ```
 ?latitud=4.7110&longitud=-74.0721&radio=10
 ```
+
 - `latitud` (required): Latitude (-90 a 90)
 - `longitud` (required): Longitude (-180 a 180)
 - `radio` (optional): Radio en km (default: 10)
 
 **Response (200):**
+
 ```json
 {
   "success": true,
@@ -289,17 +320,17 @@ Obtener ubicaciones cercanas a una coordenada.
     {
       "id": "770e8400-e29b-41d4-a716-446655440003",
       "nombre": "Showroom Principal",
-      "latitud": 4.7110,
+      "latitud": 4.711,
       "longitud": -74.0721,
-      "distancia_km": 0,
+      "distancia_km": 0
       // ... resto de campos
     },
     {
       "id": "880e8400-e29b-41d4-a716-446655440004",
       "nombre": "Taller Especializado",
-      "latitud": 4.7150,
-      "longitud": -74.0650,
-      "distancia_km": 5.2,
+      "latitud": 4.715,
+      "longitud": -74.065,
+      "distancia_km": 5.2
       // ... resto de campos
     }
   ]
@@ -309,14 +340,16 @@ Obtener ubicaciones cercanas a una coordenada.
 ---
 
 ### GET `/ubicaciones/:id`
+
 Obtener detalles de una ubicación.
 
 **Response (200):**
+
 ```json
 {
   "success": true,
   "data": {
-    "id": "770e8400-e29b-41d4-a716-446655440003",
+    "id": "770e8400-e29b-41d4-a716-446655440003"
     // ... campos completos
   }
 }
@@ -325,29 +358,32 @@ Obtener detalles de una ubicación.
 ---
 
 ### POST `/ubicaciones`
+
 Crear nueva ubicación.
 
 **Request Body:**
+
 ```json
 {
   "concesionarioId": "550e8400-e29b-41d4-a716-446655440000",
   "nombre": "Almacén Sur",
-  "latitud": 4.6900,
-  "longitud": -74.0900,
+  "latitud": 4.69,
+  "longitud": -74.09,
   "direccion": "Cra 25 #86-50, Bogotá",
   "tipo": "almacen",
   "metadatos": {
-    "responsable": {"nombre": "Pedro", "telefono": "3001111111"},
+    "responsable": { "nombre": "Pedro", "telefono": "3001111111" },
     "capacidad_m2": 500
   }
 }
 ```
 
 **Response (201):**
+
 ```json
 {
   "success": true,
-  "data": { /* ubicación creada */ },
+  "data": {/* ubicación creada */},
   "message": "Ubicación creada exitosamente"
 }
 ```
@@ -355,13 +391,15 @@ Crear nueva ubicación.
 ---
 
 ### PUT `/ubicaciones/:id`
+
 Actualizar ubicación.
 
 **Response (200):**
+
 ```json
 {
   "success": true,
-  "data": { /* ubicación actualizada */ },
+  "data": {/* ubicación actualizada */},
   "message": "Ubicación actualizada"
 }
 ```
@@ -369,13 +407,15 @@ Actualizar ubicación.
 ---
 
 ### DELETE `/ubicaciones/:id`
+
 Eliminar ubicación.
 
 **Response (200):**
+
 ```json
 {
   "success": true,
-  "data": { /* ubicación eliminada */ },
+  "data": {/* ubicación eliminada */},
   "message": "Ubicación eliminada"
 }
 ```
@@ -385,14 +425,17 @@ Eliminar ubicación.
 ## Endpoints de CRM
 
 ### GET `/crm/contacts`
+
 Obtener contactos con filtros.
 
 **Query Parameters:**
+
 ```
 ?page=1&limit=10&estado=en_progreso&concesionarioId=...&asignadoA=...
 ```
 
 **Response (200):**
+
 ```json
 {
   "success": true,
@@ -426,14 +469,16 @@ Obtener contactos con filtros.
 ---
 
 ### GET `/crm/contacts/:id`
+
 Obtener detalles de un contacto.
 
 **Response (200):**
+
 ```json
 {
   "success": true,
   "data": {
-    "id": "990e8400-e29b-41d4-a716-446655440005",
+    "id": "990e8400-e29b-41d4-a716-446655440005"
     // ... campos completos
   }
 }
@@ -442,9 +487,11 @@ Obtener detalles de un contacto.
 ---
 
 ### POST `/crm/contacts`
+
 Crear nuevo contacto/lead.
 
 **Request Body:**
+
 ```json
 {
   "nombre": "María García",
@@ -462,10 +509,11 @@ Crear nuevo contacto/lead.
 ```
 
 **Response (201):**
+
 ```json
 {
   "success": true,
-  "data": { /* contacto creado */ },
+  "data": {/* contacto creado */},
   "message": "Contacto creado exitosamente"
 }
 ```
@@ -473,9 +521,11 @@ Crear nuevo contacto/lead.
 ---
 
 ### PUT `/crm/contacts/:id`
+
 Actualizar contacto.
 
 **Request Body:**
+
 ```json
 {
   "nombre": "María García López",
@@ -488,10 +538,11 @@ Actualizar contacto.
 ```
 
 **Response (200):**
+
 ```json
 {
   "success": true,
-  "data": { /* contacto actualizado */ },
+  "data": {/* contacto actualizado */},
   "message": "Contacto actualizado"
 }
 ```
@@ -499,9 +550,11 @@ Actualizar contacto.
 ---
 
 ### PUT `/crm/contacts/:id/estado`
+
 Cambiar estado del contacto en el pipeline.
 
 **Request Body:**
+
 ```json
 {
   "estado": "calificado"
@@ -509,16 +562,18 @@ Cambiar estado del contacto en el pipeline.
 ```
 
 **Estados válidos:**
+
 - `nuevo`: Contacto nuevo/lead inicial
 - `en_progreso`: Se está trabajando en el lead
 - `calificado`: Lead calificado, listo para propuesta
 - `descartado`: Lead descartado
 
 **Response (200):**
+
 ```json
 {
   "success": true,
-  "data": { /* contacto con estado actualizado */ },
+  "data": {/* contacto con estado actualizado */},
   "message": "Estado del contacto actualizado a \"calificado\""
 }
 ```
@@ -526,13 +581,15 @@ Cambiar estado del contacto en el pipeline.
 ---
 
 ### DELETE `/crm/contacts/:id`
+
 Eliminar contacto.
 
 **Response (200):**
+
 ```json
 {
   "success": true,
-  "data": { /* contacto eliminado */ },
+  "data": {/* contacto eliminado */},
   "message": "Contacto eliminado"
 }
 ```
@@ -540,9 +597,11 @@ Eliminar contacto.
 ---
 
 ### GET `/crm/analytics`
+
 Obtener métricas y analytics del CRM.
 
 **Response (200):**
+
 ```json
 {
   "success": true,
@@ -570,24 +629,25 @@ Obtener métricas y analytics del CRM.
 
 ## Códigos de Estado
 
-| Código | Significado | Descripción |
-|--------|------------|------------|
-| `200` | OK | Operación exitosa |
-| `201` | Created | Recurso creado exitosamente |
-| `204` | No Content | Operación exitosa sin contenido |
-| `400` | Bad Request | Datos inválidos o malformados |
-| `401` | Unauthorized | Token inválido o expirado |
-| `403` | Forbidden | Permiso denegado |
-| `404` | Not Found | Recurso no encontrado |
-| `409` | Conflict | Conflicto (ej: NIT duplicado) |
-| `422` | Unprocessable Entity | Validación fallida |
-| `500` | Internal Server Error | Error del servidor |
+| Código | Significado           | Descripción                     |
+| ------ | --------------------- | ------------------------------- |
+| `200`  | OK                    | Operación exitosa               |
+| `201`  | Created               | Recurso creado exitosamente     |
+| `204`  | No Content            | Operación exitosa sin contenido |
+| `400`  | Bad Request           | Datos inválidos o malformados   |
+| `401`  | Unauthorized          | Token inválido o expirado       |
+| `403`  | Forbidden             | Permiso denegado                |
+| `404`  | Not Found             | Recurso no encontrado           |
+| `409`  | Conflict              | Conflicto (ej: NIT duplicado)   |
+| `422`  | Unprocessable Entity  | Validación fallida              |
+| `500`  | Internal Server Error | Error del servidor              |
 
 ---
 
 ## Ejemplos cURL
 
 ### Login
+
 ```bash
 curl -X POST http://localhost:3000/api/v1/auth/login \
   -H "Content-Type: application/json" \
@@ -598,6 +658,7 @@ curl -X POST http://localhost:3000/api/v1/auth/login \
 ```
 
 ### Obtener Concesionarios
+
 ```bash
 curl -X GET "http://localhost:3000/api/v1/concesionarios?page=1&limit=10" \
   -H "Authorization: Bearer <TOKEN>" \
@@ -605,13 +666,14 @@ curl -X GET "http://localhost:3000/api/v1/concesionarios?page=1&limit=10" \
 ```
 
 ### Crear Concesionario
+
 ```bash
 curl -X POST http://localhost:3000/api/v1/concesionarios \
   -H "Authorization: Bearer <TOKEN>" \
   -H "Content-Type: application/json" \
   -d '{
-    "nombre": "Mundo Motos Cali",
-    "razonSocial": "Mundo Motos S.A.S",
+    "nombre": "LifePhone Cali",
+    "razonSocial": "LifePhone S.A.S",
     "nit": "555666777",
     "email": "cali@mundomotos.com",
     "ciudad": "Cali",
@@ -624,6 +686,7 @@ curl -X POST http://localhost:3000/api/v1/concesionarios \
 ```
 
 ### Buscar Ubicaciones Cercanas
+
 ```bash
 curl -X GET "http://localhost:3000/api/v1/ubicaciones/geo/cercanas?latitud=4.7110&longitud=-74.0721&radio=10" \
   -H "Authorization: Bearer <TOKEN>" \
@@ -631,6 +694,7 @@ curl -X GET "http://localhost:3000/api/v1/ubicaciones/geo/cercanas?latitud=4.711
 ```
 
 ### Crear Contacto CRM
+
 ```bash
 curl -X POST http://localhost:3000/api/v1/crm/contacts \
   -H "Authorization: Bearer <TOKEN>" \
@@ -647,6 +711,7 @@ curl -X POST http://localhost:3000/api/v1/crm/contacts \
 ```
 
 ### Actualizar Estado de Contacto
+
 ```bash
 curl -X PUT "http://localhost:3000/api/v1/crm/contacts/990e8400-e29b-41d4-a716-446655440005/estado" \
   -H "Authorization: Bearer <TOKEN>" \
@@ -657,6 +722,7 @@ curl -X PUT "http://localhost:3000/api/v1/crm/contacts/990e8400-e29b-41d4-a716-4
 ```
 
 ### Obtener Analytics
+
 ```bash
 curl -X GET http://localhost:3000/api/v1/crm/analytics \
   -H "Authorization: Bearer <TOKEN>" \
@@ -682,6 +748,7 @@ La API implementa rate limiting para proteger contra abuso:
 ## Versionamiento de API
 
 La API usa versionamiento en la URL:
+
 - `v1`: Versión actual (estable)
 - `v2`: Próxima versión (en desarrollo)
 
@@ -692,6 +759,7 @@ Las versiones se mantendrán por al menos 12 meses antes de deprecarse.
 ## Documentación Interactiva
 
 Para explorar la API interactivamente:
+
 - Postman Collection: `docs/postman-collection.json`
 - Swagger UI: `http://localhost:3000/api-docs`
 - ReDoc: `http://localhost:3000/redoc`
@@ -701,6 +769,7 @@ Para explorar la API interactivamente:
 ## Soporte
 
 Para dudas o reportes de bugs:
+
 - Email: `api-support@mundomotos.com`
 - GitHub Issues: `https://github.com/mundomotos/crm-api/issues`
 - Slack: `#api-support`

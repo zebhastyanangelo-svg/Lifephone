@@ -1,6 +1,7 @@
-# 🏗️ Arquitectura del Proyecto - Mundo Motos CRM
+# 🏗️ Arquitectura del Proyecto - LifePhone
 
 ## 📋 Tabla de Contenidos
+
 1. [Visión General](#visión-general)
 2. [Arquitectura General](#arquitectura-general)
 3. [Monolito Modular](#monolito-modular)
@@ -12,14 +13,65 @@
 
 ## Visión General
 
-**Mundo Motos CRM** es un sistema integrado de gestión y geolocalización de concesionarios construido con una arquitectura de **Monolito Modular** (Modular Monolith). Esta arquitectura combina la simplicidad de un monolito con la flexibilidad y organización de un enfoque modular.
+**LifePhone** es una plataforma de gestión, CRM y geolocalización de tiendas de tecnología
+y telefonía móvil construida con una arquitectura de **Monolito Modular**. Esta arquitectura
+combina la simplicidad de un monolito con la organización de módulos independientes.
+
+La plataforma incorpora ahora una capa aislada `Store` para la gestión de tiendas. Esta
+capa convive con los módulos legacy de CRM, expansiones e historial, cuyos contratos SQL
+de `concesionarios` permanecen intactos para conservar compatibilidad con bases existentes.
 
 ### Características Arquitectónicas
+
 - ✅ **Monolito Modular**: Un único proceso de ejecución pero dividido en módulos independientes
 - ✅ **Domain-Driven Design (DDD)**: Cada módulo representa un dominio de negocio específico
 - ✅ **Fácil escalabilidad**: Posibilidad de evolucionar a microservicios sin refactorización mayor
 - ✅ **TypeScript**: Type-safety en todo el stack
 - ✅ **Offline-First**: Progressive Web App (PWA) con capacidades offline
+
+## Capa Store
+
+La capa Store vive en `packages/backend/src/modules/stores/` y expone `storeRouter` bajo
+`/trpc`. Sus procedimientos tipados son:
+
+| Procedimiento   | Operación                                        |
+| --------------- | ------------------------------------------------ |
+| `store.list`    | Lista y filtra por CUIT, estado, gerente o radio |
+| `store.getById` | Obtiene una tienda por UUID                      |
+| `store.create`  | Crea una tienda                                  |
+| `store.update`  | Actualiza una tienda                             |
+| `store.remove`  | Elimina una tienda                               |
+| `store.metrics` | Devuelve métricas consolidadas                   |
+
+La tabla `stores` usa `name`, `cuit`, `status`, `manager_id`, `metadata JSONB`, `address`,
+`latitude` y `longitude`. El filtro geográfico invoca `get_stores_in_radius`, basado en la
+fórmula Haversine y expresado en kilómetros. El índice GIN acelera las consultas sobre
+`metadata`.
+
+La pantalla frontend `/stores` consume la nueva capa, muestra métricas y representa las
+ubicaciones mediante Leaflet y OpenStreetMap. El proxy de Vite reenvía `/trpc` al backend
+en `http://localhost:3000`.
+
+## Módulos Legacy
+
+CRM, expansiones e historial continúan utilizando sus tablas, columnas, rutas y relaciones
+con `concesionarios`. No deben renombrarse ni migrarse como parte de Store: ambos dominios
+operan en paralelo, evitando cambios destructivos sobre instalaciones existentes.
+
+## Instalación y validación
+
+```bash
+npm install
+
+./node_modules/.bin/tsc --noEmit -p packages/frontend/tsconfig.app.json
+./node_modules/.bin/tsc --noEmit -p packages/backend/tsconfig.json
+
+npm run build --workspace=@mundo-motos/frontend
+npm run build --workspace=@mundo-motos/backend
+```
+
+Antes de usar Store, ejecuta [019_stores.sql](../packages/backend/src/database/migrations/019_stores.sql)
+en el SQL Editor de Supabase o contra PostgreSQL local.
 
 ---
 
@@ -115,6 +167,7 @@ packages/backend/src/
 ### Responsabilidades por Capas
 
 #### 1. **Controller Layer** (API Endpoints)
+
 ```typescript
 // packages/backend/src/modules/concesionarios/controller.ts
 - Maneja requests HTTP
@@ -124,6 +177,7 @@ packages/backend/src/
 ```
 
 #### 2. **Service Layer** (Lógica de Negocio)
+
 ```typescript
 // packages/backend/src/modules/concesionarios/service.ts
 - Lógica de negocio compleja
@@ -133,6 +187,7 @@ packages/backend/src/
 ```
 
 #### 3. **Repository Layer** (Acceso a Datos)
+
 ```typescript
 // packages/backend/src/modules/concesionarios/repository.ts
 - Queries SQL/Supabase
@@ -142,6 +197,7 @@ packages/backend/src/
 ```
 
 #### 4. **Types Layer** (Contratos)
+
 ```typescript
 // packages/backend/src/modules/concesionarios/types.ts
 - DTOs (Data Transfer Objects)
@@ -210,7 +266,7 @@ async save(concesionario: Concesionario): Promise<Concesionario> {
     .from('concesionarios')
     .insert([concesionario])
     .select()
-  
+
   if (error) throw error
   return data[0]
 }
@@ -231,6 +287,7 @@ RETURNING *;
 ## Patrones y Prácticas
 
 ### 1. Dependency Injection
+
 ```typescript
 // Service recibe dependencias via constructor
 class ConcesionarioService {
@@ -242,6 +299,7 @@ class ConcesionarioService {
 ```
 
 ### 2. Error Handling Centralizado
+
 ```typescript
 // ApiError custom
 class ApiError extends Error {
@@ -250,7 +308,7 @@ class ApiError extends Error {
     public statusCode: number = 500,
     public code?: string
   ) {
-    super(message)
+    super(message);
   }
 }
 
@@ -259,32 +317,34 @@ app.use((err: ApiError, req, res, next) => {
   res.status(err.statusCode).json({
     success: false,
     error: err.message,
-    code: err.code
-  })
-})
+    code: err.code,
+  });
+});
 ```
 
 ### 3. Validación con Zod
+
 ```typescript
 // Schema validation
 const CreateConcesionarioSchema = z.object({
   nombre: z.string().min(3),
   email: z.string().email(),
   // ...
-})
+});
 
 // En controller
-const data = CreateConcesionarioSchema.parse(req.body)
+const data = CreateConcesionarioSchema.parse(req.body);
 ```
 
 ### 4. Logging Estructurado
+
 ```typescript
 // Usar Pino para logging JSON
-logger.info({ 
+logger.info({
   action: 'create_concesionario',
   userId: req.user.id,
-  concesionarioId: result.id
-})
+  concesionarioId: result.id,
+});
 ```
 
 ---
@@ -321,26 +381,26 @@ Fase 3: Event-Driven Architecture
 
 ```typescript
 // Ejemplo: Usar Redis para caché
-const cachedConcesionario = await redis.get(`concesionario:${id}`)
-if (cachedConcesionario) return JSON.parse(cachedConcesionario)
+const cachedConcesionario = await redis.get(`concesionario:${id}`);
+if (cachedConcesionario) return JSON.parse(cachedConcesionario);
 
-const concesionario = await repository.findById(id)
-await redis.set(`concesionario:${id}`, JSON.stringify(concesionario), 'EX', 3600)
-return concesionario
+const concesionario = await repository.findById(id);
+await redis.set(`concesionario:${id}`, JSON.stringify(concesionario), 'EX', 3600);
+return concesionario;
 ```
 
 ---
 
 ## Ventajas de esta Arquitectura
 
-| Ventaja | Descripción |
-|---------|------------|
-| **Claridad** | Módulos bien definidos y responsabilidades claras |
-| **Testabilidad** | Fácil de testear cada módulo de forma aislada |
-| **Mantenibilidad** | Código organizado y fácil de entender |
-| **Escalabilidad** | Preparado para crecer sin refactorización mayor |
-| **Reusabilidad** | Código compartido entre módulos |
-| **Flexibilidad** | Cambiar implementación sin afectar otros módulos |
+| Ventaja            | Descripción                                       |
+| ------------------ | ------------------------------------------------- |
+| **Claridad**       | Módulos bien definidos y responsabilidades claras |
+| **Testabilidad**   | Fácil de testear cada módulo de forma aislada     |
+| **Mantenibilidad** | Código organizado y fácil de entender             |
+| **Escalabilidad**  | Preparado para crecer sin refactorización mayor   |
+| **Reusabilidad**   | Código compartido entre módulos                   |
+| **Flexibilidad**   | Cambiar implementación sin afectar otros módulos  |
 
 ---
 

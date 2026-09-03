@@ -4,14 +4,14 @@
 
 :root {
   --primary: #000000;
-  --secondary: #FFCC00;
+  --secondary: #1D1D1F;
   --success: #10B981;
   --error: #EF4444;
   --warning: #F59E0B;
   /* Modo oscuro para controles nativos (date picker, selects) */
-  color-scheme: dark;
+  color-scheme: light;
   /* Controles nativos (checkbox/radio/range) con acento amarillo corporativo */
-  accent-color: #FFCC00;
+  accent-color: #000000;
 }
 
 * {
@@ -27,6 +27,8 @@ html {
 
 body {
   font-family: 'Inter', system-ui, sans-serif;
+  background: #F5F5F7;
+  color: #1D1D1F;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }

@@ -13,6 +13,8 @@ import reportesRouter from './modules/reportes/reporte.routes'
 import authRouter from './modules/auth/auth.routes'
 import adminRouter from './modules/auth/admin.routes'
 import analyticsRouter from './modules/analytics/analytics.routes'
+import { createExpressMiddleware } from '@trpc/server/adapters/express'
+import { storeRouter } from './modules/stores/store.router'
 
 // Cargar variables de entorno
 dotenv.config()
@@ -110,6 +112,14 @@ app.use('/api/v1/users', apiLimiter, usersRouter)
 app.use('/api/v1/expansiones', apiLimiter, expansionesRouter)
 app.use('/api/v1/reportes', apiLimiter, reportesRouter)
 app.use('/api/v1/analytics', apiLimiter, analyticsRouter)
+app.use('/trpc', createExpressMiddleware({
+  router: storeRouter,
+  createContext: ({ req }) => ({
+    token: typeof req.headers.authorization === 'string'
+      ? req.headers.authorization.replace(/^Bearer\s+/i, '')
+      : '',
+  }),
+}))
 
 // API raíz (placeholder informativo)
 app.use('/api/v1', (_req: Request, res: Response) => {
