@@ -4,6 +4,7 @@ import { Toaster } from 'react-hot-toast'
 import {
   BarChart3,
   CalendarDays,
+  Info,
   LayoutDashboard,
   LogOut,
   MapPin,
@@ -24,6 +25,7 @@ import { InstallPWAButton } from '@components/InstallPWAButton'
 import AdminRoute from '@components/AdminRoute'
 import Analiticas from '@pages/Analiticas'
 import Stores from '@pages/Stores'
+import { SystemOverview } from '@components/SystemOverview'
 import { useAnalytics } from '@hooks/useAnalytics'
 
 interface LinkNav {
@@ -39,6 +41,7 @@ const LINKS: LinkNav[] = [
   { to: '/expansiones', etiqueta: 'Cronograma 2026', icono: CalendarDays },
   { to: '/reportes', etiqueta: 'Reportes', icono: BarChart3 },
   { to: '/analiticas', etiqueta: 'Analíticas', icono: BarChart3 },
+  { to: '/overview', etiqueta: 'Sistema', icono: Info },
 ]
 
 function Navegacion() {
@@ -174,6 +177,7 @@ function App() {
                       <Route path="/concesionarios" element={<DashboardConcesionarios />} />
                       <Route path="/expansiones" element={<CronogramaExpansions />} />
                       <Route path="/reportes" element={<ReportesView />} />
+                      <Route path="/overview" element={<SystemOverview />} />
                       <Route
                         path="/analiticas"
                         element={
