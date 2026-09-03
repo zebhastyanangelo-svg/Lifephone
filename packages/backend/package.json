@@ -1,5 +1,5 @@
 {
-  "name": "@mundo-motos/backend",
+  "name": "@lifephone/backend",
   "version": "1.0.0",
   "description": "Backend Node.js/Express para CRM y Dashboard Mundo Motos",
   "private": true,
