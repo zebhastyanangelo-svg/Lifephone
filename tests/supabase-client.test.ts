@@ -13,8 +13,8 @@ describe('cliente Supabase de Expo', () => {
   beforeEach(() => {
     vi.resetModules();
     createClientMock.mockReset();
-    process.env.EXPO_PUBLIC_SUPABASE_URL = 'https://lifephone.supabase.co';
-    process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY = 'public-anon-key';
+    process.env.VITE_SUPABASE_URL = 'https://lifephone.supabase.co';
+    process.env.VITE_SUPABASE_ANON_KEY = 'public-anon-key';
   });
 
   it('usa únicamente la URL y anon key públicas de Expo', async () => {

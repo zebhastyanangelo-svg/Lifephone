@@ -1,9 +1,9 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from './database.types';
 
-type ExpoEnvironment = Record<string, string | undefined>;
+type AppEnvironment = Record<string, string | undefined>;
 
-function requiredEnvironmentValue(environment: ExpoEnvironment, name: string): string {
+function requiredEnvironmentValue(environment: AppEnvironment, name: string): string {
   const value = environment[name];
   if (!value) {
     throw new Error(`Missing required environment variable: ${name}`);
@@ -12,10 +12,10 @@ function requiredEnvironmentValue(environment: ExpoEnvironment, name: string): s
 }
 
 export function createSupabaseClient(
-  environment: ExpoEnvironment = process.env
+  environment: AppEnvironment = process.env
 ): SupabaseClient<Database> {
-  const url = requiredEnvironmentValue(environment, 'EXPO_PUBLIC_SUPABASE_URL');
-  const anonKey = requiredEnvironmentValue(environment, 'EXPO_PUBLIC_SUPABASE_ANON_KEY');
+  const url = requiredEnvironmentValue(environment, 'VITE_SUPABASE_URL');
+  const anonKey = requiredEnvironmentValue(environment, 'VITE_SUPABASE_ANON_KEY');
   return createClient<Database>(url, anonKey);
 }
 
