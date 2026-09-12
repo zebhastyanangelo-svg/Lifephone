@@ -1,0 +1,10 @@
+{
+  "buildCommand": "vite build",
+  "devCommand": "vite",
+  "installCommand": "npm install",
+  "framework": "vite",
+  "regions": ["iad1"],
+  "routes": [
+    { "src": "/.*", "dest": "/index.html" }
+  ]
+}

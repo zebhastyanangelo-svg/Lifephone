@@ -5,6 +5,9 @@
   "type": "module",
   "description": "CRM de expansion y portal B2B mayorista de LifePhone",
   "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
     "test": "vitest run",
     "typecheck": "tsc --noEmit"
   },
@@ -14,6 +17,7 @@
   "devDependencies": {
     "@types/node": "^24.3.0",
     "typescript": "^5.9.2",
-    "vitest": "^3.2.4"
+    "vitest": "^3.2.4",
+    "vite": "^7.3.0"
   }
 }
