@@ -19,8 +19,31 @@ export type ExpansionMetrics = {
   totalApprovedActive: number;
 };
 
-export async function listExpansionLeads(client: ExpansionLeadsClient) {
-  const { data, error } = await client.from('expansion_leads').select('*');
+export type ExpansionLeadFilters = {
+  state?: string;
+  city?: string;
+};
+
+export type NationalGrowthMetrics = {
+  weeklyNewLeads: number;
+  monthlyNewLeads: number;
+  totalInNegotiation: number;
+  totalApprovedActive: number;
+};
+
+export async function listExpansionLeads(
+  client: ExpansionLeadsClient,
+  filters: ExpansionLeadFilters = {}
+) {
+  let query = client.from('expansion_leads').select('*');
+  if (filters.state) {
+    query = query.eq('state', filters.state);
+  }
+  if (filters.city) {
+    query = query.eq('city', filters.city);
+  }
+
+  const { data, error } = await query;
   if (error) {
     throw error;
   }
@@ -68,5 +91,66 @@ export async function getExpansionMetrics(
       return metrics;
     },
     { totalInNegotiation: 0, totalApprovedActive: 0 }
+  );
+}
+
+export async function updateExpansionLeadStatus(
+  client: ExpansionLeadsClient,
+  leadId: string,
+  status: ExpansionLeadStatus
+) {
+  const { data, error } = await client
+    .from('expansion_leads')
+    .update({ status })
+    .eq('id', leadId)
+    .select('*')
+    .single();
+
+  if (error) {
+    throw error;
+  }
+  return data;
+}
+
+type GrowthLead = {
+  status: ExpansionLeadStatus;
+  created_at: string;
+};
+
+function isWithinWindow(createdAt: string, start: number, end: number): boolean {
+  const timestamp = Date.parse(createdAt);
+  return Number.isFinite(timestamp) && timestamp >= start && timestamp <= end;
+}
+
+export function calculateNationalGrowthMetrics(
+  leads: GrowthLead[],
+  referenceDate = new Date()
+): NationalGrowthMetrics {
+  const referenceTime = referenceDate.getTime();
+  const weekStart = referenceTime - 7 * 24 * 60 * 60 * 1000;
+  const monthStart = referenceTime - 30 * 24 * 60 * 60 * 1000;
+
+  return leads.reduce(
+    (metrics, lead) => {
+      if (lead.status === 'negotiating') {
+        metrics.totalInNegotiation += 1;
+      }
+      if (lead.status === 'won') {
+        metrics.totalApprovedActive += 1;
+      }
+      if (isWithinWindow(lead.created_at, weekStart, referenceTime)) {
+        metrics.weeklyNewLeads += 1;
+      }
+      if (isWithinWindow(lead.created_at, monthStart, referenceTime)) {
+        metrics.monthlyNewLeads += 1;
+      }
+      return metrics;
+    },
+    {
+      weeklyNewLeads: 0,
+      monthlyNewLeads: 0,
+      totalInNegotiation: 0,
+      totalApprovedActive: 0
+    }
   );
 }

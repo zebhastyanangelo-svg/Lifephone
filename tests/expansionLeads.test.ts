@@ -1,8 +1,10 @@
 import { describe, expect, it, vi } from 'vitest';
 import {
   createExpansionLead,
+  calculateNationalGrowthMetrics,
   getExpansionMetrics,
   listExpansionLeads,
+  updateExpansionLeadStatus,
   type ExpansionLeadsClient,
   type NewExpansionLead
 } from '../src/repositories/expansionLeadsRepository';
@@ -70,5 +72,51 @@ describe('Expansion Leads Repository', () => {
 
     await expect(listExpansionLeads(client)).rejects.toMatchObject(rlsError);
     await expect(createExpansionLead(client, leadInput)).rejects.toMatchObject(rlsError);
+  });
+
+  it('actualiza el estatus de una negociación', async () => {
+    const single = vi.fn().mockResolvedValue({ data: { id: 'lead-1', status: 'won' }, error: null });
+    const select = vi.fn().mockReturnValue({ single });
+    const eq = vi.fn().mockReturnValue({ select });
+    const update = vi.fn().mockReturnValue({ eq });
+    const client = { from: vi.fn().mockReturnValue({ update }) } as unknown as ExpansionLeadsClient;
+
+    await expect(updateExpansionLeadStatus(client, 'lead-1', 'won')).resolves.toEqual({
+      id: 'lead-1',
+      status: 'won'
+    });
+    expect(update).toHaveBeenCalledWith({ status: 'won' });
+    expect(eq).toHaveBeenCalledWith('id', 'lead-1');
+  });
+
+  it('aplica filtros geograficos al consultar leads', async () => {
+    const query = {
+      select: vi.fn(),
+      eq: vi.fn()
+    };
+    query.select.mockReturnValue(query);
+    query.eq.mockReturnValue(query);
+    const client = { from: vi.fn().mockReturnValue(query) } as unknown as ExpansionLeadsClient;
+
+    await listExpansionLeads(client, { state: 'Miranda', city: 'Caracas' });
+
+    expect(query.select).toHaveBeenCalledWith('*');
+    expect(query.eq).toHaveBeenNthCalledWith(1, 'state', 'Miranda');
+    expect(query.eq).toHaveBeenNthCalledWith(2, 'city', 'Caracas');
+  });
+
+  it('calcula crecimiento nacional semanal y mensual con fechas deterministas', () => {
+    const referenceDate = new Date('2026-09-12T12:00:00.000Z');
+
+    expect(calculateNationalGrowthMetrics([
+      { status: 'new', created_at: '2026-09-11T12:00:00.000Z' },
+      { status: 'negotiating', created_at: '2026-09-01T12:00:00.000Z' },
+      { status: 'won', created_at: '2026-08-01T12:00:00.000Z' }
+    ], referenceDate)).toEqual({
+      weeklyNewLeads: 1,
+      monthlyNewLeads: 2,
+      totalInNegotiation: 1,
+      totalApprovedActive: 1
+    });
   });
 });
