@@ -1,0 +1,28 @@
+{
+  "project": "LifePhone",
+  "version": "1.0.0",
+  "features": [
+    {
+      "id": "SPEC-001",
+      "title": "Definir base relacional Supabase",
+      "description": "Crear el contrato y la migración inicial para CRM, catálogo y pedidos B2B.",
+      "acceptance_criteria": [
+        "Crear roles y profiles con los cinco roles soportados",
+        "Crear expansion_leads, products, store_orders y order_items",
+        "Validar el contrato con pruebas automatizadas y el gate del arnés"
+      ],
+      "status": "done"
+    },
+    {
+      "id": "SPEC-002",
+      "title": "Implementar módulo de expansión CRM",
+      "description": "Crear el repositorio tipado para leads, métricas y propagación de denegaciones RLS.",
+      "acceptance_criteria": [
+        "Insertar leads con mapeo de dominio a expansion_leads",
+        "Calcular negociaciones frente a tiendas aprobadas/activas",
+        "Rechazar y propagar accesos no autorizados"
+      ],
+      "status": "done"
+    }
+  ]
+}

@@ -1,0 +1,7 @@
+{
+	"task_id": "SPEC-002",
+	"title": "Implementar módulo de expansión CRM",
+	"status": "done",
+	"spec": ".harness/specs/002-expansion-crm.md",
+	"verification": "npm test && npm run typecheck && bash .harness/scripts/init.sh"
+}

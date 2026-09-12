@@ -1,0 +1,19 @@
+{
+  "name": "lifephone",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "CRM de expansion y portal B2B mayorista de LifePhone",
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.57.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.3.0",
+    "typescript": "^5.9.2",
+    "vitest": "^3.2.4"
+  }
+}

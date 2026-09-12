@@ -1,0 +1,5 @@
+.mi-arnes-ia/
+node_modules/
+.env
+.env.*
+!.env.example
