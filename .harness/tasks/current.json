@@ -1,7 +1,8 @@
 {
-	"task_id": "SPEC-002",
-	"title": "Implementar módulo de expansión CRM",
+	"task_id": "SPEC-004",
+	"title": "Vistas y pantallas UI con Expo Router (espec SPEC-06, fase 1)",
 	"status": "done",
-	"spec": ".harness/specs/002-expansion-crm.md",
+	"spec": ".harness/specs/004-ui-expo-router.md",
+	"user_spec": "specs/SPEC-06-UI-EXPO-ROUTER.md",
 	"verification": "npm test && npm run typecheck && bash .harness/scripts/init.sh"
 }

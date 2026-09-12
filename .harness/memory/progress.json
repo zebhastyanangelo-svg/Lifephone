@@ -1,10 +1,10 @@
 {
-  "task_id": "FEAT-001",
+  "task_id": "SPEC-004",
   "verification_checklist": {
     "linter_passed": true,
     "tests_passed": true,
     "no_secrets_exposed": true,
     "conventions_followed": true
   },
-  "summary": "Se implementó el módulo X sin romper los módulos existentes."
+  "summary": "SPEC-004 (SPEC-06 fase 1) completado. Red-TDD: 3 suites rojas primero en tests/frontend/ (screenTree, screenRouting, pageModel) fallando solo por módulo faltante, luego implementación mínima en src/frontend/{screenTree,screenRouting,pageModel}.ts. Manifest tipado de las 11 pantallas del árbol de SPEC-04 (rutas lógicas, segmentos objetivo app/, títulos, área, protected, proveedor de avatar blobatar profile|store con size explícito). Resolución determinista wait/render/redirect por fase de sesión y rol sin debilitar guards (delega en resolveExpoRouteAccess/canAccessRoute) ni RLS, con arrendamiento por rol (store_user -> my-orders/catalog; staff -> orders/cart) y redirección de denegados al landing del rol. Page model compone título + ViewState + AvatarSpec (buildAvatarSpec), avatar solo con proveedor y nombre no vacío. Resultado: 17 archivos/117 tests Vitest en verde, tsc --noEmit sin errores. Sin dependencias nuevas; tsconfig y config de Vitest sin cambios. El montaje .tsx en app/ (toolchain Expo/RN, @blobatar/react-native, react-native-svg y tool de tests de componentes) queda registrado como fase 2 = SPEC-07 por SPEC-04 §7/§8."
 }

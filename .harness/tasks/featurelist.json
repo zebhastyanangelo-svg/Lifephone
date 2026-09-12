@@ -23,6 +23,32 @@
         "Rechazar y propagar accesos no autorizados"
       ],
       "status": "done"
+    },
+    {
+      "id": "SPEC-003",
+      "title": "Núcleo de frontend: sesión, navegación por rol y estado visual",
+      "description": "Lógica plataforma-agnóstica en TypeScript puro (specs/SPEC-05) que consumirán las pantallas Expo: máquina de sesión, aterrizaje por rol, puente de rutas Expo, visibilidad de mutaciones, view states y seed de Blobatar.",
+      "acceptance_criteria": [
+        "Máquina de fases de sesión con redirecciones deterministas sin asumir admin",
+        "Resolver aterrizaje y acceso por rol sobre las rutas de SPEC-04",
+        "OCultar controles de mutación a read_only y CRM a store_user",
+        "Mapear errores a view states seguros y seed determinista de Blobatar",
+        "Pasar npm test, npm run typecheck y el gate del arnés en verde"
+      ],
+      "status": "done"
+    },
+    {
+      "id": "SPEC-004",
+      "title": "Vistas y pantallas UI con Expo Router (fase 1)",
+      "description": "Capa de pantallas tipada sobre SPEC-04/SPEC-05 (specs/SPEC-06): manifest del árbol Expo, resolución determinista por fase de sesión y rol con arrendamiento store vs staff, y page model que compone título, ViewState y Blobatar para las pantallas.",
+      "acceptance_criteria": [
+        "Manifest tipado de las 11 pantallas del árbol de SPEC-04 con segmentos app/ objetivo, títulos y proveedor de avatar",
+        "Resolución determinista wait/render/redirect por fase de sesión sin asumir admin",
+        "Arrendamiento por rol (store_user -> my-orders/catalog; staff -> orders) sin debilitar guards ni RLS",
+        "Page model con ViewState y Blobatar (size explícito, semilla sin datos sensibles)",
+        "Pasar npm test, npm run typecheck y el gate del arnés en verde"
+      ],
+      "status": "done"
     }
   ]
 }

@@ -9,6 +9,8 @@ These documents are the agent-facing source of truth for LifePhone. They complem
 3. [SPEC-02-CRM-EXPANSION.md](SPEC-02-CRM-EXPANSION.md): Expansion CRM domain and repository contract.
 4. [SPEC-03-B2B-CATALOG-ORDERS.md](SPEC-03-B2B-CATALOG-ORDERS.md): catalog and allied-store order workflow.
 5. [SPEC-04-FRONTEND-EXPO-ROUTER.md](SPEC-04-FRONTEND-EXPO-ROUTER.md): future Expo Router navigation and role-aware frontend.
+6. [SPEC-05-FRONTEND-NUCLEUS.md](SPEC-05-FRONTEND-NUCLEUS.md): platform-agnostic frontend logic core (session machine, role navigation, view states, Blobatar seed) required before any UI Spec.
+7. [SPEC-06-UI-EXPO-ROUTER.md](SPEC-06-UI-EXPO-ROUTER.md): typed Expo Router screen layer (screen manifest, per-phase/per-role route resolution, page model with ViewState and Blobatar); the `.tsx` mount under `app/` is Phase 2 → SPEC-07.
 
 ## Agent procedure
 
