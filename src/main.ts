@@ -1,6 +1,4 @@
-import { createSupabaseClient } from './lib/supabase';
-
-const supabase = createSupabaseClient();
+import { supabase } from './lib/supabase';
 
 function initApp(): void {
   const app = document.getElementById('app');
