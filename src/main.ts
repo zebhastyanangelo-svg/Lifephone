@@ -1,3 +1,4 @@
+import './index.css';
 import { supabase } from './lib/supabase';
 
 function initApp(): void {

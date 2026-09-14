@@ -1,0 +1,83 @@
+@import "tailwindcss";
+
+/* ===================================================================
+   LifePhone design tokens (SPEC-07 §2.2) — variables canónicas.
+   Los componentes consumen tokens; jamás valores hardcodeados.
+   Cualquier desviación exige actualizar el token y su test (§6).
+   =================================================================== */
+:root {
+  --lp-bg-base: #050505;
+  --lp-bg-surface: #0a0a0c;
+  --lp-glass-bg: rgba(255, 255, 255, 0.03);
+  --lp-glass-border: rgba(255, 255, 255, 0.08);
+  --lp-glass-blur: 12px;
+  --lp-primary: #ffffff;
+  --lp-accent-electric: #0044ff;
+  --lp-accent-cyan: #00f0ff;
+  --lp-text-muted: #94a3b8;
+  --lp-radius: 12px;
+  --lp-radius-lg: 16px;
+  --lp-shadow-glass: 0 8px 32px rgba(0, 0, 0, 0.45);
+  --lp-motion-fast: 160ms ease-out;
+  --lp-motion-base: 240ms ease-out;
+}
+
+/* Mapeo Tailwind: p. ej. bg-lp-surface / text-lp-muted resuelven los tokens. */
+@theme {
+  --color-lp-base: var(--lp-bg-base);
+  --color-lp-surface: var(--lp-bg-surface);
+  --color-lp-glass-bg: var(--lp-glass-bg);
+  --color-lp-glass-border: var(--lp-glass-border);
+  --color-lp-primary: var(--lp-primary);
+  --color-lp-electric: var(--lp-accent-electric);
+  --color-lp-cyan: var(--lp-accent-cyan);
+  --color-lp-muted: var(--lp-text-muted);
+  --radius-lp: var(--lp-radius);
+  --radius-lp-lg: var(--lp-radius-lg);
+  --font-lp-display: "Space Grotesk", system-ui, -apple-system, sans-serif;
+  --font-lp-body: "Inter", system-ui, -apple-system, sans-serif;
+}
+
+/* ===================================================================
+   Receta única de cristal (SPEC-07 §2.4). Sin variantes ad-hoc.
+   =================================================================== */
+.life-glass {
+  background: var(--lp-glass-bg);
+  border: 1px solid var(--lp-glass-border);
+  border-radius: var(--lp-radius);
+  backdrop-filter: blur(var(--lp-glass-blur));
+  -webkit-backdrop-filter: blur(var(--lp-glass-blur));
+  box-shadow: var(--lp-shadow-glass);
+}
+
+/* Fallback para navegadores sin backdrop-filter: elevar el relleno. */
+@supports not (backdrop-filter: blur(1px)) {
+  .life-glass {
+    background: rgba(10, 10, 12, 0.92);
+  }
+}
+
+/* ===================================================================
+   Isotipo animado (SPEC-07 §2.5) — pulso "pum-pum".
+   =================================================================== */
+@keyframes lp-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.04);
+    opacity: 0.85;
+  }
+}
+
+.animate-lp-pulse {
+  animation: lp-pulse 1.6s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-lp-pulse {
+    animation: none;
+  }
+}

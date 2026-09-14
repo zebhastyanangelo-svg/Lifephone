@@ -11,6 +11,7 @@ These documents are the agent-facing source of truth for LifePhone. They complem
 5. [SPEC-04-FRONTEND-EXPO-ROUTER.md](SPEC-04-FRONTEND-EXPO-ROUTER.md): future Expo Router navigation and role-aware frontend.
 6. [SPEC-05-FRONTEND-NUCLEUS.md](SPEC-05-FRONTEND-NUCLEUS.md): platform-agnostic frontend logic core (session machine, role navigation, view states, Blobatar seed) required before any UI Spec.
 7. [SPEC-06-UI-EXPO-ROUTER.md](SPEC-06-UI-EXPO-ROUTER.md): typed Expo Router screen layer (screen manifest, per-phase/per-role route resolution, page model with ViewState and Blobatar); the `.tsx` mount under `app/` is Phase 2 → SPEC-07.
+8. [SPEC-07-UI-DESIGN.md](SPEC-07-UI-DESIGN.md): UI/UX design system (look & feel, design tokens, `LifeButton`/`LifeCard`/`LifeInput`/`LifeNav` base components, `@blobatar/react` integration with `blobatar/motion.css`, and the 11-screen layout mapping); strict baseline before TDD implementation of the components.
 
 ## Agent procedure
 
