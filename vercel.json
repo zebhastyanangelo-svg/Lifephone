@@ -5,9 +5,6 @@
   "installCommand": "npm install",
   "framework": "vite",
   "regions": ["iad1"],
-  "analytics": {
-    "id": "vercel"
-  },
   "cleanUrls": true,
   "rewrites": [
     { "source": "/(.*)", "destination": "/index.html" }
