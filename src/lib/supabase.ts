@@ -3,12 +3,32 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from './database.types';
 
-export const supabase = createClient<Database>(
-  import.meta.env.VITE_SUPABASE_URL,
-  import.meta.env.VITE_SUPABASE_ANON_KEY
-);
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+if (!supabaseUrl || !supabaseAnonKey) {
+  throw new Error(
+    `Supabase credentials missing: URL=${!!supabaseUrl}, KEY=${!!supabaseAnonKey}. Check environment variables.`
+  );
+}
+
+export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
+  auth: {
+    autoRefreshToken: true,
+    persistSession: false,
+    detectChangesInStorage: false,
+  },
+  db: {
+    schema: 'public',
+  },
+  realtime: {
+    params: {
+      eventsPerSecond: 10,
+    },
+  },
+});
 
 console.log('[Supabase] Client initialized:', {
-  url: import.meta.env.VITE_SUPABASE_URL ? 'configured' : 'MISSING',
-  key: import.meta.env.VITE_SUPABASE_ANON_KEY ? 'configured' : 'MISSING',
+  url: supabaseUrl ? 'configured' : 'MISSING',
+  key: supabaseAnonKey ? 'configured' : 'MISSING',
 });

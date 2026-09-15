@@ -22,7 +22,14 @@ describe('cliente Supabase de Expo', () => {
 
     expect(createClientMock).toHaveBeenCalledWith(
       'https://lifephone.supabase.co',
-      'public-anon-key'
+      'public-anon-key',
+      expect.objectContaining({
+        auth: expect.objectContaining({
+          autoRefreshToken: true,
+          persistSession: false,
+          detectChangesInStorage: false,
+        }),
+      })
     );
   });
 
