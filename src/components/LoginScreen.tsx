@@ -55,7 +55,7 @@ export function LoginScreen({
   return (
     <main className="flex min-h-screen w-full items-center justify-center bg-lp-base p-4">
       <LifeCard
-        title="Iniciar sesión"
+        title="Iniciar sesión v2.1"
         description="Ingresa tus credenciales para continuar"
         className="w-full max-w-md"
       >

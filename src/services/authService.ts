@@ -1,5 +1,9 @@
+// AuthService v2.1.0 — 2026-09-14T20:42:00Z — Force bundle invalidation
+
 import { supabase } from '../lib/supabase';
 import type { UserRole } from '../lib/database.types';
+
+console.log('[AuthService] v2.1.0 loaded — fresh bundle deployed');
 
 export type AuthSession = {
   userId: string;
