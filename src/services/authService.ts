@@ -9,8 +9,13 @@ export type AuthSession = {
 
 export class AuthService {
   public async login(email: string, password: string): Promise<AuthSession> {
+    const cleanEmail = email.trim();
+    console.log('[AuthService] Login attempt:', { email: cleanEmail, hasPassword: !!password });
+    console.log('[AuthService] Supabase URL:', import.meta.env.VITE_SUPABASE_URL ? 'configured' : 'MISSING');
+    console.log('[AuthService] Supabase key:', import.meta.env.VITE_SUPABASE_ANON_KEY ? 'configured' : 'MISSING');
+
     const { data, error } = await supabase.auth.signInWithPassword({
-      email,
+      email: cleanEmail,
       password,
     });
     if (error) {
@@ -25,7 +30,7 @@ export class AuthService {
     const role = (session.user.user_metadata?.role as UserRole) || 'read_only';
     return {
       userId: session.user.id,
-      email: session.user.email || email,
+      email: session.user.email || cleanEmail,
       role,
     };
   }
