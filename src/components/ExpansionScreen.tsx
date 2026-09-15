@@ -12,9 +12,11 @@ import { buildPageModel } from '../frontend/pageModel';
 import { loadingState, emptyState } from '../frontend/viewState';
 import { LifeHeader } from './LifeHeader';
 import { LifeCard } from './LifeCard';
+import { LifeButton } from './LifeButton';
 import { BrandMark } from './BrandMark';
 import { ExpansionDashboard } from './ExpansionDashboard';
 import { BranchList, type BranchItem } from './BranchList';
+import { BranchModal } from './BranchModal';
 
 type ExpansionScreenState =
   | { status: 'loading' }
@@ -23,65 +25,54 @@ type ExpansionScreenState =
 
 export function ExpansionScreen() {
   const [state, setState] = useState<ExpansionScreenState>({ status: 'loading' });
+  const [modalOpen, setModalOpen] = useState(false);
+
+  async function refetchData() {
+    try {
+      const client = supabase as ExpansionLeadsClient;
+      const [leadsResult, metricsResult] = await Promise.all([
+        listExpansionLeads(client),
+        getExpansionMetrics(client)
+      ]);
+      if (!leadsResult || leadsResult.length === 0) {
+        setState({ status: 'empty' });
+        return;
+      }
+      const branches: BranchItem[] = leadsResult.map((lead) => ({
+        id: lead.id,
+        store_name: lead.store_name,
+        contact_name: lead.contact_name,
+        state: lead.state,
+        city: lead.city,
+        status: lead.status as BranchItem['status'],
+        created_at: lead.created_at
+      }));
+      const growth = calculateNationalGrowthMetrics(leadsResult);
+      setState({ status: 'data', branches, metrics: metricsResult, growth });
+    } catch {
+      setState({ status: 'empty' });
+    }
+  }
 
   useEffect(() => {
     let subscribed = true;
-
-    async function loadData() {
-      try {
-        const client = supabase as ExpansionLeadsClient;
-
-        const [leadsResult, metricsResult] = await Promise.all([
-          listExpansionLeads(client),
-          getExpansionMetrics(client)
-        ]);
-
-        if (!subscribed) return;
-
-        if (!leadsResult || leadsResult.length === 0) {
-          setState({ status: 'empty' });
-          return;
-        }
-
-        const branches: BranchItem[] = leadsResult.map((lead) => ({
-          id: lead.id,
-          store_name: lead.store_name,
-          contact_name: lead.contact_name,
-          state: lead.state,
-          city: lead.city,
-          status: lead.status as BranchItem['status'],
-          created_at: lead.created_at
-        }));
-
-        const growth = calculateNationalGrowthMetrics(leadsResult);
-
-        setState({
-          status: 'data',
-          branches,
-          metrics: metricsResult,
-          growth
-        });
-      } catch {
-        if (subscribed) {
-          setState({ status: 'empty' });
-        }
-      }
-    }
-
-    loadData();
-
+    refetchData();
     const channel = supabase
       .channel('expansion-leads-changes')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'expansion_leads' }, () => {
-        if (subscribed) loadData();
+        if (subscribed) refetchData();
       })
       .subscribe();
-
     return () => {
       subscribed = false;
       channel.unsubscribe();
     };
   }, []);
+
+  const handleRegisterSuccess = () => {
+    setModalOpen(false);
+    refetchData();
+  };
 
   const model = buildPageModel({
     screen: 'expansion-index',
@@ -93,6 +84,17 @@ export function ExpansionScreen() {
     <div className="min-h-screen bg-lp-base">
       <LifeHeader model={model} />
       <main className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+        <div className="mb-6 flex items-center justify-between">
+          <div />
+          <LifeButton
+            label="+ Registrar Sucursal"
+            onPress={() => setModalOpen(true)}
+            variant="primary"
+            size="sm"
+            accessibilityLabel="Registrar nueva sucursal"
+          />
+        </div>
+
         {state.status === 'loading' && (
           <div className="flex flex-col items-center justify-center py-20">
             <BrandMark size={48} pulsing decorative />
@@ -124,6 +126,12 @@ export function ExpansionScreen() {
             </div>
           </>
         )}
+
+        <BranchModal
+          isOpen={modalOpen}
+          onClose={() => setModalOpen(false)}
+          onSuccess={handleRegisterSuccess}
+        />
       </main>
     </div>
   );
