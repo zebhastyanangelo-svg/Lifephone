@@ -6,6 +6,10 @@ import { defineConfig } from 'vitest/config';
  * el resto de la suite permanece en node, sin cambios.
  */
 export default defineConfig({
+  define: {
+    'import.meta.env.VITE_SUPABASE_URL': JSON.stringify(process.env.VITE_SUPABASE_URL || 'https://lifephone.supabase.co'),
+    'import.meta.env.VITE_SUPABASE_ANON_KEY': JSON.stringify(process.env.VITE_SUPABASE_ANON_KEY || 'test-anon-key'),
+  },
   test: {
     globals: true,
     environment: 'node',

@@ -5,10 +5,6 @@
   "installCommand": "npm install",
   "framework": "vite",
   "regions": ["iad1"],
-  "env": {
-    "VITE_SUPABASE_URL": "https://fdsiutxsduuzayfmgocd.supabase.co",
-    "VITE_SUPABASE_ANON_KEY": "sb_publishable_MgjKh8SvwIiGuhP3CHboxA_rlhjRBoI"
-  },
   "cleanUrls": false,
   "rewrites": [
     { "source": "/(.*)", "destination": "/" }
