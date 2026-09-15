@@ -5,6 +5,10 @@
   "installCommand": "npm install",
   "framework": "vite",
   "regions": ["iad1"],
+  "env": {
+    "VITE_SUPABASE_URL": "https://fdsiutxsduuzayfmgocd.supabase.co",
+    "VITE_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZkc2l1dHhzZHV1emF5Zm1nb2NkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkyMzEyOTMsImV4cCI6MjEwNDgwNzI5M30.aEv14p1IhEfLFJy6dtKruiDokUB4YgbhlgzBhxXyREc"
+  },
   "cleanUrls": false,
   "rewrites": [
     { "source": "/(.*)", "destination": "/" }
