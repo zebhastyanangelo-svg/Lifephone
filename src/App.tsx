@@ -16,6 +16,7 @@ import { AccessDeniedScreen } from './components/AccessDeniedScreen';
 import { LifeCard } from './components/LifeCard';
 import { LifeHeader } from './components/LifeHeader';
 import { BrandMark } from './components/BrandMark';
+import { ExpansionScreen } from './components/ExpansionScreen';
 
 const defaultAuthService = new AuthService();
 
@@ -177,6 +178,10 @@ export function App({ initialPath }: AppProps) {
         break;
       case 'access-denied':
         screenNode = <AccessDeniedScreen onLogout={handleLogout} />;
+        break;
+      case 'expansion-index':
+      case 'lead-detail':
+        screenNode = <ExpansionScreen />;
         break;
       default:
         screenNode = <ProtectedScreenPlaceholder screen={resolution.screen} />;
