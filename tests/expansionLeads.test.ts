@@ -13,7 +13,9 @@ const leadInput: NewExpansionLead = {
   store_name: 'Tecno Caracas',
   owner_name: 'Ana Rodriguez',
   location: { state: 'Miranda', city: 'Caracas' },
-  status: 'negotiating'
+  status: 'negotiating',
+  rif: 'J-12345678-9',
+  google_maps_url: 'https://maps.google.com/?q=10.5.1.2'
 };
 
 describe('Expansion Leads Repository', () => {
@@ -24,7 +26,9 @@ describe('Expansion Leads Repository', () => {
       contact_name: leadInput.owner_name,
       state: leadInput.location.state,
       city: leadInput.location.city,
-      status: leadInput.status
+      status: leadInput.status,
+      rif: leadInput.rif,
+      google_maps_url: leadInput.google_maps_url
     };
     const single = vi.fn().mockResolvedValue({ data: row, error: null });
     const select = vi.fn().mockReturnValue({ single });
@@ -38,8 +42,36 @@ describe('Expansion Leads Repository', () => {
       contact_name: 'Ana Rodriguez',
       state: 'Miranda',
       city: 'Caracas',
-      status: 'negotiating'
+      status: 'negotiating',
+      rif: 'J-12345678-9',
+      google_maps_url: 'https://maps.google.com/?q=10.5.1.2'
     });
+  });
+
+  it('mapa rif y google_maps_url a null cuando no se proveen', async () => {
+    const leadInput: NewExpansionLead = {
+      store_name: 'Net Local',
+      owner_name: 'Luis Gómez',
+      location: { state: 'Lara', city: 'Barquisimeto' },
+      status: 'new'
+    };
+    const single = vi.fn().mockResolvedValue({ data: {}, error: null });
+    const select = vi.fn().mockReturnValue({ single });
+    const insert = vi.fn().mockReturnValue({ select });
+    const client = { from: vi.fn().mockReturnValue({ insert }) } as unknown as ExpansionLeadsClient;
+
+    await createExpansionLead(client, leadInput);
+    expect(insert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        store_name: 'Net Local',
+        contact_name: 'Luis Gómez',
+        state: 'Lara',
+        city: 'Barquisimeto',
+        status: 'new',
+        rif: null,
+        google_maps_url: null
+      })
+    );
   });
 
   it('calcula negociaciones frente a tiendas aprobadas o activas', async () => {

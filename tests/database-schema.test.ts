@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 
 const schemaPath = new URL('../supabase/migrations/001_initial_schema.sql', import.meta.url);
 const superAdminPath = new URL('../supabase/migrations/002_super_admin_user.sql', import.meta.url);
+const branchFieldsPath = new URL('../supabase/migrations/003_add_branch_fields.sql', import.meta.url);
 
 describe('contrato relacional de LifePhone', () => {
   it('define el modelo inicial de datos', async () => {
@@ -56,5 +57,14 @@ describe('Migración de usuario administrador supremo', () => {
     const migration = await readFile(superAdminPath, 'utf8');
     expect(migration).toMatch(/SELECT id INTO.*auth\.users.*WHERE email/i);
     expect(migration).toMatch(/IF admin_user_id IS NULL/i);
+  });
+});
+
+describe('Migración de campos de sucursal (003)', () => {
+  it('agrega las columnas rif y google_maps_url a expansion_leads', async () => {
+    const migration = await readFile(branchFieldsPath, 'utf8');
+    expect(migration).toMatch(/alter table.*public\.expansion_leads/i);
+    expect(migration).toMatch(/\brif\b/i);
+    expect(migration).toMatch(/\bgoogle_maps_url\b/i);
   });
 });

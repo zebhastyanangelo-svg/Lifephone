@@ -12,6 +12,8 @@ export type NewExpansionLead = {
     city: string;
   };
   status: ExpansionLeadStatus;
+  rif?: string | null;
+  google_maps_url?: string | null;
 };
 
 export type ExpansionMetrics = {
@@ -61,7 +63,9 @@ export async function createExpansionLead(
       contact_name: lead.owner_name,
       state: lead.location.state,
       city: lead.location.city,
-      status: lead.status
+      status: lead.status,
+      rif: lead.rif ?? null,
+      google_maps_url: lead.google_maps_url ?? null
     })
     .select('*')
     .single();

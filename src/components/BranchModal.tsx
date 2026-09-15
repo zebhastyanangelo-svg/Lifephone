@@ -19,6 +19,8 @@ export function BranchModal({ isOpen, onClose, onSuccess }: BranchModalProps) {
   const [ownerName, setOwnerName] = useState('');
   const [city, setCity] = useState('');
   const [state, setState] = useState('');
+  const [rif, setRif] = useState('');
+  const [googleMapsUrl, setGoogleMapsUrl] = useState('');
   const [status, setStatus] = useState<ExpansionLeadStatus>('new');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -37,7 +39,9 @@ export function BranchModal({ isOpen, onClose, onSuccess }: BranchModalProps) {
         store_name: storeName.trim(),
         owner_name: ownerName.trim(),
         location: { state: state.trim(), city: city.trim() },
-        status
+        status,
+        rif: rif.trim() || null,
+        google_maps_url: googleMapsUrl.trim() || null
       });
       onSuccess();
       onClose();
@@ -45,6 +49,8 @@ export function BranchModal({ isOpen, onClose, onSuccess }: BranchModalProps) {
       setOwnerName('');
       setCity('');
       setState('');
+      setRif('');
+      setGoogleMapsUrl('');
       setStatus('new');
     } catch (err) {
       setError('No se pudo registrar la sucursal. Intenta nuevamente.');
@@ -111,6 +117,22 @@ export function BranchModal({ isOpen, onClose, onSuccess }: BranchModalProps) {
             disabled={loading}
             accessibilityLabel="Nombre del propietario"
           />
+          <LifeInput
+            label="RIF"
+            value={rif}
+            onChange={setRif}
+            placeholder="Ej. J-12345678-9"
+            disabled={loading}
+            accessibilityLabel="RIF fiscal de la sucursal"
+          />
+          <LifeInput
+            label="Dirección (Google Maps)"
+            value={googleMapsUrl}
+            onChange={setGoogleMapsUrl}
+            placeholder="Ej. https://maps.google.com/?q=..."
+            disabled={loading}
+            accessibilityLabel="Dirección en Google Maps"
+          />
           <div className="grid grid-cols-2 gap-4">
             <LifeInput
               label="Ciudad"
@@ -139,12 +161,13 @@ export function BranchModal({ isOpen, onClose, onSuccess }: BranchModalProps) {
                   key={s}
                   type="button"
                   onClick={() => setStatus(s)}
+                  disabled={loading}
                   data-testid={`status-option-${s}`}
                   className={`rounded-lp px-3 py-2 text-xs font-medium transition-all duration-[var(--lp-motion-fast)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lp-cyan/55 ${
                     status === s
                       ? 'bg-lp-cyan/20 text-lp-cyan ring-1 ring-lp-cyan/40'
                       : 'life-glass text-lp-muted hover:text-lp-primary'
-                  }`}
+                  } ${loading ? 'opacity-45' : ''}`}
                 >
                   {s === 'new' ? 'Nuevo' : s === 'negotiating' ? 'Negociación' : 'Activa'}
                 </button>

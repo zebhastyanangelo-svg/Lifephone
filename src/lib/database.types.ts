@@ -52,10 +52,12 @@ export type Database = {
           contact_name: string
           created_at: string
           email: string | null
+          google_maps_url: string | null
           id: string
           notes: string | null
           owner_id: string | null
           phone: string | null
+          rif: string | null
           state: string
           status: string
           store_name: string
@@ -66,10 +68,12 @@ export type Database = {
           contact_name: string
           created_at?: string
           email?: string | null
+          google_maps_url?: string | null
           id?: string
           notes?: string | null
           owner_id?: string | null
           phone?: string | null
+          rif?: string | null
           state: string
           status?: string
           store_name: string
@@ -80,10 +84,12 @@ export type Database = {
           contact_name?: string
           created_at?: string
           email?: string | null
+          google_maps_url?: string | null
           id?: string
           notes?: string | null
           owner_id?: string | null
           phone?: string | null
+          rif?: string | null
           state?: string
           status?: string
           store_name?: string
