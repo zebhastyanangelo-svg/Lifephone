@@ -6,8 +6,8 @@
   "framework": "vite",
   "regions": ["iad1"],
   "env": {
-    "VITE_SUPABASE_URL": "https://eeksewjxkkaasigjehat.supabase.co",
-    "VITE_SUPABASE_ANON_KEY": "sb_publishable_OGE8YAb_2T_DTlE_JlUSbA_bLCsjNH3"
+    "VITE_SUPABASE_URL": "https://fdsiutxsduuzayfmgocd.supabase.co",
+    "VITE_SUPABASE_ANON_KEY": "sb_publishable_MgjKh8SvwIiGuhP3CHboxA_rlhjRBoI"
   },
   "cleanUrls": false,
   "rewrites": [

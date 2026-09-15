@@ -5,6 +5,24 @@ import type { UserRole } from '../lib/database.types';
 
 console.log('[AuthService] v2.1.0 loaded — fresh bundle deployed');
 
+const DB_ROLE_TO_CODE_ROLE: Record<string, UserRole> = {
+  superadmin: 'super_admin',
+  super_admin: 'super_admin',
+  merchant_owner: 'admin',
+  admin: 'admin',
+  merchant_staff: 'staff_orders',
+  staff_orders: 'staff_orders',
+  driver: 'read_only',
+  read_only: 'read_only',
+  customer: 'store_user',
+  store_user: 'store_user',
+};
+
+function mapDatabaseRoleToCodeRole(dbRole: string | undefined): UserRole {
+  if (!dbRole) return 'read_only';
+  return DB_ROLE_TO_CODE_ROLE[dbRole] || 'read_only';
+}
+
 export type AuthSession = {
   userId: string;
   email: string;
@@ -43,7 +61,9 @@ export class AuthService {
       throw new Error('No session returned');
     }
 
-    const role = (session.user.user_metadata?.role as UserRole) || 'read_only';
+    const dbRole = session.user.user_metadata?.role as string | undefined;
+    const role = mapDatabaseRoleToCodeRole(dbRole);
+    console.log('[AuthService] Role mapped:', { dbRole, codeRole: role });
     return {
       userId: session.user.id,
       email: session.user.email || cleanEmail,
@@ -64,7 +84,8 @@ export class AuthService {
       return null;
     }
 
-    const role = (session.user.user_metadata?.role as UserRole) || 'read_only';
+    const dbRole = session.user.user_metadata?.role as string | undefined;
+    const role = mapDatabaseRoleToCodeRole(dbRole);
     return {
       userId: session.user.id,
       email: session.user.email || '',
@@ -78,6 +99,7 @@ export class AuthService {
       return null;
     }
 
-    return (session.user.user_metadata?.role as UserRole) || null;
+    const dbRole = session.user.user_metadata?.role as string | undefined;
+    return mapDatabaseRoleToCodeRole(dbRole);
   }
 }
