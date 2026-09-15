@@ -18,12 +18,24 @@ export class AuthService {
     console.log('[AuthService] Supabase URL:', import.meta.env.VITE_SUPABASE_URL ? 'configured' : 'MISSING');
     console.log('[AuthService] Supabase key:', import.meta.env.VITE_SUPABASE_ANON_KEY ? 'configured' : 'MISSING');
 
+    if (!cleanEmail || !password) {
+      throw new Error('Email and password are required');
+    }
+
     const { data, error } = await supabase.auth.signInWithPassword({
       email: cleanEmail,
       password,
     });
+
     if (error) {
-      throw new Error(error.message);
+      console.error('[AuthService] Supabase auth error:', {
+        message: error.message,
+        status: error.status,
+        error_description: (error as any).error_description,
+        name: error.name,
+        fullError: error,
+      });
+      throw new Error(`Supabase auth failed (${error.status || 'N/A'}): ${error.message}`);
     }
 
     const session = data.session;

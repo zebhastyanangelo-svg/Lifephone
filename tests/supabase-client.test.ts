@@ -26,8 +26,8 @@ describe('cliente Supabase de Expo', () => {
       expect.objectContaining({
         auth: expect.objectContaining({
           autoRefreshToken: true,
-          persistSession: false,
-          detectChangesInStorage: false,
+          persistSession: true,
+          detectSessionInUrl: false,
         }),
       })
     );
