@@ -4,7 +4,9 @@ import {
   calculateNationalGrowthMetrics,
   getExpansionMetrics,
   listExpansionLeads,
+  updateExpansionLead,
   updateExpansionLeadStatus,
+  deleteExpansionLead,
   type ExpansionLeadsClient,
   type NewExpansionLead
 } from '../src/repositories/expansionLeadsRepository';
@@ -119,6 +121,44 @@ describe('Expansion Leads Repository', () => {
     });
     expect(update).toHaveBeenCalledWith({ status: 'won' });
     expect(eq).toHaveBeenCalledWith('id', 'lead-1');
+  });
+
+  it('actualiza todos los campos de un lead existente', async () => {
+    const single = vi.fn().mockResolvedValue({ data: { id: 'lead-1', store_name: 'Updated Name' }, error: null });
+    const select = vi.fn().mockReturnValue({ single });
+    const eq = vi.fn().mockReturnValue({ select });
+    const update = vi.fn().mockReturnValue({ eq });
+    const client = { from: vi.fn().mockReturnValue({ update }) } as unknown as ExpansionLeadsClient;
+
+    await expect(updateExpansionLead(client, 'lead-1', {
+      store_name: 'Updated Name',
+      owner_name: 'New Owner',
+      location: { state: 'Zulia', city: 'Maracaibo' },
+      status: 'won',
+      rif: 'J-98765432-1',
+      google_maps_url: 'https://maps.google.com/?q=updated'
+    })).resolves.toEqual({ id: 'lead-1', store_name: 'Updated Name' });
+    expect(update).toHaveBeenCalledWith({
+      store_name: 'Updated Name',
+      contact_name: 'New Owner',
+      state: 'Zulia',
+      city: 'Maracaibo',
+      status: 'won',
+      rif: 'J-98765432-1',
+      google_maps_url: 'https://maps.google.com/?q=updated'
+    });
+    expect(eq).toHaveBeenCalledWith('id', 'lead-1');
+  });
+
+  it('elimina un lead existente', async () => {
+    const single = vi.fn().mockResolvedValue({ data: { id: 'lead-1' }, error: null });
+    const selectFn = vi.fn().mockReturnValue({ single });
+    const eqFn = vi.fn().mockReturnValue({ select: selectFn });
+    const delFn = vi.fn().mockReturnValue({ eq: eqFn });
+    const client = { from: vi.fn().mockReturnValue({ delete: delFn }) } as unknown as ExpansionLeadsClient;
+
+    await expect(deleteExpansionLead(client, 'lead-1')).resolves.toEqual({ id: 'lead-1' });
+    expect(client.from).toHaveBeenCalledWith('expansion_leads');
   });
 
   it('aplica filtros geograficos al consultar leads', async () => {

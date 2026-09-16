@@ -1,8 +1,10 @@
 export {
   calculateNationalGrowthMetrics,
   createExpansionLead,
+  deleteExpansionLead,
   getExpansionMetrics,
   listExpansionLeads,
+  updateExpansionLead,
   updateExpansionLeadStatus,
   type ExpansionLeadFilters,
   type ExpansionLeadsClient,

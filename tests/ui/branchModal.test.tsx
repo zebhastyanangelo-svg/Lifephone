@@ -2,10 +2,12 @@ import { render, screen, fireEvent, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { BranchModal } from '../../src/components/BranchModal';
-import { createExpansionLead } from '../../src/features/expansion/leadsRepository';
+import { createExpansionLead, updateExpansionLead, deleteExpansionLead } from '../../src/features/expansion/leadsRepository';
 
 vi.mock('../../src/features/expansion/leadsRepository', () => ({
-  createExpansionLead: vi.fn().mockResolvedValue({ data: {}, error: null })
+  createExpansionLead: vi.fn().mockResolvedValue({ data: {}, error: null }),
+  updateExpansionLead: vi.fn().mockResolvedValue({ data: {}, error: null }),
+  deleteExpansionLead: vi.fn().mockResolvedValue({ data: {}, error: null })
 }));
 
 vi.mock('../../src/lib/supabase', () => ({
@@ -18,10 +20,27 @@ vi.mock('../../src/lib/supabase', () => ({
 }));
 
 const mockedCreateExpansionLead = vi.mocked(createExpansionLead);
+const mockedUpdateExpansionLead = vi.mocked(updateExpansionLead);
+const mockedDeleteExpansionLead = vi.mocked(deleteExpansionLead);
+
+const sampleBranch = {
+  id: 'branch-1',
+  store_name: 'Tecno Caracas',
+  contact_name: 'Ana Rodriguez',
+  state: 'Miranda',
+  city: 'Caracas',
+  status: 'won' as const,
+  created_at: '2026-08-01T12:00:00.000Z',
+  rif: 'J-12345678-9',
+  google_maps_url: 'https://maps.google.com/?q=10.5.1.2',
+  owner_name: 'Ana Rodriguez'
+};
 
 describe('BranchModal (registro de sucursal)', () => {
   beforeEach(() => {
     mockedCreateExpansionLead.mockClear();
+    mockedUpdateExpansionLead.mockClear();
+    mockedDeleteExpansionLead.mockClear();
   });
 
   it('no renderiza cuando isOpen es false', () => {
@@ -158,6 +177,61 @@ describe('BranchModal (registro de sucursal)', () => {
           google_maps_url: null
         })
       );
+    });
+  });
+
+  it('modo edición: precarga los datos de la sucursal', () => {
+    render(<BranchModal isOpen={true} onClose={vi.fn()} onSuccess={vi.fn()} branch={sampleBranch} />);
+    expect(screen.getByLabelText('Nombre de la sucursal')).toHaveValue('Tecno Caracas');
+    expect(screen.getByLabelText('Nombre del propietario')).toHaveValue('Ana Rodriguez');
+    expect(screen.getByLabelText('RIF fiscal de la sucursal')).toHaveValue('J-12345678-9');
+    expect(screen.getByLabelText('Dirección en Google Maps')).toHaveValue('https://maps.google.com/?q=10.5.1.2');
+    expect(screen.getByLabelText('Ciudad')).toHaveValue('Caracas');
+    expect(screen.getByLabelText('Estado')).toHaveValue('Miranda');
+    expect(screen.getByText('Editar Sucursal')).toBeInTheDocument();
+  });
+
+  it('modo edición: muestra botón "Guardar Cambios"', () => {
+    render(<BranchModal isOpen={true} onClose={vi.fn()} onSuccess={vi.fn()} branch={sampleBranch} />);
+    expect(screen.getByLabelText('Guardar cambios de sucursal')).toBeInTheDocument();
+  });
+
+  it('modo edición: llama a updateExpansionLead al guardar', async () => {
+    const user = await userEvent.setup();
+    render(<BranchModal isOpen={true} onClose={vi.fn()} onSuccess={vi.fn()} branch={sampleBranch} />);
+
+    await user.type(screen.getByLabelText('Nombre de la sucursal'), ' Modificado');
+
+    const form = screen.getByTestId('branch-modal').querySelector('form')!;
+    await act(async () => {
+      fireEvent.submit(form);
+    });
+
+    await vi.waitFor(() => {
+      expect(mockedUpdateExpansionLead).toHaveBeenCalledWith(
+        expect.anything(),
+        'branch-1',
+        expect.objectContaining({
+          store_name: 'Tecno Caracas Modificado'
+        })
+      );
+    });
+  });
+
+  it('modo edición: muestra botón de eliminar y confirma eliminación', async () => {
+    const user = await userEvent.setup();
+    render(<BranchModal isOpen={true} onClose={vi.fn()} onSuccess={vi.fn()} branch={sampleBranch} />);
+
+    const deleteBtn = screen.getByLabelText('Eliminar sucursal');
+    await user.click(deleteBtn);
+    expect(screen.getByText('Confirmar Eliminación')).toBeInTheDocument();
+    expect(screen.getByText(/Estás seguro de que deseas eliminar/)).toBeInTheDocument();
+
+    const confirmBtn = screen.getByLabelText('Confirmar eliminación');
+    await user.click(confirmBtn);
+
+    await vi.waitFor(() => {
+      expect(mockedDeleteExpansionLead).toHaveBeenCalledWith(expect.anything(), 'branch-1');
     });
   });
 });

@@ -1,9 +1,6 @@
 import { render, screen } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
-import { ExpansionDashboard } from '../../src/components/ExpansionDashboard';
-import { BranchList } from '../../src/components/BranchList';
-import { LifeCard } from '../../src/components/LifeCard';
-import { beforeEach } from 'vitest';
+import userEvent from '@testing-library/user-event';
+import { describe, expect, it, vi, beforeEach } from 'vitest';
 
 const expansionMetrics = {
   totalInNegotiation: 3,
@@ -25,7 +22,10 @@ const sampleBranches = [
     state: 'Miranda',
     city: 'Caracas',
     status: 'won' as const,
-    created_at: '2026-08-01T12:00:00.000Z'
+    created_at: '2026-08-01T12:00:00.000Z',
+    rif: 'J-12345678-9',
+    google_maps_url: 'https://maps.google.com/?q=10.5.1.2',
+    owner_name: 'Ana Rodriguez'
   },
   {
     id: 'branch-2',
@@ -34,7 +34,10 @@ const sampleBranches = [
     state: 'Carabobo',
     city: 'Valencia',
     status: 'negotiating' as const,
-    created_at: '2026-09-05T12:00:00.000Z'
+    created_at: '2026-09-05T12:00:00.000Z',
+    rif: null,
+    google_maps_url: null,
+    owner_name: 'Carlos Pérez'
   },
   {
     id: 'branch-3',
@@ -43,7 +46,10 @@ const sampleBranches = [
     state: 'Lara',
     city: 'Barquisimeto',
     status: 'new' as const,
-    created_at: '2026-09-12T12:00:00.000Z'
+    created_at: '2026-09-12T12:00:00.000Z',
+    rif: null,
+    google_maps_url: null,
+    owner_name: 'María López'
   }
 ];
 
@@ -138,5 +144,39 @@ describe('BranchList (gestión de sucursales)', () => {
     const cards = screen.getAllByTestId('life-card');
     expect(cards.length).toBeGreaterThan(0);
     expect(cards[0]).toHaveAttribute('data-interactive', 'true');
+  });
+
+  it('renderiza botones de edición y eliminación en cada tarjeta', () => {
+    const onEdit = vi.fn();
+    const onDelete = vi.fn();
+    render(<BranchList branches={sampleBranches} onEdit={onEdit} onDelete={onDelete} />);
+    const editButtons = screen.getAllByLabelText(/Editar/);
+    expect(editButtons.length).toBe(sampleBranches.length);
+    const deleteButtons = screen.getAllByLabelText(/Eliminar/);
+    expect(deleteButtons.length).toBe(sampleBranches.length);
+  });
+
+  it('llama a onEdit al hacer clic en el botón de edición', async () => {
+    const user = userEvent.setup();
+    const onEdit = vi.fn();
+    render(<BranchList branches={sampleBranches} onEdit={onEdit} />);
+    const editButtons = screen.getAllByLabelText(/Editar Tecno Caracas/);
+    await user.click(editButtons[0]);
+    expect(onEdit).toHaveBeenCalledTimes(1);
+    expect(onEdit).toHaveBeenCalledWith(
+      expect.objectContaining({ id: 'branch-1', store_name: 'Tecno Caracas' })
+    );
+  });
+
+  it('llama a onDelete al hacer clic en el botón de eliminación', async () => {
+    const user = userEvent.setup();
+    const onDelete = vi.fn();
+    render(<BranchList branches={sampleBranches} onDelete={onDelete} />);
+    const deleteButtons = screen.getAllByLabelText(/Eliminar Tecno Caracas/);
+    await user.click(deleteButtons[0]);
+    expect(onDelete).toHaveBeenCalledTimes(1);
+    expect(onDelete).toHaveBeenCalledWith(
+      expect.objectContaining({ id: 'branch-1', store_name: 'Tecno Caracas' })
+    );
   });
 });

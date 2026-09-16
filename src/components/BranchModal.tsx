@@ -1,20 +1,25 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { LifeInput } from './LifeInput';
 import { LifeButton } from './LifeButton';
 import { BrandMark } from './BrandMark';
 import { supabase } from '../lib/supabase';
 import {
   createExpansionLead,
+  updateExpansionLead,
+  deleteExpansionLead,
   type ExpansionLeadStatus
 } from '../features/expansion/leadsRepository';
+import type { BranchItem } from './BranchList';
 
 type BranchModalProps = {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: () => void;
+  branch?: BranchItem | null;
+  onDelete?: (branchId: string) => void;
 };
 
-export function BranchModal({ isOpen, onClose, onSuccess }: BranchModalProps) {
+export function BranchModal({ isOpen, onClose, onSuccess, branch = null, onDelete }: BranchModalProps) {
   const [storeName, setStoreName] = useState('');
   const [ownerName, setOwnerName] = useState('');
   const [city, setCity] = useState('');
@@ -24,6 +29,29 @@ export function BranchModal({ isOpen, onClose, onSuccess }: BranchModalProps) {
   const [status, setStatus] = useState<ExpansionLeadStatus>('new');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
+  const isEditing = !!branch;
+
+  useEffect(() => {
+    if (branch) {
+      setStoreName(branch.store_name);
+      setOwnerName(branch.contact_name || '');
+      setCity(branch.city);
+      setState(branch.state);
+      setRif(branch.rif || '');
+      setGoogleMapsUrl(branch.google_maps_url || '');
+      setStatus(branch.status as ExpansionLeadStatus);
+    } else {
+      setStoreName('');
+      setOwnerName('');
+      setCity('');
+      setState('');
+      setRif('');
+      setGoogleMapsUrl('');
+      setStatus('new');
+    }
+  }, [branch, isOpen]);
 
   if (!isOpen) return null;
 
@@ -35,14 +63,25 @@ export function BranchModal({ isOpen, onClose, onSuccess }: BranchModalProps) {
     setError(null);
 
     try {
-      await createExpansionLead(supabase as any, {
-        store_name: storeName.trim(),
-        owner_name: ownerName.trim(),
-        location: { state: state.trim(), city: city.trim() },
-        status,
-        rif: rif.trim() || null,
-        google_maps_url: googleMapsUrl.trim() || null
-      });
+      if (isEditing && branch) {
+        await updateExpansionLead(supabase as any, branch.id, {
+          store_name: storeName.trim(),
+          owner_name: ownerName.trim(),
+          location: { state: state.trim(), city: city.trim() },
+          status,
+          rif: rif.trim() || null,
+          google_maps_url: googleMapsUrl.trim() || null
+        });
+      } else {
+        await createExpansionLead(supabase as any, {
+          store_name: storeName.trim(),
+          owner_name: ownerName.trim(),
+          location: { state: state.trim(), city: city.trim() },
+          status,
+          rif: rif.trim() || null,
+          google_maps_url: googleMapsUrl.trim() || null
+        });
+      }
       onSuccess();
       onClose();
       setStoreName('');
@@ -52,8 +91,25 @@ export function BranchModal({ isOpen, onClose, onSuccess }: BranchModalProps) {
       setRif('');
       setGoogleMapsUrl('');
       setStatus('new');
+      setShowDeleteConfirm(false);
     } catch (err) {
-      setError('No se pudo registrar la sucursal. Intenta nuevamente.');
+      setError('No se pudo guardar la sucursal. Intenta nuevamente.');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleDelete() {
+    if (!branch) return;
+    setLoading(true);
+    setError(null);
+    try {
+      await deleteExpansionLead(supabase as any, branch.id);
+      onSuccess();
+      onClose();
+      setShowDeleteConfirm(false);
+    } catch (err) {
+      setError('No se pudo eliminar la sucursal. Intenta nuevamente.');
     } finally {
       setLoading(false);
     }
@@ -66,7 +122,7 @@ export function BranchModal({ isOpen, onClose, onSuccess }: BranchModalProps) {
       onClick={onClose}
       role="dialog"
       aria-modal="true"
-      aria-label="Registrar nueva sucursal"
+      aria-label={isEditing ? 'Editar sucursal' : 'Registrar nueva sucursal'}
     >
       <div
         data-testid="branch-modal"
@@ -77,7 +133,7 @@ export function BranchModal({ isOpen, onClose, onSuccess }: BranchModalProps) {
           <div className="flex items-center gap-3">
             <BrandMark size={28} pulsing decorative />
             <h2 className="font-lp-display text-xl font-semibold tracking-[0.08em] text-lp-primary">
-              Registrar Sucursal
+              {isEditing ? 'Editar Sucursal' : 'Registrar Sucursal'}
             </h2>
           </div>
           <button
@@ -100,100 +156,136 @@ export function BranchModal({ isOpen, onClose, onSuccess }: BranchModalProps) {
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <LifeInput
-            label="Nombre de la sucursal"
-            value={storeName}
-            onChange={setStoreName}
-            placeholder="Ej. Tecno Caracas"
-            disabled={loading}
-            accessibilityLabel="Nombre de la sucursal"
-          />
-          <LifeInput
-            label="Nombre del propietario"
-            value={ownerName}
-            onChange={setOwnerName}
-            placeholder="Ej. Ana Rodriguez"
-            disabled={loading}
-            accessibilityLabel="Nombre del propietario"
-          />
-          <LifeInput
-            label="RIF"
-            value={rif}
-            onChange={setRif}
-            placeholder="Ej. J-12345678-9"
-            disabled={loading}
-            accessibilityLabel="RIF fiscal de la sucursal"
-          />
-          <LifeInput
-            label="Dirección (Google Maps)"
-            value={googleMapsUrl}
-            onChange={setGoogleMapsUrl}
-            placeholder="Ej. https://maps.google.com/?q=..."
-            disabled={loading}
-            accessibilityLabel="Dirección en Google Maps"
-          />
-          <div className="grid grid-cols-2 gap-4">
-            <LifeInput
-              label="Ciudad"
-              value={city}
-              onChange={setCity}
-              placeholder="Ej. Caracas"
-              disabled={loading}
-              accessibilityLabel="Ciudad"
-            />
-            <LifeInput
-              label="Estado"
-              value={state}
-              onChange={setState}
-              placeholder="Ej. Miranda"
-              disabled={loading}
-              accessibilityLabel="Estado"
-            />
-          </div>
-          <div className="space-y-2">
-            <label className="font-lp-body text-[13px] font-medium text-lp-muted">
-              Estado actual
-            </label>
-            <div className="grid grid-cols-3 gap-2">
-              {(['new', 'negotiating', 'won'] as ExpansionLeadStatus[]).map((s) => (
-                <button
-                  key={s}
-                  type="button"
-                  onClick={() => setStatus(s)}
-                  disabled={loading}
-                  data-testid={`status-option-${s}`}
-                  className={`rounded-lp px-3 py-2 text-xs font-medium transition-all duration-[var(--lp-motion-fast)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lp-cyan/55 ${
-                    status === s
-                      ? 'bg-lp-cyan/20 text-lp-cyan ring-1 ring-lp-cyan/40'
-                      : 'life-glass text-lp-muted hover:text-lp-primary'
-                  } ${loading ? 'opacity-45' : ''}`}
-                >
-                  {s === 'new' ? 'Nuevo' : s === 'negotiating' ? 'Negociación' : 'Activa'}
-                </button>
-              ))}
+        {showDeleteConfirm ? (
+          <div className="space-y-4">
+            <div className="rounded-lp bg-red-500/10 px-4 py-3">
+              <p className="font-lp-body text-sm text-red-400">
+                ¿Estás seguro de que deseas eliminar <strong>{branch?.store_name}</strong>? Esta acción no se puede deshacer.
+              </p>
+            </div>
+            <div className="flex items-center justify-end gap-3">
+              <LifeButton
+                label="Cancelar"
+                onPress={() => setShowDeleteConfirm(false)}
+                variant="ghost"
+                disabled={loading}
+                accessibilityLabel="Cancelar eliminación"
+              />
+              <LifeButton
+                label="Eliminar"
+                onPress={handleDelete}
+                loading={loading}
+                disabled={loading}
+                variant="ghost"
+                accessibilityLabel="Confirmar eliminación"
+              />
             </div>
           </div>
+        ) : (
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <LifeInput
+              label="Nombre de la sucursal"
+              value={storeName}
+              onChange={setStoreName}
+              placeholder="Ej. Tecno Caracas"
+              disabled={loading}
+              accessibilityLabel="Nombre de la sucursal"
+            />
+            <LifeInput
+              label="Nombre del propietario"
+              value={ownerName}
+              onChange={setOwnerName}
+              placeholder="Ej. Ana Rodriguez"
+              disabled={loading}
+              accessibilityLabel="Nombre del propietario"
+            />
+            <LifeInput
+              label="RIF"
+              value={rif}
+              onChange={setRif}
+              placeholder="Ej. J-12345678-9"
+              disabled={loading}
+              accessibilityLabel="RIF fiscal de la sucursal"
+            />
+            <LifeInput
+              label="Dirección (Google Maps)"
+              value={googleMapsUrl}
+              onChange={setGoogleMapsUrl}
+              placeholder="Ej. https://maps.google.com/?q=..."
+              disabled={loading}
+              accessibilityLabel="Dirección en Google Maps"
+            />
+            <div className="grid grid-cols-2 gap-4">
+              <LifeInput
+                label="Ciudad"
+                value={city}
+                onChange={setCity}
+                placeholder="Ej. Caracas"
+                disabled={loading}
+                accessibilityLabel="Ciudad"
+              />
+              <LifeInput
+                label="Estado"
+                value={state}
+                onChange={setState}
+                placeholder="Ej. Miranda"
+                disabled={loading}
+                accessibilityLabel="Estado"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="font-lp-body text-[13px] font-medium text-lp-muted">
+                Estado actual
+              </label>
+              <div className="grid grid-cols-3 gap-2">
+                {(['new', 'negotiating', 'won'] as ExpansionLeadStatus[]).map((s) => (
+                  <button
+                    key={s}
+                    type="button"
+                    onClick={() => setStatus(s)}
+                    disabled={loading}
+                    data-testid={`status-option-${s}`}
+                    className={`rounded-lp px-3 py-2 text-xs font-medium transition-all duration-[var(--lp-motion-fast)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lp-cyan/55 ${
+                      status === s
+                        ? 'bg-lp-cyan/20 text-lp-cyan ring-1 ring-lp-cyan/40'
+                        : 'life-glass text-lp-muted hover:text-lp-primary'
+                    } ${loading ? 'opacity-45' : ''}`}
+                  >
+                    {s === 'new' ? 'Nuevo' : s === 'negotiating' ? 'Negociación' : 'Activa'}
+                  </button>
+                ))}
+              </div>
+            </div>
 
-          <div className="mt-6 flex items-center justify-end gap-3">
-            <LifeButton
-              label="Cancelar"
-              onPress={onClose}
-              variant="ghost"
-              disabled={loading}
-              accessibilityLabel="Cancelar registro"
-            />
-            <LifeButton
-              label="Registrar Sucursal"
-              onPress={handleSubmit}
-              loading={loading}
-              disabled={loading}
-              variant="primary"
-              type="submit"
-              accessibilityLabel="Registrar sucursal"
-            />
-          </div>
-        </form>
+            <div className="mt-6 flex items-center justify-end gap-3">
+              {isEditing && (
+                <LifeButton
+                  label="Eliminar"
+                  onPress={() => setShowDeleteConfirm(true)}
+                  variant="ghost"
+                  disabled={loading}
+                  accessibilityLabel="Eliminar sucursal"
+                />
+              )}
+              <LifeButton
+                label="Cancelar"
+                onPress={onClose}
+                variant="ghost"
+                disabled={loading}
+                accessibilityLabel="Cancelar registro"
+              />
+              <LifeButton
+                label={isEditing ? 'Guardar Cambios' : 'Registrar Sucursal'}
+                onPress={handleSubmit}
+                loading={loading}
+                disabled={loading}
+                variant="primary"
+                type="submit"
+                accessibilityLabel={isEditing ? 'Guardar cambios de sucursal' : 'Registrar sucursal'}
+              />
+            </div>
+          </form>
+        )}
       </div>
     </div>
   );

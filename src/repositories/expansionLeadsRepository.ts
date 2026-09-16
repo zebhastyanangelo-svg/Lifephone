@@ -98,6 +98,49 @@ export async function getExpansionMetrics(
   );
 }
 
+export async function updateExpansionLead(
+  client: ExpansionLeadsClient,
+  leadId: string,
+  lead: Partial<NewExpansionLead> & { status?: ExpansionLeadStatus }
+) {
+  const { data, error } = await client
+    .from('expansion_leads')
+    .update({
+      store_name: lead.store_name,
+      contact_name: lead.owner_name,
+      state: lead.location?.state,
+      city: lead.location?.city,
+      status: lead.status,
+      rif: lead.rif ?? null,
+      google_maps_url: lead.google_maps_url ?? null
+    })
+    .eq('id', leadId)
+    .select('*')
+    .single();
+
+  if (error) {
+    throw error;
+  }
+  return data;
+}
+
+export async function deleteExpansionLead(
+  client: ExpansionLeadsClient,
+  leadId: string
+) {
+  const { data, error } = await client
+    .from('expansion_leads')
+    .delete()
+    .eq('id', leadId)
+    .select('*')
+    .single();
+
+  if (error) {
+    throw error;
+  }
+  return data;
+}
+
 export async function updateExpansionLeadStatus(
   client: ExpansionLeadsClient,
   leadId: string,
