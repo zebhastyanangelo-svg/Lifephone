@@ -84,9 +84,18 @@ export function ExpansionMapScreen({ branches, onEdit }: ExpansionMapScreenProps
     map.addControl(new maplibregl.AttributionControl({ compact: true }), 'bottom-left');
     map.addControl(new maplibregl.ScaleControl({ unit: 'metric' }), 'bottom-right');
 
+    map.on('load', () => {
+      map.resize();
+    });
+
+    const resizeTimer = setTimeout(() => {
+      if (mapRef.current) mapRef.current.resize();
+    }, 300);
+
     mapRef.current = map;
 
     return () => {
+      clearTimeout(resizeTimer);
       removeMarkers();
       map.remove();
       mapRef.current = null;
@@ -155,7 +164,7 @@ export function ExpansionMapScreen({ branches, onEdit }: ExpansionMapScreenProps
         <div
           ref={mapContainer}
           className="w-full rounded-lp-lg overflow-hidden"
-          style={{ height: 'calc(100vh - 420px)', minHeight: '400px' }}
+          style={{ height: '550px' }}
         />
       )}
 
