@@ -103,25 +103,25 @@ export async function updateExpansionLead(
   leadId: string,
   lead: Partial<NewExpansionLead> & { status?: ExpansionLeadStatus }
 ) {
+  const updateData: Record<string, unknown> = {};
+  if (lead.store_name !== undefined) updateData.store_name = lead.store_name;
+  if (lead.owner_name !== undefined) updateData.contact_name = lead.owner_name;
+  if (lead.location?.state !== undefined) updateData.state = lead.location.state;
+  if (lead.location?.city !== undefined) updateData.city = lead.location.city;
+  if (lead.status !== undefined) updateData.status = lead.status;
+  if (lead.rif !== undefined) updateData.rif = lead.rif ?? null;
+  if (lead.google_maps_url !== undefined) updateData.google_maps_url = lead.google_maps_url ?? null;
+
   const { data, error } = await client
     .from('expansion_leads')
-    .update({
-      store_name: lead.store_name,
-      contact_name: lead.owner_name,
-      state: lead.location?.state,
-      city: lead.location?.city,
-      status: lead.status,
-      rif: lead.rif ?? null,
-      google_maps_url: lead.google_maps_url ?? null
-    })
+    .update(updateData)
     .eq('id', leadId)
-    .select('*')
-    .single();
+    .select();
 
   if (error) {
     throw error;
   }
-  return data;
+  return Array.isArray(data) ? data[0] : data;
 }
 
 export async function deleteExpansionLead(
@@ -132,13 +132,12 @@ export async function deleteExpansionLead(
     .from('expansion_leads')
     .delete()
     .eq('id', leadId)
-    .select('*')
-    .single();
+    .select();
 
   if (error) {
     throw error;
   }
-  return data;
+  return Array.isArray(data) ? data[0] : data;
 }
 
 export async function updateExpansionLeadStatus(
@@ -150,13 +149,12 @@ export async function updateExpansionLeadStatus(
     .from('expansion_leads')
     .update({ status })
     .eq('id', leadId)
-    .select('*')
-    .single();
+    .select();
 
   if (error) {
     throw error;
   }
-  return data;
+  return Array.isArray(data) ? data[0] : data;
 }
 
 type GrowthLead = {

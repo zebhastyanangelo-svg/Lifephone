@@ -109,9 +109,8 @@ describe('Expansion Leads Repository', () => {
   });
 
   it('actualiza el estatus de una negociación', async () => {
-    const single = vi.fn().mockResolvedValue({ data: { id: 'lead-1', status: 'won' }, error: null });
-    const select = vi.fn().mockReturnValue({ single });
-    const eq = vi.fn().mockReturnValue({ select });
+    const selectFn = vi.fn().mockReturnValue({ data: [{ id: 'lead-1', status: 'won' }], error: null });
+    const eq = vi.fn().mockReturnValue({ select: selectFn });
     const update = vi.fn().mockReturnValue({ eq });
     const client = { from: vi.fn().mockReturnValue({ update }) } as unknown as ExpansionLeadsClient;
 
@@ -124,11 +123,11 @@ describe('Expansion Leads Repository', () => {
   });
 
   it('actualiza todos los campos de un lead existente', async () => {
-    const single = vi.fn().mockResolvedValue({ data: { id: 'lead-1', store_name: 'Updated Name' }, error: null });
-    const select = vi.fn().mockReturnValue({ single });
-    const eq = vi.fn().mockReturnValue({ select });
-    const update = vi.fn().mockReturnValue({ eq });
-    const client = { from: vi.fn().mockReturnValue({ update }) } as unknown as ExpansionLeadsClient;
+    const row = { id: 'lead-1', store_name: 'Updated Name', contact_name: 'New Owner' };
+    const selectFn = vi.fn().mockReturnValue({ data: [row], error: null });
+    const eqFn = vi.fn().mockReturnValue({ select: selectFn });
+    const updateFn = vi.fn().mockReturnValue({ eq: eqFn });
+    const client = { from: vi.fn().mockReturnValue({ update: updateFn }) } as unknown as ExpansionLeadsClient;
 
     await expect(updateExpansionLead(client, 'lead-1', {
       store_name: 'Updated Name',
@@ -137,8 +136,8 @@ describe('Expansion Leads Repository', () => {
       status: 'won',
       rif: 'J-98765432-1',
       google_maps_url: 'https://maps.google.com/?q=updated'
-    })).resolves.toEqual({ id: 'lead-1', store_name: 'Updated Name' });
-    expect(update).toHaveBeenCalledWith({
+    })).resolves.toEqual(row);
+    expect(updateFn).toHaveBeenCalledWith({
       store_name: 'Updated Name',
       contact_name: 'New Owner',
       state: 'Zulia',
@@ -147,17 +146,32 @@ describe('Expansion Leads Repository', () => {
       rif: 'J-98765432-1',
       google_maps_url: 'https://maps.google.com/?q=updated'
     });
-    expect(eq).toHaveBeenCalledWith('id', 'lead-1');
+    expect(eqFn).toHaveBeenCalledWith('id', 'lead-1');
+  });
+
+  it('actualiza un subconjunto de campos de un lead existente', async () => {
+    const row = { id: 'lead-1', store_name: 'Partial Update' };
+    const selectFn = vi.fn().mockReturnValue({ data: [row], error: null });
+    const eqFn = vi.fn().mockReturnValue({ select: selectFn });
+    const updateFn = vi.fn().mockReturnValue({ eq: eqFn });
+    const client = { from: vi.fn().mockReturnValue({ update: updateFn }) } as unknown as ExpansionLeadsClient;
+
+    await expect(updateExpansionLead(client, 'lead-1', {
+      store_name: 'Partial Update'
+    })).resolves.toEqual(row);
+    expect(updateFn).toHaveBeenCalledWith(
+      expect.objectContaining({ store_name: 'Partial Update' })
+    );
   });
 
   it('elimina un lead existente', async () => {
-    const single = vi.fn().mockResolvedValue({ data: { id: 'lead-1' }, error: null });
-    const selectFn = vi.fn().mockReturnValue({ single });
+    const row = { id: 'lead-1' };
+    const selectFn = vi.fn().mockReturnValue({ data: [row], error: null });
     const eqFn = vi.fn().mockReturnValue({ select: selectFn });
     const delFn = vi.fn().mockReturnValue({ eq: eqFn });
     const client = { from: vi.fn().mockReturnValue({ delete: delFn }) } as unknown as ExpansionLeadsClient;
 
-    await expect(deleteExpansionLead(client, 'lead-1')).resolves.toEqual({ id: 'lead-1' });
+    await expect(deleteExpansionLead(client, 'lead-1')).resolves.toEqual(row);
     expect(client.from).toHaveBeenCalledWith('expansion_leads');
   });
 
