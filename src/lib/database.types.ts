@@ -52,6 +52,9 @@ export type Database = {
           contact_name: string
           created_at: string
           email: string | null
+          fecha_apertura: string | null
+          fecha_creacion: string
+          fecha_negociacion: string | null
           google_maps_url: string | null
           id: string
           notes: string | null
@@ -68,6 +71,9 @@ export type Database = {
           contact_name: string
           created_at?: string
           email?: string | null
+          fecha_apertura?: string | null
+          fecha_creacion?: string
+          fecha_negociacion?: string | null
           google_maps_url?: string | null
           id?: string
           notes?: string | null
@@ -84,6 +90,9 @@ export type Database = {
           contact_name?: string
           created_at?: string
           email?: string | null
+          fecha_apertura?: string | null
+          fecha_creacion?: string
+          fecha_negociacion?: string | null
           google_maps_url?: string | null
           id?: string
           notes?: string | null

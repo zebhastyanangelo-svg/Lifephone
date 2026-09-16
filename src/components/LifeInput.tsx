@@ -7,7 +7,7 @@ import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
  * controlado de visibilidad cambia el `type`). Foco = borde cian + glow;
  * error = borde eléctrico + mensaje accesible (aria-describedby, role=alert).
  */
-export type LifeInputType = 'text' | 'email' | 'password' | 'tel' | 'search' | 'number';
+export type LifeInputType = 'text' | 'email' | 'password' | 'tel' | 'search' | 'number' | 'date';
 
 export type LifeInputProps = {
   label: string;

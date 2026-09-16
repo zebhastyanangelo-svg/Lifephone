@@ -52,7 +52,10 @@ export function ExpansionScreen() {
         created_at: lead.created_at,
         rif: lead.rif ?? null,
         google_maps_url: lead.google_maps_url ?? null,
-        owner_name: lead.contact_name
+        owner_name: lead.contact_name,
+        fecha_creacion: lead.fecha_creacion,
+        fecha_negociacion: lead.fecha_negociacion,
+        fecha_apertura: lead.fecha_apertura
       }));
       const growth = calculateNationalGrowthMetrics(leadsResult);
       setState({ status: 'data', branches, metrics: metricsResult, growth });

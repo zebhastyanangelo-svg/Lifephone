@@ -1,6 +1,8 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi, beforeEach } from 'vitest';
+import { ExpansionDashboard } from '../../src/components/ExpansionDashboard';
+import { BranchList } from '../../src/components/BranchList';
 
 const expansionMetrics = {
   totalInNegotiation: 3,

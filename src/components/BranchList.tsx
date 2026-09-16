@@ -14,6 +14,9 @@ export type BranchItem = {
   rif: string | null;
   google_maps_url: string | null;
   owner_name: string;
+  fecha_creacion: string;
+  fecha_negociacion: string | null;
+  fecha_apertura: string | null;
 };
 
 type BranchCardProps = {

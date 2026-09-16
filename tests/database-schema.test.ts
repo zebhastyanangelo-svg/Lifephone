@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest';
 const schemaPath = new URL('../supabase/migrations/001_initial_schema.sql', import.meta.url);
 const superAdminPath = new URL('../supabase/migrations/002_super_admin_user.sql', import.meta.url);
 const branchFieldsPath = new URL('../supabase/migrations/003_add_branch_fields.sql', import.meta.url);
+const dateFieldsPath = new URL('../supabase/migrations/005_add_date_fields.sql', import.meta.url);
 
 describe('contrato relacional de LifePhone', () => {
   it('define el modelo inicial de datos', async () => {
@@ -66,5 +67,20 @@ describe('Migración de campos de sucursal (003)', () => {
     expect(migration).toMatch(/alter table.*public\.expansion_leads/i);
     expect(migration).toMatch(/\brif\b/i);
     expect(migration).toMatch(/\bgoogle_maps_url\b/i);
+  });
+});
+
+describe('Migración de campos de fecha (005)', () => {
+  it('agrega las columnas fecha_creacion, fecha_negociacion y fecha_apertura a expansion_leads', async () => {
+    const migration = await readFile(dateFieldsPath, 'utf8');
+    expect(migration).toMatch(/alter table.*public\.expansion_leads/i);
+    expect(migration).toMatch(/\bfecha_creacion\b/i);
+    expect(migration).toMatch(/\bfecha_negociacion\b/i);
+    expect(migration).toMatch(/\bfecha_apertura\b/i);
+  });
+
+  it('configura fecha_creacion con valor por defecto now()', async () => {
+    const migration = await readFile(dateFieldsPath, 'utf8');
+    expect(migration).toMatch(/fecha_creacion.*timestamptz.*not null.*default now\(\)/i);
   });
 });

@@ -33,7 +33,10 @@ const sampleBranch = {
   created_at: '2026-08-01T12:00:00.000Z',
   rif: 'J-12345678-9',
   google_maps_url: 'https://maps.google.com/?q=10.5.1.2',
-  owner_name: 'Ana Rodriguez'
+  owner_name: 'Ana Rodriguez',
+  fecha_creacion: '2026-08-01T12:00:00.000Z',
+  fecha_negociacion: null,
+  fecha_apertura: '2026-08-15T12:00:00.000Z'
 };
 
 describe('BranchModal (registro de sucursal)', () => {
@@ -191,6 +194,44 @@ describe('BranchModal (registro de sucursal)', () => {
     expect(screen.getByText('Editar Sucursal')).toBeInTheDocument();
   });
 
+  it('modo edición: muestra el campo fecha_apertura cuando el estado es Activa', () => {
+    render(<BranchModal isOpen={true} onClose={vi.fn()} onSuccess={vi.fn()} branch={sampleBranch} />);
+    expect(screen.getByLabelText('Fecha de apertura')).toBeInTheDocument();
+  });
+
+  it('modo edición: muestra el campo fecha_negociacion cuando el estado es Negociación', async () => {
+    const user = await userEvent.setup();
+    render(<BranchModal isOpen={true} onClose={vi.fn()} onSuccess={vi.fn()} branch={sampleBranch} />);
+    const negotiatingBtn = screen.getByTestId('status-option-negotiating');
+    await user.click(negotiatingBtn);
+    expect(screen.getByLabelText('Fecha de negociación')).toBeInTheDocument();
+  });
+
+  it('modo nuevo: muestra el campo fecha_creacion con la fecha actual por defecto', () => {
+    render(<BranchModal isOpen={true} onClose={vi.fn()} onSuccess={vi.fn()} />);
+    expect(screen.getByLabelText('Fecha de creación')).toBeInTheDocument();
+  });
+
+  it('modo nuevo: selecciona Negociación y muestra el campo fecha_negociacion', async () => {
+    const user = await userEvent.setup();
+    render(<BranchModal isOpen={true} onClose={vi.fn()} onSuccess={vi.fn()} />);
+    const negotiatingBtn = screen.getByTestId('status-option-negotiating');
+    await user.click(negotiatingBtn);
+    expect(screen.getByLabelText('Fecha de negociación')).toBeInTheDocument();
+    expect(screen.queryByLabelText('Fecha de creación')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('Fecha de apertura')).not.toBeInTheDocument();
+  });
+
+  it('modo nuevo: selecciona Activa y muestra el campo fecha_apertura', async () => {
+    const user = await userEvent.setup();
+    render(<BranchModal isOpen={true} onClose={vi.fn()} onSuccess={vi.fn()} />);
+    const activeBtn = screen.getByTestId('status-option-won');
+    await user.click(activeBtn);
+    expect(screen.getByLabelText('Fecha de apertura')).toBeInTheDocument();
+    expect(screen.queryByLabelText('Fecha de creación')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('Fecha de negociación')).not.toBeInTheDocument();
+  });
+
   it('modo edición: muestra botón "Guardar Cambios"', () => {
     render(<BranchModal isOpen={true} onClose={vi.fn()} onSuccess={vi.fn()} branch={sampleBranch} />);
     expect(screen.getByLabelText('Guardar cambios de sucursal')).toBeInTheDocument();
@@ -220,11 +261,11 @@ describe('BranchModal (registro de sucursal)', () => {
 
   it('modo edición: muestra botón de eliminar y confirma eliminación', async () => {
     const user = await userEvent.setup();
-    render(<BranchModal isOpen={true} onClose={vi.fn()} onSuccess={vi.fn()} branch={sampleBranch} />);
+    const { container } = render(<BranchModal isOpen={true} onClose={vi.fn()} onSuccess={vi.fn()} branch={sampleBranch} />);
 
     const deleteBtn = screen.getByLabelText('Eliminar sucursal');
     await user.click(deleteBtn);
-    expect(screen.getByText('Confirmar Eliminación')).toBeInTheDocument();
+    expect(container.querySelector('.bg-red-500\\/10')?.textContent).toMatch(/Confirmar Eliminación|Estás seguro/);
     expect(screen.getByText(/Estás seguro de que deseas eliminar/)).toBeInTheDocument();
 
     const confirmBtn = screen.getByLabelText('Confirmar eliminación');

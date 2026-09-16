@@ -14,6 +14,9 @@ export type NewExpansionLead = {
   status: ExpansionLeadStatus;
   rif?: string | null;
   google_maps_url?: string | null;
+  fecha_creacion?: string;
+  fecha_negociacion?: string | null;
+  fecha_apertura?: string | null;
 };
 
 export type ExpansionMetrics = {
@@ -65,7 +68,10 @@ export async function createExpansionLead(
       city: lead.location.city,
       status: lead.status,
       rif: lead.rif ?? null,
-      google_maps_url: lead.google_maps_url ?? null
+      google_maps_url: lead.google_maps_url ?? null,
+      fecha_creacion: lead.fecha_creacion ?? new Date().toISOString(),
+      fecha_negociacion: lead.fecha_negociacion ?? null,
+      fecha_apertura: lead.fecha_apertura ?? null
     })
     .select('*')
     .single();
@@ -111,6 +117,9 @@ export async function updateExpansionLead(
   if (lead.status !== undefined) updateData.status = lead.status;
   if (lead.rif !== undefined) updateData.rif = lead.rif ?? null;
   if (lead.google_maps_url !== undefined) updateData.google_maps_url = lead.google_maps_url ?? null;
+  if (lead.fecha_creacion !== undefined) updateData.fecha_creacion = lead.fecha_creacion;
+  if (lead.fecha_negociacion !== undefined) updateData.fecha_negociacion = lead.fecha_negociacion ?? null;
+  if (lead.fecha_apertura !== undefined) updateData.fecha_apertura = lead.fecha_apertura ?? null;
 
   const { data, error } = await client
     .from('expansion_leads')
@@ -160,10 +169,13 @@ export async function updateExpansionLeadStatus(
 type GrowthLead = {
   status: ExpansionLeadStatus;
   created_at: string;
+  fecha_creacion: string;
+  fecha_negociacion: string | null;
+  fecha_apertura: string | null;
 };
 
-function isWithinWindow(createdAt: string, start: number, end: number): boolean {
-  const timestamp = Date.parse(createdAt);
+function isWithinWindow(dateStr: string, start: number, end: number): boolean {
+  const timestamp = Date.parse(dateStr);
   return Number.isFinite(timestamp) && timestamp >= start && timestamp <= end;
 }
 
@@ -183,10 +195,10 @@ export function calculateNationalGrowthMetrics(
       if (lead.status === 'won') {
         metrics.totalApprovedActive += 1;
       }
-      if (isWithinWindow(lead.created_at, weekStart, referenceTime)) {
+      if (isWithinWindow(lead.fecha_creacion, weekStart, referenceTime)) {
         metrics.weeklyNewLeads += 1;
       }
-      if (isWithinWindow(lead.created_at, monthStart, referenceTime)) {
+      if (isWithinWindow(lead.fecha_creacion, monthStart, referenceTime)) {
         metrics.monthlyNewLeads += 1;
       }
       return metrics;

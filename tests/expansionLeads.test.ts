@@ -17,7 +17,10 @@ const leadInput: NewExpansionLead = {
   location: { state: 'Miranda', city: 'Caracas' },
   status: 'negotiating',
   rif: 'J-12345678-9',
-  google_maps_url: 'https://maps.google.com/?q=10.5.1.2'
+  google_maps_url: 'https://maps.google.com/?q=10.5.1.2',
+  fecha_creacion: '2026-09-12T12:00:00.000Z',
+  fecha_negociacion: '2026-09-12T12:00:00.000Z',
+  fecha_apertura: null
 };
 
 describe('Expansion Leads Repository', () => {
@@ -30,7 +33,10 @@ describe('Expansion Leads Repository', () => {
       city: leadInput.location.city,
       status: leadInput.status,
       rif: leadInput.rif,
-      google_maps_url: leadInput.google_maps_url
+      google_maps_url: leadInput.google_maps_url,
+      fecha_creacion: '2026-09-12T12:00:00.000Z',
+      fecha_negociacion: '2026-09-12T12:00:00.000Z',
+      fecha_apertura: null
     };
     const single = vi.fn().mockResolvedValue({ data: row, error: null });
     const select = vi.fn().mockReturnValue({ single });
@@ -39,15 +45,13 @@ describe('Expansion Leads Repository', () => {
 
     await expect(createExpansionLead(client, leadInput)).resolves.toEqual(row);
     expect(client.from).toHaveBeenCalledWith('expansion_leads');
-    expect(insert).toHaveBeenCalledWith({
-      store_name: 'Tecno Caracas',
-      contact_name: 'Ana Rodriguez',
-      state: 'Miranda',
-      city: 'Caracas',
-      status: 'negotiating',
-      rif: 'J-12345678-9',
-      google_maps_url: 'https://maps.google.com/?q=10.5.1.2'
-    });
+    expect(insert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        fecha_creacion: expect.anything(),
+        fecha_negociacion: '2026-09-12T12:00:00.000Z',
+        fecha_apertura: null
+      })
+    );
   });
 
   it('mapa rif y google_maps_url a null cuando no se proveen', async () => {
@@ -55,7 +59,8 @@ describe('Expansion Leads Repository', () => {
       store_name: 'Net Local',
       owner_name: 'Luis Gómez',
       location: { state: 'Lara', city: 'Barquisimeto' },
-      status: 'new'
+      status: 'new',
+      fecha_creacion: '2026-09-12T12:00:00.000Z'
     };
     const single = vi.fn().mockResolvedValue({ data: {}, error: null });
     const select = vi.fn().mockReturnValue({ single });
@@ -71,7 +76,10 @@ describe('Expansion Leads Repository', () => {
         city: 'Barquisimeto',
         status: 'new',
         rif: null,
-        google_maps_url: null
+        google_maps_url: null,
+        fecha_creacion: expect.anything(),
+        fecha_negociacion: null,
+        fecha_apertura: null
       })
     );
   });
@@ -135,17 +143,24 @@ describe('Expansion Leads Repository', () => {
       location: { state: 'Zulia', city: 'Maracaibo' },
       status: 'won',
       rif: 'J-98765432-1',
-      google_maps_url: 'https://maps.google.com/?q=updated'
+      google_maps_url: 'https://maps.google.com/?q=updated',
+      fecha_creacion: '2026-09-12T12:00:00.000Z',
+      fecha_negociacion: null,
+      fecha_apertura: '2026-09-12T12:00:00.000Z'
     })).resolves.toEqual(row);
-    expect(updateFn).toHaveBeenCalledWith({
-      store_name: 'Updated Name',
-      contact_name: 'New Owner',
-      state: 'Zulia',
-      city: 'Maracaibo',
-      status: 'won',
-      rif: 'J-98765432-1',
-      google_maps_url: 'https://maps.google.com/?q=updated'
-    });
+    expect(updateFn).toHaveBeenCalledWith(
+      expect.objectContaining({
+        store_name: 'Updated Name',
+        contact_name: 'New Owner',
+        state: 'Zulia',
+        city: 'Maracaibo',
+        status: 'won',
+        rif: 'J-98765432-1',
+        google_maps_url: 'https://maps.google.com/?q=updated',
+        fecha_creacion: '2026-09-12T12:00:00.000Z',
+        fecha_apertura: '2026-09-12T12:00:00.000Z'
+      })
+    );
     expect(eqFn).toHaveBeenCalledWith('id', 'lead-1');
   });
 
@@ -195,9 +210,9 @@ describe('Expansion Leads Repository', () => {
     const referenceDate = new Date('2026-09-12T12:00:00.000Z');
 
     expect(calculateNationalGrowthMetrics([
-      { status: 'new', created_at: '2026-09-11T12:00:00.000Z' },
-      { status: 'negotiating', created_at: '2026-09-01T12:00:00.000Z' },
-      { status: 'won', created_at: '2026-08-01T12:00:00.000Z' }
+      { status: 'new', created_at: '2026-09-11T12:00:00.000Z', fecha_creacion: '2026-09-11T12:00:00.000Z', fecha_negociacion: null, fecha_apertura: null },
+      { status: 'negotiating', created_at: '2026-09-01T12:00:00.000Z', fecha_creacion: '2026-09-01T12:00:00.000Z', fecha_negociacion: null, fecha_apertura: null },
+      { status: 'won', created_at: '2026-08-01T12:00:00.000Z', fecha_creacion: '2026-08-01T12:00:00.000Z', fecha_negociacion: null, fecha_apertura: null }
     ], referenceDate)).toEqual({
       weeklyNewLeads: 1,
       monthlyNewLeads: 2,

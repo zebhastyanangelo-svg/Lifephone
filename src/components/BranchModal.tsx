@@ -27,6 +27,9 @@ export function BranchModal({ isOpen, onClose, onSuccess, branch = null, onDelet
   const [rif, setRif] = useState('');
   const [googleMapsUrl, setGoogleMapsUrl] = useState('');
   const [status, setStatus] = useState<ExpansionLeadStatus>('new');
+  const [fechaCreacion, setFechaCreacion] = useState('');
+  const [fechaNegociacion, setFechaNegociacion] = useState('');
+  const [fechaApertura, setFechaApertura] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -42,6 +45,9 @@ export function BranchModal({ isOpen, onClose, onSuccess, branch = null, onDelet
       setRif(branch.rif || '');
       setGoogleMapsUrl(branch.google_maps_url || '');
       setStatus(branch.status as ExpansionLeadStatus);
+      setFechaCreacion(branch.fecha_creacion ? branch.fecha_creacion.substring(0, 10) : '');
+      setFechaNegociacion(branch.fecha_negociacion ? branch.fecha_negociacion.substring(0, 10) : '');
+      setFechaApertura(branch.fecha_apertura ? branch.fecha_apertura.substring(0, 10) : '');
     } else {
       setStoreName('');
       setOwnerName('');
@@ -50,6 +56,9 @@ export function BranchModal({ isOpen, onClose, onSuccess, branch = null, onDelet
       setRif('');
       setGoogleMapsUrl('');
       setStatus('new');
+      setFechaCreacion(new Date().toISOString().substring(0, 10));
+      setFechaNegociacion('');
+      setFechaApertura('');
     }
   }, [branch, isOpen]);
 
@@ -62,6 +71,10 @@ export function BranchModal({ isOpen, onClose, onSuccess, branch = null, onDelet
     setLoading(true);
     setError(null);
 
+    const fechaCreacionValue = status === 'new' ? (fechaCreacion || new Date().toISOString().substring(0, 10)) : (branch?.fecha_creacion ? branch.fecha_creacion.substring(0, 10) : new Date().toISOString().substring(0, 10));
+    const fechaNegociacionValue = status === 'negotiating' ? (fechaNegociacion || new Date().toISOString().substring(0, 10)) : (branch?.fecha_negociacion ?? null);
+    const fechaAperturaValue = status === 'won' ? (fechaApertura || new Date().toISOString().substring(0, 10)) : (branch?.fecha_apertura ?? null);
+
     try {
       if (isEditing && branch) {
         await updateExpansionLead(supabase as any, branch.id, {
@@ -70,7 +83,10 @@ export function BranchModal({ isOpen, onClose, onSuccess, branch = null, onDelet
           location: { state: state.trim(), city: city.trim() },
           status,
           rif: rif.trim() || null,
-          google_maps_url: googleMapsUrl.trim() || null
+          google_maps_url: googleMapsUrl.trim() || null,
+          fecha_creacion: fechaCreacionValue,
+          fecha_negociacion: fechaNegociacionValue,
+          fecha_apertura: fechaAperturaValue
         });
       } else {
         await createExpansionLead(supabase as any, {
@@ -79,7 +95,10 @@ export function BranchModal({ isOpen, onClose, onSuccess, branch = null, onDelet
           location: { state: state.trim(), city: city.trim() },
           status,
           rif: rif.trim() || null,
-          google_maps_url: googleMapsUrl.trim() || null
+          google_maps_url: googleMapsUrl.trim() || null,
+          fecha_creacion: fechaCreacionValue,
+          fecha_negociacion: fechaNegociacionValue,
+          fecha_apertura: fechaAperturaValue
         });
       }
       onSuccess();
@@ -91,6 +110,9 @@ export function BranchModal({ isOpen, onClose, onSuccess, branch = null, onDelet
       setRif('');
       setGoogleMapsUrl('');
       setStatus('new');
+      setFechaCreacion(new Date().toISOString().substring(0, 10));
+      setFechaNegociacion('');
+      setFechaApertura('');
       setShowDeleteConfirm(false);
     } catch (err) {
       setError('No se pudo guardar la sucursal. Intenta nuevamente.');
@@ -255,6 +277,39 @@ export function BranchModal({ isOpen, onClose, onSuccess, branch = null, onDelet
                   </button>
                 ))}
               </div>
+            </div>
+
+            <div className="space-y-2">
+              {status === 'new' && (
+                <LifeInput
+                  label="Fecha de creación"
+                  type="date"
+                  value={fechaCreacion}
+                  onChange={setFechaCreacion}
+                  disabled={loading}
+                  accessibilityLabel="Fecha de creación"
+                />
+              )}
+              {status === 'negotiating' && (
+                <LifeInput
+                  label="Fecha de negociación"
+                  type="date"
+                  value={fechaNegociacion}
+                  onChange={setFechaNegociacion}
+                  disabled={loading}
+                  accessibilityLabel="Fecha de negociación"
+                />
+              )}
+              {status === 'won' && (
+                <LifeInput
+                  label="Fecha de apertura"
+                  type="date"
+                  value={fechaApertura}
+                  onChange={setFechaApertura}
+                  disabled={loading}
+                  accessibilityLabel="Fecha de apertura"
+                />
+              )}
             </div>
 
             <div className="mt-6 flex items-center justify-end gap-3">
