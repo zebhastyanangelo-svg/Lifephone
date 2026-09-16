@@ -27,7 +27,12 @@ const sampleBranches = [
     created_at: '2026-08-01T12:00:00.000Z',
     rif: 'J-12345678-9',
     google_maps_url: 'https://maps.google.com/?q=10.5.1.2',
-    owner_name: 'Ana Rodriguez'
+    latitude: 10.4806,
+    longitude: -66.9036,
+    owner_name: 'Ana Rodriguez',
+    fecha_creacion: '2026-08-01T12:00:00.000Z',
+    fecha_negociacion: null,
+    fecha_apertura: '2026-08-15T12:00:00.000Z'
   },
   {
     id: 'branch-2',
@@ -39,7 +44,12 @@ const sampleBranches = [
     created_at: '2026-09-05T12:00:00.000Z',
     rif: null,
     google_maps_url: null,
-    owner_name: 'Carlos Pérez'
+    latitude: 10.1620,
+    longitude: -68.0077,
+    owner_name: 'Carlos Pérez',
+    fecha_creacion: '2026-09-05T12:00:00.000Z',
+    fecha_negociacion: '2026-09-06T12:00:00.000Z',
+    fecha_apertura: null
   },
   {
     id: 'branch-3',
@@ -51,7 +61,12 @@ const sampleBranches = [
     created_at: '2026-09-12T12:00:00.000Z',
     rif: null,
     google_maps_url: null,
-    owner_name: 'María López'
+    latitude: 10.0647,
+    longitude: -69.3367,
+    owner_name: 'María López',
+    fecha_creacion: '2026-09-12T12:00:00.000Z',
+    fecha_negociacion: null,
+    fecha_apertura: null
   }
 ];
 

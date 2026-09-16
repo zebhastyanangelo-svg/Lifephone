@@ -14,6 +14,8 @@ export type NewExpansionLead = {
   status: ExpansionLeadStatus;
   rif?: string | null;
   google_maps_url?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
   fecha_creacion?: string;
   fecha_negociacion?: string | null;
   fecha_apertura?: string | null;
@@ -69,6 +71,8 @@ export async function createExpansionLead(
       status: lead.status,
       rif: lead.rif ?? null,
       google_maps_url: lead.google_maps_url ?? null,
+      latitude: lead.latitude ?? null,
+      longitude: lead.longitude ?? null,
       fecha_creacion: lead.fecha_creacion ?? new Date().toISOString(),
       fecha_negociacion: lead.fecha_negociacion ?? null,
       fecha_apertura: lead.fecha_apertura ?? null
@@ -104,12 +108,14 @@ export async function getExpansionMetrics(
   );
 }
 
+type ExpansionLeadUpdate = Database['public']['Tables']['expansion_leads']['Update'];
+
 export async function updateExpansionLead(
   client: ExpansionLeadsClient,
   leadId: string,
   lead: Partial<NewExpansionLead> & { status?: ExpansionLeadStatus }
 ) {
-  const updateData: Record<string, unknown> = {};
+  const updateData: Partial<ExpansionLeadUpdate> = {};
   if (lead.store_name !== undefined) updateData.store_name = lead.store_name;
   if (lead.owner_name !== undefined) updateData.contact_name = lead.owner_name;
   if (lead.location?.state !== undefined) updateData.state = lead.location.state;
@@ -117,6 +123,8 @@ export async function updateExpansionLead(
   if (lead.status !== undefined) updateData.status = lead.status;
   if (lead.rif !== undefined) updateData.rif = lead.rif ?? null;
   if (lead.google_maps_url !== undefined) updateData.google_maps_url = lead.google_maps_url ?? null;
+  if (lead.latitude !== undefined) updateData.latitude = lead.latitude ?? null;
+  if (lead.longitude !== undefined) updateData.longitude = lead.longitude ?? null;
   if (lead.fecha_creacion !== undefined) updateData.fecha_creacion = lead.fecha_creacion;
   if (lead.fecha_negociacion !== undefined) updateData.fecha_negociacion = lead.fecha_negociacion ?? null;
   if (lead.fecha_apertura !== undefined) updateData.fecha_apertura = lead.fecha_apertura ?? null;

@@ -9,6 +9,7 @@ import {
   deleteExpansionLead,
   type ExpansionLeadStatus
 } from '../features/expansion/leadsRepository';
+import { extractCoordinatesFromGoogleMapsUrl } from '../utils/googleMapsUrl';
 import type { BranchItem } from './BranchList';
 
 type BranchModalProps = {
@@ -30,6 +31,8 @@ export function BranchModal({ isOpen, onClose, onSuccess, branch = null, onDelet
   const [fechaCreacion, setFechaCreacion] = useState('');
   const [fechaNegociacion, setFechaNegociacion] = useState('');
   const [fechaApertura, setFechaApertura] = useState('');
+  const [latitude, setLatitude] = useState<number | null>(null);
+  const [longitude, setLongitude] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -48,6 +51,8 @@ export function BranchModal({ isOpen, onClose, onSuccess, branch = null, onDelet
       setFechaCreacion(branch.fecha_creacion ? branch.fecha_creacion.substring(0, 10) : '');
       setFechaNegociacion(branch.fecha_negociacion ? branch.fecha_negociacion.substring(0, 10) : '');
       setFechaApertura(branch.fecha_apertura ? branch.fecha_apertura.substring(0, 10) : '');
+      setLatitude(branch.latitude ?? null);
+      setLongitude(branch.longitude ?? null);
     } else {
       setStoreName('');
       setOwnerName('');
@@ -59,6 +64,8 @@ export function BranchModal({ isOpen, onClose, onSuccess, branch = null, onDelet
       setFechaCreacion(new Date().toISOString().substring(0, 10));
       setFechaNegociacion('');
       setFechaApertura('');
+      setLatitude(null);
+      setLongitude(null);
     }
   }, [branch, isOpen]);
 
@@ -75,6 +82,10 @@ export function BranchModal({ isOpen, onClose, onSuccess, branch = null, onDelet
     const fechaNegociacionValue = status === 'negotiating' ? (fechaNegociacion || new Date().toISOString().substring(0, 10)) : (branch?.fecha_negociacion ?? null);
     const fechaAperturaValue = status === 'won' ? (fechaApertura || new Date().toISOString().substring(0, 10)) : (branch?.fecha_apertura ?? null);
 
+    const coords = extractCoordinatesFromGoogleMapsUrl(googleMapsUrl);
+    const lat = latitude ?? coords?.latitude ?? null;
+    const lng = longitude ?? coords?.longitude ?? null;
+
     try {
       if (isEditing && branch) {
         await updateExpansionLead(supabase as any, branch.id, {
@@ -84,6 +95,8 @@ export function BranchModal({ isOpen, onClose, onSuccess, branch = null, onDelet
           status,
           rif: rif.trim() || null,
           google_maps_url: googleMapsUrl.trim() || null,
+          latitude: lat,
+          longitude: lng,
           fecha_creacion: fechaCreacionValue,
           fecha_negociacion: fechaNegociacionValue,
           fecha_apertura: fechaAperturaValue
@@ -96,6 +109,8 @@ export function BranchModal({ isOpen, onClose, onSuccess, branch = null, onDelet
           status,
           rif: rif.trim() || null,
           google_maps_url: googleMapsUrl.trim() || null,
+          latitude: lat,
+          longitude: lng,
           fecha_creacion: fechaCreacionValue,
           fecha_negociacion: fechaNegociacionValue,
           fecha_apertura: fechaAperturaValue
@@ -113,6 +128,8 @@ export function BranchModal({ isOpen, onClose, onSuccess, branch = null, onDelet
       setFechaCreacion(new Date().toISOString().substring(0, 10));
       setFechaNegociacion('');
       setFechaApertura('');
+      setLatitude(null);
+      setLongitude(null);
       setShowDeleteConfirm(false);
     } catch (err) {
       setError('No se pudo guardar la sucursal. Intenta nuevamente.');
@@ -136,6 +153,17 @@ export function BranchModal({ isOpen, onClose, onSuccess, branch = null, onDelet
       setLoading(false);
     }
   }
+
+  function handleGoogleMapsUrlChange(value: string) {
+    setGoogleMapsUrl(value);
+    const coords = extractCoordinatesFromGoogleMapsUrl(value);
+    if (coords) {
+      setLatitude(coords.latitude);
+      setLongitude(coords.longitude);
+    }
+  }
+
+  const hasCoordinates = latitude !== null && longitude !== null;
 
   return (
     <div
@@ -232,11 +260,16 @@ export function BranchModal({ isOpen, onClose, onSuccess, branch = null, onDelet
             <LifeInput
               label="Dirección (Google Maps)"
               value={googleMapsUrl}
-              onChange={setGoogleMapsUrl}
+              onChange={handleGoogleMapsUrlChange}
               placeholder="Ej. https://maps.google.com/?q=..."
               disabled={loading}
               accessibilityLabel="Dirección en Google Maps"
             />
+            {hasCoordinates && (
+              <p className="font-lp-body text-[11px] text-lp-cyan -mt-2 ml-1">
+                Coordenadas detectadas: {latitude?.toFixed(6)}, {longitude?.toFixed(6)}
+              </p>
+            )}
             <div className="grid grid-cols-2 gap-4">
               <LifeInput
                 label="Ciudad"

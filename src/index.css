@@ -81,3 +81,158 @@
     animation: none;
   }
 }
+
+/* ===================================================================
+   MapLibre GL — Popup oscuro LifePhone
+   =================================================================== */
+.maplibregl-popup-content {
+  background: var(--lp-bg-surface) !important;
+  border: 1px solid var(--lp-glass-border) !important;
+  border-radius: 12px !important;
+  padding: 0 !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6) !important;
+  color: var(--lp-primary) !important;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif !important;
+}
+
+.maplibregl-popup-anchor-bottom .maplibregl-popup-tip {
+  border-top-color: var(--lp-bg-surface) !important;
+}
+
+.maplibregl-popup-anchor-top .maplibregl-popup-tip {
+  border-bottom-color: var(--lp-bg-surface) !important;
+}
+
+.maplibregl-popup-anchor-left .maplibregl-popup-tip {
+  border-right-color: var(--lp-bg-surface) !important;
+}
+
+.maplibregl-popup-anchor-right .maplibregl-popup-tip {
+  border-left-color: var(--lp-bg-surface) !important;
+}
+
+.maplibregl-popup-close-button {
+  color: var(--lp-text-muted) !important;
+  font-size: 18px !important;
+  width: 24px !important;
+  height: 24px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border-radius: 6px !important;
+  transition: color 0.15s ease-out, background 0.15s ease-out !important;
+}
+
+.maplibregl-popup-close-button:hover {
+  color: var(--lp-primary) !important;
+  background: var(--lp-glass-border) !important;
+}
+
+.maplibregl-ctrl-group {
+  background: var(--lp-bg-surface) !important;
+  border: 1px solid var(--lp-glass-border) !important;
+  border-radius: 8px !important;
+  overflow: hidden !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4) !important;
+}
+
+.maplibregl-ctrl-group button {
+  background: var(--lp-bg-surface) !important;
+  border-color: rgba(255, 255, 255, 0.06) !important;
+}
+
+.maplibregl-ctrl-group button + button {
+  border-top: 1px solid rgba(255, 255, 255, 0.06) !important;
+}
+
+.maplibregl-ctrl-group button:hover {
+  background: rgba(255, 255, 255, 0.05) !important;
+}
+
+.maplibregl-ctrl-group button .maplibregl-ctrl-icon {
+  filter: invert(1) brightness(0.8) !important;
+}
+
+.maplibregl-ctrl-attrib {
+  background: rgba(10, 10, 12, 0.8) !important;
+  color: var(--lp-text-muted) !important;
+  font-size: 10px !important;
+}
+
+.maplibregl-ctrl-attrib a {
+  color: var(--lp-text-muted) !important;
+}
+
+.maplibregl-ctrl-scale {
+  background: var(--lp-bg-surface) !important;
+  color: var(--lp-text-muted) !important;
+  border-color: var(--lp-glass-border) !important;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif !important;
+  font-size: 11px !important;
+  border-radius: 4px !important;
+  padding: 0 6px !important;
+}
+
+/* ===================================================================
+   MapLibre GL — Popup interno (HTML inyectado vía setHTML)
+   =================================================================== */
+.map-popup-header {
+  padding: 12px 16px;
+  background: linear-gradient(135deg, rgba(0, 240, 255, 0.08), rgba(0, 68, 255, 0.08));
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+.map-popup-title {
+  margin: 0 0 4px 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--lp-primary);
+  letter-spacing: 0.02em;
+}
+.map-popup-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--status-color);
+  background: var(--status-bg);
+  border: 1px solid var(--status-border);
+}
+.map-popup-body {
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.map-popup-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.map-popup-label {
+  font-size: 12px;
+  color: var(--lp-text-muted);
+  min-width: 60px;
+}
+.map-popup-value {
+  font-size: 13px;
+  color: #e2e8f0;
+}
+
+/* ===================================================================
+   MapLibre GL — Marcador de sucursal
+   =================================================================== */
+.expansion-map-marker {
+  width: 28px;
+  height: 28px;
+  border-radius: 50% 50% 50% 0;
+  background: var(--marker-bg, var(--lp-accent-cyan));
+  transform: rotate(-45deg);
+  border: 2px solid rgba(255, 255, 255, 0.9);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4), 0 0 12px var(--marker-glow, transparent);
+  cursor: pointer;
+  transition: transform 0.15s ease-out;
+}
+.expansion-map-marker:hover {
+  transform: rotate(-45deg) scale(1.2);
+}

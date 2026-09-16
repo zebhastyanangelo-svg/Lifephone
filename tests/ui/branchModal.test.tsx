@@ -33,6 +33,8 @@ const sampleBranch = {
   created_at: '2026-08-01T12:00:00.000Z',
   rif: 'J-12345678-9',
   google_maps_url: 'https://maps.google.com/?q=10.5.1.2',
+  latitude: 10.4806,
+  longitude: -66.9036,
   owner_name: 'Ana Rodriguez',
   fecha_creacion: '2026-08-01T12:00:00.000Z',
   fecha_negociacion: null,

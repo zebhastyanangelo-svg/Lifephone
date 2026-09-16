@@ -57,6 +57,8 @@ export type Database = {
           fecha_negociacion: string | null
           google_maps_url: string | null
           id: string
+          latitude: number | null
+          longitude: number | null
           notes: string | null
           owner_id: string | null
           phone: string | null
@@ -76,6 +78,8 @@ export type Database = {
           fecha_negociacion?: string | null
           google_maps_url?: string | null
           id?: string
+          latitude?: number | null
+          longitude?: number | null
           notes?: string | null
           owner_id?: string | null
           phone?: string | null
@@ -95,6 +99,8 @@ export type Database = {
           fecha_negociacion?: string | null
           google_maps_url?: string | null
           id?: string
+          latitude?: number | null
+          longitude?: number | null
           notes?: string | null
           owner_id?: string | null
           phone?: string | null

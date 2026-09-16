@@ -19,6 +19,9 @@ import { BrandMark } from './BrandMark';
 import { ExpansionDashboard } from './ExpansionDashboard';
 import { BranchList, type BranchItem } from './BranchList';
 import { BranchModal } from './BranchModal';
+import { ExpansionMapScreen } from './ExpansionMapScreen';
+
+type ViewMode = 'list' | 'map';
 
 type ExpansionScreenState =
   | { status: 'loading' }
@@ -30,6 +33,7 @@ export function ExpansionScreen() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editingBranch, setEditingBranch] = useState<BranchItem | null>(null);
   const [deletingBranch, setDeletingBranch] = useState<BranchItem | null>(null);
+  const [viewMode, setViewMode] = useState<ViewMode>('list');
 
   async function refetchData() {
     try {
@@ -52,6 +56,8 @@ export function ExpansionScreen() {
         created_at: lead.created_at,
         rif: lead.rif ?? null,
         google_maps_url: lead.google_maps_url ?? null,
+        latitude: lead.latitude ?? null,
+        longitude: lead.longitude ?? null,
         owner_name: lead.contact_name,
         fecha_creacion: lead.fecha_creacion,
         fecha_negociacion: lead.fecha_negociacion,
@@ -155,13 +161,60 @@ export function ExpansionScreen() {
               metrics={state.metrics}
               growth={state.growth}
             />
-            <div className="mt-8">
-              <BranchList
-                branches={state.branches}
-                onEdit={handleEdit}
-                onDelete={handleDeleteRequest}
-              />
+
+            <div className="mt-8 mb-4 flex items-center gap-1 rounded-lp p-1 life-glass w-fit">
+              {([
+                { key: 'list' as ViewMode, label: 'Vista de Lista' },
+                { key: 'map' as ViewMode, label: 'Vista de Mapa' }
+              ]).map((tab) => (
+                <button
+                  key={tab.key}
+                  type="button"
+                  onClick={() => setViewMode(tab.key)}
+                  className={`rounded-lp px-4 py-2 text-sm font-medium transition-all duration-[var(--lp-motion-fast)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lp-cyan/55 ${
+                    viewMode === tab.key
+                      ? 'bg-lp-cyan/20 text-lp-cyan ring-1 ring-lp-cyan/40'
+                      : 'text-lp-muted hover:text-lp-primary'
+                  }`}
+                  aria-pressed={viewMode === tab.key}
+                >
+                  {tab.key === 'list' ? (
+                    <span className="flex items-center gap-2">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/>
+                        <line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>
+                      </svg>
+                      Lista
+                    </span>
+                  ) : (
+                    <span className="flex items-center gap-2">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/>
+                        <line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/>
+                      </svg>
+                      Mapa
+                    </span>
+                  )}
+                </button>
+              ))}
             </div>
+
+            {viewMode === 'list' ? (
+              <div className="mt-4">
+                <BranchList
+                  branches={state.branches}
+                  onEdit={handleEdit}
+                  onDelete={handleDeleteRequest}
+                />
+              </div>
+            ) : (
+              <div className="mt-4">
+                <ExpansionMapScreen
+                  branches={state.branches}
+                  onEdit={handleEdit}
+                />
+              </div>
+            )}
           </>
         )}
 

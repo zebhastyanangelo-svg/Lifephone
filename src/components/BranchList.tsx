@@ -13,6 +13,8 @@ export type BranchItem = {
   created_at: string;
   rif: string | null;
   google_maps_url: string | null;
+  latitude: number | null;
+  longitude: number | null;
   owner_name: string;
   fecha_creacion: string;
   fecha_negociacion: string | null;
