@@ -26,7 +26,7 @@ function allowsAction(
   action: RouteAction
 ): boolean {
   if (typeof capability === 'boolean') {
-    return capability && action === 'manage';
+    return capability;
   }
   if (action === 'read') {
     return capability !== 'none';
