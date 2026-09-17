@@ -117,12 +117,12 @@ function AppLoading() {
  * el título del ScreenPageModel + tarjeta de módulo en preparación. Las pantallas
  * funcionales específicas llegan por Spec en la Phase 2 (SPEC-06).
  */
-function ProtectedScreenPlaceholder({ screen }: { screen: ExpoScreenKey }) {
+function ProtectedScreenPlaceholder({ screen, onLogout }: { screen: ExpoScreenKey; onLogout?: () => void }) {
   const model = buildPageModel({ screen, viewState: loadingState() });
 
   return (
     <div className="min-h-screen bg-lp-base">
-      <LifeHeader model={model} />
+      <LifeHeader model={model} onLogout={onLogout} />
       <main className="mx-auto w-full max-w-3xl p-4 sm:p-6">
         <LifeCard description="Este módulo estará disponible en la próxima fase del sistema.">
           <div className="flex items-center gap-3">
@@ -182,13 +182,13 @@ export function App({ initialPath }: AppProps) {
         break;
       case 'expansion-index':
       case 'lead-detail':
-        screenNode = <ExpansionScreen role={phase.phase === 'authenticated' ? phase.role : undefined} onNavigate={navigate} />;
+        screenNode = <ExpansionScreen role={phase.phase === 'authenticated' ? phase.role : undefined} onNavigate={navigate} onLogout={handleLogout} />;
         break;
       case 'admin-roles-index':
-        screenNode = <AdminManagementScreen onNavigate={navigate} />;
+        screenNode = <AdminManagementScreen onNavigate={navigate} onLogout={handleLogout} />;
         break;
       default:
-        screenNode = <ProtectedScreenPlaceholder screen={resolution.screen} />;
+        screenNode = <ProtectedScreenPlaceholder screen={resolution.screen} onLogout={handleLogout} />;
     }
   }
 

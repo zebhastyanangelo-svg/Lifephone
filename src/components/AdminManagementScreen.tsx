@@ -22,7 +22,7 @@ type AdminScreenState =
   | { status: 'data'; admins: AdminUser[] }
   | { status: 'error'; message: string };
 
-export function AdminManagementScreen({ onNavigate }: { onNavigate?: (to: string) => void }) {
+export function AdminManagementScreen({ onNavigate, onLogout }: { onNavigate?: (to: string) => void; onLogout?: () => void }) {
   const [state, setState] = useState<AdminScreenState>({ status: 'loading' });
   const [modalOpen, setModalOpen] = useState(false);
   const [editingAdmin, setEditingAdmin] = useState<AdminUser | null>(null);
@@ -51,7 +51,7 @@ export function AdminManagementScreen({ onNavigate }: { onNavigate?: (to: string
 
   return (
     <div className="min-h-screen bg-lp-base">
-      <LifeHeader model={model} />
+      <LifeHeader model={model} onLogout={onLogout} />
       <main className="mx-auto w-full max-w-5xl px-4 py-6 sm:px-6 lg:px-8">
         <div className="mb-6 flex items-center justify-between">
           <LifeButton
@@ -281,11 +281,19 @@ function AdminUserModal({ isOpen, onClose, onSuccess, admin }: AdminUserModalPro
 
     try {
       if (isEditing && admin) {
-        const { error: roleError } = await supabase.rpc('update_admin_role', {
+        const trimmedPassword = password.trim();
+        const { data, error: updateError } = await supabase.rpc('update_admin_user', {
           p_user_id: admin.id,
-          p_new_role: 'admin'
+          p_full_name: fullName.trim(),
+          p_email: email.trim(),
+          ...(trimmedPassword ? { p_new_password: trimmedPassword } : {})
         });
-        if (roleError) throw roleError;
+        if (updateError) throw updateError;
+
+        const result = data as Record<string, unknown> | null;
+        if (result && result.success === false) {
+          throw new Error((result.error as string) || 'Error updating user');
+        }
       } else {
         const { data, error: createError } = await supabase.rpc('create_admin_user', {
           p_email: email.trim(),
@@ -307,12 +315,14 @@ function AdminUserModal({ isOpen, onClose, onSuccess, admin }: AdminUserModalPro
     } catch (err) {
       console.error('[AdminUserModal] Error:', err);
       const message = err instanceof Error ? err.message : 'Error desconocido';
-      if (message.includes('already registered') || message.includes('already exists')) {
+      if (message.includes('already registered') || message.includes('already exists') || message.includes('already registered to another')) {
         setError('Este correo electrónico ya está registrado.');
       } else if (message.includes('valid email')) {
         setError('El correo electrónico no es válido.');
       } else if (message.includes('at least 6')) {
         setError('La contraseña debe tener al menos 6 caracteres.');
+      } else if (message.includes('empty')) {
+        setError('El nombre y el correo son obligatorios.');
       } else {
         setError('No se pudo guardar. Intenta nuevamente.');
       }
@@ -381,25 +391,23 @@ function AdminUserModal({ isOpen, onClose, onSuccess, admin }: AdminUserModalPro
             accessibilityLabel="Correo electrónico del administrador"
           />
           {!isEditing && (
-            <>
-              <LifeInput
-                label="Nombre de usuario / Rol"
-                value="Administrador"
-                onChange={() => {}}
-                disabled
-                accessibilityLabel="Rol del nuevo administrador"
-              />
-              <LifeInput
-                label="Contraseña inicial"
-                value={password}
-                onChange={setPassword}
-                type="password"
-                placeholder="Mínimo 6 caracteres"
-                disabled={loading}
-                accessibilityLabel="Contraseña del administrador"
-              />
-            </>
+            <LifeInput
+              label="Nombre de usuario / Rol"
+              value="Administrador"
+              onChange={() => {}}
+              disabled
+              accessibilityLabel="Rol del nuevo administrador"
+            />
           )}
+          <LifeInput
+            label={isEditing ? 'Nueva contraseña (opcional)' : 'Contraseña inicial'}
+            value={password}
+            onChange={setPassword}
+            type="password"
+            placeholder={isEditing ? 'Dejar vacío para no cambiar' : 'Mínimo 6 caracteres'}
+            disabled={loading}
+            accessibilityLabel={isEditing ? 'Nueva contraseña del administrador' : 'Contraseña del administrador'}
+          />
 
           <div className="mt-6 flex items-center justify-end gap-3">
             <LifeButton
