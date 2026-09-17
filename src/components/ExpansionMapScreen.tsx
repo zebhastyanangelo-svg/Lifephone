@@ -5,9 +5,24 @@ import { DEFAULT_COORDS } from '../utils/googleMapsUrl';
 import { STATUS_COLORS, STATUS_LABELS } from '../constants/statusColors';
 import type { BranchItem, BranchStatus } from './BranchList';
 
-// Fix Vercel MIME type error: point worker to CDN instead of local bundle
-(maplibregl as unknown as { workerUrl: string }).workerUrl =
-  'https://cdn.jsdelivr.net/npm/maplibre-gl@6.10.0/dist/maplibre-gl-worker.mjs';
+const OSM_STYLE: maplibregl.StyleSpecification = {
+  version: 8,
+  sources: {
+    'osm-raster': {
+      type: 'raster',
+      tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
+      tileSize: 256,
+      attribution: '&copy; OpenStreetMap contributors',
+    },
+  },
+  layers: [
+    {
+      id: 'osm-raster-layer',
+      type: 'raster',
+      source: 'osm-raster',
+    },
+  ],
+};
 
 type ExpansionMapScreenProps = {
   branches: BranchItem[];
@@ -79,7 +94,7 @@ export function ExpansionMapScreen({ branches, onEdit }: ExpansionMapScreenProps
 
     const map = new maplibregl.Map({
       container: mapContainer.current,
-      style: 'https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json',
+      style: OSM_STYLE,
       center,
       zoom: branchesWithCoords.length > 0 ? 11 : 6
     });
