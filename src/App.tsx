@@ -182,10 +182,10 @@ export function App({ initialPath }: AppProps) {
         break;
       case 'expansion-index':
       case 'lead-detail':
-        screenNode = <ExpansionScreen role={phase.phase === 'authenticated' ? phase.role : undefined} />;
+        screenNode = <ExpansionScreen role={phase.phase === 'authenticated' ? phase.role : undefined} onNavigate={navigate} />;
         break;
       case 'admin-roles-index':
-        screenNode = <AdminManagementScreen />;
+        screenNode = <AdminManagementScreen onNavigate={navigate} />;
         break;
       default:
         screenNode = <ProtectedScreenPlaceholder screen={resolution.screen} />;

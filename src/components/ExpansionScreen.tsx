@@ -29,7 +29,7 @@ type ExpansionScreenState =
   | { status: 'empty' }
   | { status: 'data'; branches: BranchItem[]; metrics: ExpansionMetrics; growth: NationalGrowthMetrics };
 
-export function ExpansionScreen({ role }: { role?: UserRole }) {
+export function ExpansionScreen({ role, onNavigate }: { role?: UserRole; onNavigate?: (to: string) => void }) {
   const [state, setState] = useState<ExpansionScreenState>({ status: 'loading' });
   const [modalOpen, setModalOpen] = useState(false);
   const [editingBranch, setEditingBranch] = useState<BranchItem | null>(null);
@@ -128,10 +128,7 @@ export function ExpansionScreen({ role }: { role?: UserRole }) {
             {(role === 'super_admin' || role === 'admin') && (
               <LifeButton
                 label="⚙ Administradores"
-                onPress={() => {
-                  window.history.pushState(null, '', '/admin/roles');
-                  window.dispatchEvent(new PopStateEvent('popstate'));
-                }}
+                onPress={() => onNavigate?.('/admin/roles')}
                 variant="glass"
                 size="sm"
                 accessibilityLabel="Gestionar administradores"

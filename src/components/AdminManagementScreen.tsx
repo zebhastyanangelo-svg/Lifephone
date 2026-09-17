@@ -22,7 +22,7 @@ type AdminScreenState =
   | { status: 'data'; admins: AdminUser[] }
   | { status: 'error'; message: string };
 
-export function AdminManagementScreen() {
+export function AdminManagementScreen({ onNavigate }: { onNavigate?: (to: string) => void }) {
   const [state, setState] = useState<AdminScreenState>({ status: 'loading' });
   const [modalOpen, setModalOpen] = useState(false);
   const [editingAdmin, setEditingAdmin] = useState<AdminUser | null>(null);
@@ -54,11 +54,15 @@ export function AdminManagementScreen() {
       <LifeHeader model={model} />
       <main className="mx-auto w-full max-w-5xl px-4 py-6 sm:px-6 lg:px-8">
         <div className="mb-6 flex items-center justify-between">
-          <p className="font-lp-body text-sm text-lp-muted">
-            Gestiona los administradores y superiores de la plataforma.
-          </p>
           <LifeButton
-            label="+ Crear Administrador"
+            label="← Volver a Expansión"
+            onPress={() => onNavigate?.('/expansion')}
+            variant="ghost"
+            size="sm"
+            accessibilityLabel="Volver a expansión"
+          />
+          <LifeButton
+            label="+ Añadir Administrador"
             onPress={() => {
               setEditingAdmin(null);
               setModalOpen(true);
@@ -102,28 +106,51 @@ export function AdminManagementScreen() {
         )}
 
         {state.status === 'data' && state.admins.length > 0 && (
-          <div className="space-y-3">
-            {state.admins.map((admin) => (
-              <AdminUserCard
-                key={admin.id}
-                admin={admin}
-                onEdit={() => {
-                  setEditingAdmin(admin);
-                  setModalOpen(true);
-                }}
-                onDelete={async () => {
-                  if (!confirm(`¿Eliminar a ${admin.full_name}? Esta acción no se puede deshacer.`)) return;
-                  try {
-                    const { error } = await supabase.rpc('delete_admin_user', { p_user_id: admin.id });
-                    if (error) throw error;
-                    void fetchAdmins();
-                  } catch (err) {
-                    console.error('[AdminManagement] Error deleting admin:', err);
-                    alert('No se pudo eliminar el administrador.');
-                  }
-                }}
-              />
-            ))}
+          <div className="life-glass overflow-hidden rounded-lp-lg">
+            <table className="w-full text-left">
+              <thead>
+                <tr className="border-b border-white/5">
+                  <th className="px-4 py-3 font-lp-display text-xs font-semibold uppercase tracking-wider text-lp-muted">
+                    Nombre
+                  </th>
+                  <th className="px-4 py-3 font-lp-display text-xs font-semibold uppercase tracking-wider text-lp-muted">
+                    Correo
+                  </th>
+                  <th className="px-4 py-3 font-lp-display text-xs font-semibold uppercase tracking-wider text-lp-muted">
+                    Rol
+                  </th>
+                  <th className="px-4 py-3 font-lp-display text-xs font-semibold uppercase tracking-wider text-lp-muted">
+                    Registrado
+                  </th>
+                  <th className="px-4 py-3 text-right font-lp-display text-xs font-semibold uppercase tracking-wider text-lp-muted">
+                    Acciones
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-white/5">
+                {state.admins.map((admin) => (
+                  <AdminTableRow
+                    key={admin.id}
+                    admin={admin}
+                    onEdit={() => {
+                      setEditingAdmin(admin);
+                      setModalOpen(true);
+                    }}
+                    onDelete={async () => {
+                      if (!confirm(`¿Eliminar a ${admin.full_name}? Esta acción no se puede deshacer.`)) return;
+                      try {
+                        const { error } = await supabase.rpc('delete_admin_user', { p_user_id: admin.id });
+                        if (error) throw error;
+                        void fetchAdmins();
+                      } catch (err) {
+                        console.error('[AdminManagement] Error deleting admin:', err);
+                        alert('No se pudo eliminar el administrador.');
+                      }
+                    }}
+                  />
+                ))}
+              </tbody>
+            </table>
           </div>
         )}
 
@@ -147,7 +174,7 @@ export function AdminManagementScreen() {
   );
 }
 
-function AdminUserCard({
+function AdminTableRow({
   admin,
   onEdit,
   onDelete
@@ -161,41 +188,54 @@ function AdminUserCard({
     ? 'bg-lp-electric/20 text-lp-electric ring-1 ring-lp-electric/40'
     : 'bg-lp-cyan/20 text-lp-cyan ring-1 ring-lp-cyan/40';
 
+  const createdDate = admin.created_at
+    ? new Date(admin.created_at).toLocaleDateString('es-VE', { day: '2-digit', month: 'short', year: 'numeric' })
+    : '—';
+
   return (
-    <div className="life-glass flex items-center gap-4 rounded-lp p-4">
-      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-lp-glass-bg font-lp-display text-sm font-semibold text-lp-primary">
-        {admin.full_name.charAt(0).toUpperCase()}
-      </div>
-      <div className="min-w-0 flex-1">
-        <div className="flex items-center gap-2">
-          <h3 className="truncate font-lp-display text-sm font-semibold text-lp-primary">
+    <tr className="transition-colors hover:bg-white/[0.02]">
+      <td className="px-4 py-3">
+        <div className="flex items-center gap-3">
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-lp-glass-bg font-lp-display text-xs font-semibold text-lp-primary">
+            {admin.full_name.charAt(0).toUpperCase()}
+          </div>
+          <span className="truncate font-lp-body text-sm font-medium text-lp-primary">
             {admin.full_name}
-          </h3>
-          <span className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-medium ${roleBadge}`}>
-            {isSuperAdmin ? 'Super Admin' : 'Admin'}
           </span>
         </div>
-        <p className="truncate font-lp-body text-xs text-lp-muted">{admin.email}</p>
-      </div>
-      <div className="flex shrink-0 items-center gap-2">
-        <LifeButton
-          label="Editar"
-          onPress={onEdit}
-          variant="ghost"
-          size="sm"
-          accessibilityLabel={`Editar ${admin.full_name}`}
-        />
-        {!isSuperAdmin && (
+      </td>
+      <td className="px-4 py-3 font-lp-body text-sm text-lp-muted">
+        <span className="truncate">{admin.email}</span>
+      </td>
+      <td className="px-4 py-3">
+        <span className={`inline-block shrink-0 rounded-full px-2 py-0.5 text-[11px] font-medium ${roleBadge}`}>
+          {isSuperAdmin ? 'Super Admin' : 'Admin'}
+        </span>
+      </td>
+      <td className="px-4 py-3 font-lp-body text-xs text-lp-muted">
+        {createdDate}
+      </td>
+      <td className="px-4 py-3 text-right">
+        <div className="flex items-center justify-end gap-2">
           <LifeButton
-            label="Eliminar"
-            onPress={onDelete}
+            label="Editar"
+            onPress={onEdit}
             variant="ghost"
             size="sm"
-            accessibilityLabel={`Eliminar ${admin.full_name}`}
+            accessibilityLabel={`Editar ${admin.full_name}`}
           />
-        )}
-      </div>
-    </div>
+          {!isSuperAdmin && (
+            <LifeButton
+              label="Eliminar"
+              onPress={onDelete}
+              variant="ghost"
+              size="sm"
+              accessibilityLabel={`Eliminar ${admin.full_name}`}
+            />
+          )}
+        </div>
+      </td>
+    </tr>
   );
 }
 
@@ -241,14 +281,12 @@ function AdminUserModal({ isOpen, onClose, onSuccess, admin }: AdminUserModalPro
 
     try {
       if (isEditing && admin) {
-        // Update role
         const { error: roleError } = await supabase.rpc('update_admin_role', {
           p_user_id: admin.id,
           p_new_role: 'admin'
         });
         if (roleError) throw roleError;
       } else {
-        // Create new admin user
         const { data, error: createError } = await supabase.rpc('create_admin_user', {
           p_email: email.trim(),
           p_password: password,
@@ -301,7 +339,7 @@ function AdminUserModal({ isOpen, onClose, onSuccess, admin }: AdminUserModalPro
           <div className="flex items-center gap-3">
             <BrandMark size={28} pulsing decorative />
             <h2 className="font-lp-display text-xl font-semibold tracking-[0.08em] text-lp-primary">
-              {isEditing ? 'Editar Administrador' : 'Crear Administrador'}
+              {isEditing ? 'Editar Administrador' : 'Nuevo Administrador'}
             </h2>
           </div>
           <button
@@ -343,15 +381,24 @@ function AdminUserModal({ isOpen, onClose, onSuccess, admin }: AdminUserModalPro
             accessibilityLabel="Correo electrónico del administrador"
           />
           {!isEditing && (
-            <LifeInput
-              label="Contraseña"
-              value={password}
-              onChange={setPassword}
-              type="password"
-              placeholder="Mínimo 6 caracteres"
-              disabled={loading}
-              accessibilityLabel="Contraseña del administrador"
-            />
+            <>
+              <LifeInput
+                label="Nombre de usuario / Rol"
+                value="Administrador"
+                onChange={() => {}}
+                disabled
+                accessibilityLabel="Rol del nuevo administrador"
+              />
+              <LifeInput
+                label="Contraseña inicial"
+                value={password}
+                onChange={setPassword}
+                type="password"
+                placeholder="Mínimo 6 caracteres"
+                disabled={loading}
+                accessibilityLabel="Contraseña del administrador"
+              />
+            </>
           )}
 
           <div className="mt-6 flex items-center justify-end gap-3">
@@ -363,7 +410,7 @@ function AdminUserModal({ isOpen, onClose, onSuccess, admin }: AdminUserModalPro
               accessibilityLabel="Cancelar"
             />
             <LifeButton
-              label={isEditing ? 'Guardar Cambios' : 'Crear Administrador'}
+              label={isEditing ? 'Guardar Cambios' : '+ Añadir Administrador'}
               onPress={handleSubmit}
               loading={loading}
               disabled={loading}
