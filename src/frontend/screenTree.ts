@@ -5,7 +5,7 @@ import type { ExpoRoute } from './expoRouteAccess';
  * `ExpoRoute` is the protected surface bridged by resolveExpoRouteAccess;
  * the auth/recovery paths are appended here as part of the screen manifest.
  */
-export type ScreenPath = ExpoRoute | '/sign-in' | '/access-denied';
+export type ScreenPath = ExpoRoute | '/sign-in' | '/access-denied' | '/admin/roles';
 
 export type ExpoScreenKey =
   | 'sign-in'
@@ -18,9 +18,10 @@ export type ExpoScreenKey =
   | 'catalog-index'
   | 'cart'
   | 'my-orders-index'
-  | 'my-orders-detail';
+  | 'my-orders-detail'
+  | 'admin-roles-index';
 
-export type ScreenArea = 'auth' | 'expansion' | 'products' | 'orders' | 'catalog';
+export type ScreenArea = 'auth' | 'expansion' | 'products' | 'orders' | 'catalog' | 'admin';
 export type AvatarProvider = 'profile' | 'store';
 
 export type ScreenMeta = {
@@ -49,7 +50,8 @@ export const SCREEN_PATHS: readonly ScreenPath[] = [
   '/catalog',
   '/cart',
   '/my-orders',
-  '/my-orders/[orderId]'
+  '/my-orders/[orderId]',
+  '/admin/roles'
 ];
 
 export function isScreenPath(value: string): value is ScreenPath {
@@ -166,6 +168,15 @@ export const SCREEN_TREE: readonly ScreenMeta[] = [
     area: 'orders',
     protected: true,
     avatar: storeAvatar
+  },
+  {
+    screen: 'admin-roles-index',
+    path: '/admin/roles',
+    segment: '(protected)/(admin)/admin/roles',
+    title: 'Administradores',
+    area: 'admin',
+    protected: true,
+    avatar: profileAvatar
   }
 ];
 

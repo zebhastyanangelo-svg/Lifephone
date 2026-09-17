@@ -73,6 +73,9 @@ export function resolveScreenRoute(input: { phase: SessionPhase; path: string })
     if (path === '/products') {
       return { kind: 'redirect', to: '/catalog', reason: 'forbidden' };
     }
+    if (path === '/admin/roles') {
+      return { kind: 'redirect', to: '/catalog', reason: 'forbidden' };
+    }
   } else {
     if (path === '/my-orders') {
       return { kind: 'redirect', to: '/orders', reason: 'forbidden' };
@@ -82,6 +85,10 @@ export function resolveScreenRoute(input: { phase: SessionPhase; path: string })
     }
     if (path === '/cart') {
       return { kind: 'redirect', to: '/orders', reason: 'forbidden' };
+    }
+    // Non-admin staff cannot access admin panel
+    if (path === '/admin/roles' && role !== 'super_admin' && role !== 'admin') {
+      return { kind: 'redirect', to: '/expansion', reason: 'forbidden' };
     }
   }
 

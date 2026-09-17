@@ -30,12 +30,10 @@ describe('Route guards', () => {
     }
   });
 
-  it('reserva administración de roles para super_admin', () => {
+  it('permite a admin y super_admin la administración de roles', () => {
     for (const route of ['/admin/roles'] as ProtectedRoute[]) {
-      expect(canAccessRoute('admin', route, 'manage')).toEqual({
-        allowed: false,
-        reason: 'forbidden'
-      });
+      expect(canAccessRoute('admin', route, 'manage')).toEqual({ allowed: true });
+      expect(canAccessRoute('super_admin', route, 'manage')).toEqual({ allowed: true });
     }
   });
 

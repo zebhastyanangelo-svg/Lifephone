@@ -61,14 +61,19 @@ describe('Expo route bridge', () => {
     }
   });
 
-  it('staff_orders nunca alcanza la administración de roles', () => {
+  it('staff_orders no puede acceder a la administración de roles', () => {
     expect(resolveExpoRouteAccess('staff_orders', '/admin/roles' as ExpoRoute, 'read')).toEqual({
       allowed: false,
-      reason: 'unknown_route'
+      reason: 'forbidden'
     });
+  });
+
+  it('admin y super_admin pueden acceder a la administración de roles', () => {
     expect(resolveExpoRouteAccess('admin', '/admin/roles' as ExpoRoute, 'manage')).toEqual({
-      allowed: false,
-      reason: 'unknown_route'
+      allowed: true
+    });
+    expect(resolveExpoRouteAccess('super_admin', '/admin/roles' as ExpoRoute, 'manage')).toEqual({
+      allowed: true
     });
   });
 
@@ -116,7 +121,8 @@ describe('Expo route bridge', () => {
       '/catalog': 'store_user',
       '/cart': 'store_user',
       '/my-orders': 'store_user',
-      '/my-orders/[orderId]': 'store_user'
+      '/my-orders/[orderId]': 'store_user',
+      '/admin/roles': 'super_admin'
     };
     for (const [path, role] of Object.entries(areas)) {
       const result = resolveExpoRouteAccess(role, path as ExpoRoute);

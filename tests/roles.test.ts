@@ -4,7 +4,7 @@ import { getRoleCapabilities, type RoleCapabilities } from '../src/features/expa
 describe('Role capabilities', () => {
   it.each([
     ['super_admin', { expansionCrm: 'manage', catalog: 'manage', orders: 'manage', roleAdmin: true }],
-    ['admin', { expansionCrm: 'manage', catalog: 'manage', orders: 'manage', roleAdmin: false }],
+    ['admin', { expansionCrm: 'manage', catalog: 'manage', orders: 'manage', roleAdmin: true }],
     ['staff_orders', { expansionCrm: 'operate', catalog: 'read', orders: 'manage', roleAdmin: false }],
     ['read_only', { expansionCrm: 'read', catalog: 'read', orders: 'read', roleAdmin: false }],
     ['store_user', { expansionCrm: 'none', catalog: 'read', orders: 'own', roleAdmin: false }]

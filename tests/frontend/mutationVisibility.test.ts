@@ -38,9 +38,10 @@ describe('Mutation visibility', () => {
     expect(canRenderMutationControls('read_only', 'orders')).toBe(false);
   });
 
-  it('roles: reservado a super_admin', () => {
+  it('roles: reservado a super_admin y admin', () => {
     expect(canRenderMutationControls('super_admin', 'roles')).toBe(true);
-    for (const role of ['admin', 'staff_orders', 'read_only', 'store_user'] as UserRole[]) {
+    expect(canRenderMutationControls('admin', 'roles')).toBe(true);
+    for (const role of ['staff_orders', 'read_only', 'store_user'] as UserRole[]) {
       expect(canRenderMutationControls(role, 'roles')).toBe(false);
     }
   });

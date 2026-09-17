@@ -17,6 +17,7 @@ import { LifeCard } from './components/LifeCard';
 import { LifeHeader } from './components/LifeHeader';
 import { BrandMark } from './components/BrandMark';
 import { ExpansionScreen } from './components/ExpansionScreen';
+import { AdminManagementScreen } from './components/AdminManagementScreen';
 
 const defaultAuthService = new AuthService();
 
@@ -181,7 +182,10 @@ export function App({ initialPath }: AppProps) {
         break;
       case 'expansion-index':
       case 'lead-detail':
-        screenNode = <ExpansionScreen />;
+        screenNode = <ExpansionScreen role={phase.phase === 'authenticated' ? phase.role : undefined} />;
+        break;
+      case 'admin-roles-index':
+        screenNode = <AdminManagementScreen />;
         break;
       default:
         screenNode = <ProtectedScreenPlaceholder screen={resolution.screen} />;

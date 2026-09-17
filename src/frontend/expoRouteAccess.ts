@@ -15,7 +15,8 @@ export type ExpoRoute =
   | '/catalog'
   | '/cart'
   | '/my-orders'
-  | '/my-orders/[orderId]';
+  | '/my-orders/[orderId]'
+  | '/admin/roles';
 
 export type ExpoRouteAction = 'read' | 'manage' | 'request';
 
@@ -30,7 +31,8 @@ const expoRouteMap: Record<ExpoRoute, ExpoPathMapping> = {
   '/catalog': { guardRoute: '/catalog' },
   '/cart': { guardRoute: '/orders' },
   '/my-orders': { guardRoute: '/orders' },
-  '/my-orders/[orderId]': { guardRoute: '/orders' }
+  '/my-orders/[orderId]': { guardRoute: '/orders' },
+  '/admin/roles': { guardRoute: '/admin/roles' }
 };
 
 /**
