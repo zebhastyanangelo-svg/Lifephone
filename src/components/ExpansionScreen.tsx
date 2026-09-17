@@ -160,6 +160,7 @@ export function ExpansionScreen() {
             <ExpansionDashboard
               metrics={state.metrics}
               growth={state.growth}
+              branches={state.branches}
             />
 
             <div className="mt-8 mb-4 flex items-center gap-1 rounded-lp p-1 life-glass w-fit">

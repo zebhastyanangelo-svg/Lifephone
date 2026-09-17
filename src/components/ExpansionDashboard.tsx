@@ -1,11 +1,14 @@
 import type { ReactNode } from 'react';
 import type { NationalGrowthMetrics, ExpansionMetrics } from '../repositories/expansionLeadsRepository';
+import type { BranchItem } from './BranchList';
 import { LifeCard } from './LifeCard';
 import { BrandMark } from './BrandMark';
+import { StatusDonutChart } from './StatusDonutChart';
 
 export type ExpansionDashboardProps = {
   metrics: ExpansionMetrics;
   growth: NationalGrowthMetrics;
+  branches?: BranchItem[];
   loading?: boolean;
 };
 
@@ -78,7 +81,7 @@ const RocketIcon = () => (
   </svg>
 );
 
-export function ExpansionDashboard({ metrics, growth, loading = false }: ExpansionDashboardProps) {
+export function ExpansionDashboard({ metrics, growth, branches = [], loading = false }: ExpansionDashboardProps) {
   const percentageMet = metrics.totalApprovedActive + metrics.totalInNegotiation > 0
     ? Math.round((metrics.totalApprovedActive / (metrics.totalApprovedActive + metrics.totalInNegotiation)) * 100)
     : 0;
@@ -92,7 +95,12 @@ export function ExpansionDashboard({ metrics, growth, loading = false }: Expansi
         </h2>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
+        <div className="sm:col-span-2 lg:col-span-1">
+          <LifeCard className="flex items-center justify-center p-4" interactive={false}>
+            <StatusDonutChart branches={branches} />
+          </LifeCard>
+        </div>
         <MetricCard
           label="Meta de Expansión"
           value={`${percentageMet}%`}
