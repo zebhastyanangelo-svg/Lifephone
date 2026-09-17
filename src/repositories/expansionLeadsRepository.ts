@@ -129,6 +129,8 @@ export async function updateExpansionLead(
   if (lead.fecha_negociacion !== undefined) updateData.fecha_negociacion = lead.fecha_negociacion ?? null;
   if (lead.fecha_apertura !== undefined) updateData.fecha_apertura = lead.fecha_apertura ?? null;
 
+  updateData.updated_at = new Date().toISOString();
+
   const { data, error } = await client
     .from('expansion_leads')
     .update(updateData)
@@ -136,9 +138,17 @@ export async function updateExpansionLead(
     .select();
 
   if (error) {
+    console.error('[expansionLeadsRepository] updateExpansionLead error:', error);
     throw error;
   }
-  return Array.isArray(data) ? data[0] : data;
+
+  if (!data || data.length === 0) {
+    const msg = `updateExpansionLead: no rows updated for leadId=${leadId}. Possible RLS policy or filter mismatch.`;
+    console.error(msg, { updateData, leadId });
+    throw new Error(msg);
+  }
+
+  return data[0];
 }
 
 export async function deleteExpansionLead(

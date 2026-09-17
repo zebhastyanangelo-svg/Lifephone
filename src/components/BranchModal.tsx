@@ -132,6 +132,7 @@ export function BranchModal({ isOpen, onClose, onSuccess, branch = null, onDelet
       setLongitude(null);
       setShowDeleteConfirm(false);
     } catch (err) {
+      console.error('[BranchModal] Error guardando sucursal:', err);
       setError('No se pudo guardar la sucursal. Intenta nuevamente.');
     } finally {
       setLoading(false);
@@ -148,6 +149,7 @@ export function BranchModal({ isOpen, onClose, onSuccess, branch = null, onDelet
       onClose();
       setShowDeleteConfirm(false);
     } catch (err) {
+      console.error('[BranchModal] Error eliminando sucursal:', err);
       setError('No se pudo eliminar la sucursal. Intenta nuevamente.');
     } finally {
       setLoading(false);
