@@ -1,5 +1,5 @@
 -- Migration: Admin Management System
--- Creates functions for super_admin to manage admin users,
+-- Creates functions for super_admin and admin to manage admin users,
 -- adds proper RLS policies for profiles, roles, and other tables.
 
 -- =============================================================================
@@ -21,7 +21,7 @@ $$;
 
 -- =============================================================================
 -- 2. FUNCTION: create_admin_user(email, password, full_name)
---    Only callable by super_admin. Creates auth user + profile.
+--    Callable by super_admin or admin. Creates auth user + profile.
 -- =============================================================================
 CREATE OR REPLACE FUNCTION public.create_admin_user(
   p_email text,
@@ -45,8 +45,8 @@ BEGIN
   JOIN public.roles r ON r.id = p.role_id
   WHERE p.id = auth.uid();
 
-  IF v_caller_role IS DISTINCT FROM 'super_admin' THEN
-    RAISE EXCEPTION 'Only super_admin can create admin users';
+  IF v_caller_role NOT IN ('super_admin', 'admin') THEN
+    RAISE EXCEPTION 'Only super_admin or admin can create admin users';
   END IF;
 
   -- Create the auth user with admin role in metadata
@@ -109,7 +109,7 @@ $$;
 
 -- =============================================================================
 -- 4. FUNCTION: update_admin_role(user_id, new_role_name)
---    Only super_admin can change roles.
+--    Callable by super_admin or admin. Changes a user's role.
 -- =============================================================================
 CREATE OR REPLACE FUNCTION public.update_admin_role(
   p_user_id uuid,
@@ -129,8 +129,8 @@ BEGIN
   JOIN public.roles r ON r.id = p.role_id
   WHERE p.id = auth.uid();
 
-  IF v_caller_role IS DISTINCT FROM 'super_admin' THEN
-    RAISE EXCEPTION 'Only super_admin can change roles';
+  IF v_caller_role NOT IN ('super_admin', 'admin') THEN
+    RAISE EXCEPTION 'Only super_admin or admin can change roles';
   END IF;
 
   SELECT id INTO v_target_role_id FROM public.roles WHERE name = p_new_role;
@@ -158,7 +158,7 @@ $$;
 
 -- =============================================================================
 -- 5. FUNCTION: delete_admin_user(user_id)
---    Only super_admin. Cannot delete self.
+--    Callable by super_admin or admin. Cannot delete self.
 -- =============================================================================
 CREATE OR REPLACE FUNCTION public.delete_admin_user(p_user_id uuid)
 RETURNS json
@@ -174,8 +174,8 @@ BEGIN
   JOIN public.roles r ON r.id = p.role_id
   WHERE p.id = auth.uid();
 
-  IF v_caller_role IS DISTINCT FROM 'super_admin' THEN
-    RAISE EXCEPTION 'Only super_admin can delete admin users';
+  IF v_caller_role NOT IN ('super_admin', 'admin') THEN
+    RAISE EXCEPTION 'Only super_admin or admin can delete admin users';
   END IF;
 
   IF p_user_id = auth.uid() THEN
@@ -194,27 +194,27 @@ $$;
 -- 6. RLS POLICIES
 -- =============================================================================
 
--- PROFILES: everyone authenticated can read; super_admin can full CRUD
+-- PROFILES: everyone authenticated can read; super_admin and admin can full CRUD
 DROP POLICY IF EXISTS "profiles_select_authenticated" ON public.profiles;
 CREATE POLICY "profiles_select_authenticated"
   ON public.profiles FOR SELECT TO authenticated
   USING (true);
 
-DROP POLICY IF EXISTS "profiles_insert_super_admin" ON public.profiles;
-CREATE POLICY "profiles_insert_super_admin"
+DROP POLICY IF EXISTS "profiles_insert_admin_or_super" ON public.profiles;
+CREATE POLICY "profiles_insert_admin_or_super"
   ON public.profiles FOR INSERT TO authenticated
-  WITH CHECK (public.check_user_role('super_admin'));
+  WITH CHECK (public.check_user_role('super_admin') OR public.check_user_role('admin'));
 
 DROP POLICY IF EXISTS "profiles_update_super_admin_or_self" ON public.profiles;
 CREATE POLICY "profiles_update_super_admin_or_self"
   ON public.profiles FOR UPDATE TO authenticated
-  USING (public.check_user_role('super_admin') OR id = auth.uid())
-  WITH CHECK (public.check_user_role('super_admin') OR id = auth.uid());
+  USING (public.check_user_role('super_admin') OR public.check_user_role('admin') OR id = auth.uid())
+  WITH CHECK (public.check_user_role('super_admin') OR public.check_user_role('admin') OR id = auth.uid());
 
-DROP POLICY IF EXISTS "profiles_delete_super_admin" ON public.profiles;
-CREATE POLICY "profiles_delete_super_admin"
+DROP POLICY IF EXISTS "profiles_delete_admin_or_super" ON public.profiles;
+CREATE POLICY "profiles_delete_admin_or_super"
   ON public.profiles FOR DELETE TO authenticated
-  USING (public.check_user_role('super_admin') AND id != auth.uid());
+  USING ((public.check_user_role('super_admin') OR public.check_user_role('admin')) AND id != auth.uid());
 
 -- ROLES: everyone authenticated can read
 DROP POLICY IF EXISTS "roles_select_authenticated" ON public.roles;
