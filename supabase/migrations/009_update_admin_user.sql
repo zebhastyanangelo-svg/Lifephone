@@ -1,11 +1,12 @@
 -- Migration: Update Admin User Profile
 -- Creates function to update admin user name, email and optionally password.
--- Only callable by super_admin. Validates email uniqueness via auth admin API.
+-- Callable by super_admin or admin. Validates email uniqueness via auth admin API.
 
 -- =============================================================================
 -- FUNCTION: update_admin_user(user_id, full_name, email, new_password)
 --    Updates profile name, auth email and optionally password.
 --    Password can be null/empty to skip password update.
+--    Callable by super_admin or admin.
 -- =============================================================================
 CREATE OR REPLACE FUNCTION public.update_admin_user(
   p_user_id uuid,
@@ -23,14 +24,14 @@ DECLARE
   v_current_email text;
   v_email_exists boolean;
 BEGIN
-  -- Authorization: only super_admin can update admin users
+  -- Authorization: super_admin or admin can update admin users
   SELECT r.name INTO v_caller_role
   FROM public.profiles p
   JOIN public.roles r ON r.id = p.role_id
   WHERE p.id = auth.uid();
 
-  IF v_caller_role IS DISTINCT FROM 'super_admin' THEN
-    RAISE EXCEPTION 'Only super_admin can update admin users';
+  IF v_caller_role NOT IN ('super_admin', 'admin') THEN
+    RAISE EXCEPTION 'Only super_admin or admin can update admin users';
   END IF;
 
   -- Validate inputs
@@ -112,5 +113,5 @@ BEGIN
 END;
 $$;
 
--- Grant execute permission to authenticated users (super_admin check is inside the function)
+-- Grant execute permission to authenticated users (super_admin/admin check is inside the function)
 GRANT EXECUTE ON FUNCTION public.update_admin_user(uuid, text, text, text) TO authenticated;

@@ -295,10 +295,12 @@ function AdminUserModal({ isOpen, onClose, onSuccess, admin }: AdminUserModalPro
           throw new Error((result.error as string) || 'Error updating user');
         }
       } else {
-        const { data, error: createError } = await supabase.rpc('create_admin_user', {
-          p_email: email.trim(),
-          p_password: password,
-          p_full_name: fullName.trim()
+        const { data, error: createError } = await supabase.rpc('create_new_administrator', {
+          payload: {
+            full_name: fullName.trim(),
+            email: email.trim(),
+            password: password
+          }
         });
         if (createError) throw createError;
 
