@@ -10,8 +10,8 @@ import {
 } from '../../src/frontend/screenTree';
 
 describe('screenTree: manifest del árbol Expo de SPEC-04 (SPEC-06 §2)', () => {
-  it('cubre las 12 pantallas del árbol', () => {
-    expect(SCREEN_TREE).toHaveLength(12);
+  it('cubre las 13 pantallas del árbol', () => {
+    expect(SCREEN_TREE).toHaveLength(13);
   });
 
   it('las claves de pantalla son únicas', () => {
@@ -80,7 +80,8 @@ describe('screenTree: manifest del árbol Expo de SPEC-04 (SPEC-06 §2)', () => 
       '/catalog',
       '/cart',
       '/my-orders',
-      '/my-orders/[orderId]'
+      '/my-orders/[orderId]',
+      '/reports'
     ];
     for (const path of protectedPaths) {
       expect(resolveExpoRouteAccess('super_admin', path, 'read').allowed).toBe(true);

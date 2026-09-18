@@ -125,6 +125,13 @@ export function ExpansionScreen({ role, onNavigate, onLogout, userName }: { role
         <div className="mb-6 flex items-center justify-between">
           <div />
           <div className="flex items-center gap-2">
+            <LifeButton
+              label="Reportes"
+              onPress={() => onNavigate?.('/reports')}
+              variant="glass"
+              size="sm"
+              accessibilityLabel="Ver reportes y exportar datos"
+            />
             {(role === 'super_admin' || role === 'admin') && (
               <LifeButton
                 label="⚙ Administradores"

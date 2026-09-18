@@ -1,7 +1,7 @@
 import type { UserRole } from '../lib/database.types';
 import { getRoleCapabilities, type RoleCapabilities } from '../features/expansion/roles';
 
-export type ProtectedRoute = '/expansion' | '/catalog' | '/orders' | '/admin/roles';
+export type ProtectedRoute = '/expansion' | '/catalog' | '/orders' | '/admin/roles' | '/reports';
 export type RouteAction = 'read' | 'manage';
 
 export type RouteGuardResult =
@@ -17,6 +17,9 @@ function routeCapability(capabilities: RoleCapabilities, route: ProtectedRoute):
   }
   if (route === '/orders') {
     return capabilities.orders;
+  }
+  if (route === '/reports') {
+    return capabilities.expansionCrm;
   }
   return capabilities.roleAdmin;
 }
@@ -43,7 +46,13 @@ export function canAccessRoute(
     return { allowed: false, reason: 'unauthenticated', redirectTo: '/sign-in' };
   }
 
-  const knownRoutes: ProtectedRoute[] = ['/expansion', '/catalog', '/orders', '/admin/roles'];
+  const knownRoutes: ProtectedRoute[] = [
+    '/expansion',
+    '/catalog',
+    '/orders',
+    '/admin/roles',
+    '/reports'
+  ];
   if (!knownRoutes.includes(route)) {
     return { allowed: false, reason: 'unknown_route' };
   }

@@ -122,7 +122,8 @@ describe('Expo route bridge', () => {
       '/cart': 'store_user',
       '/my-orders': 'store_user',
       '/my-orders/[orderId]': 'store_user',
-      '/admin/roles': 'super_admin'
+      '/admin/roles': 'super_admin',
+      '/reports': 'read_only'
     };
     for (const [path, role] of Object.entries(areas)) {
       const result = resolveExpoRouteAccess(role, path as ExpoRoute);

@@ -17,6 +17,7 @@ import { LifeHeader } from './components/LifeHeader';
 import { BrandMark } from './components/BrandMark';
 import { ExpansionScreen } from './components/ExpansionScreen';
 import { AdminManagementScreen } from './components/AdminManagementScreen';
+import { ReportsScreen } from './components/ReportsScreen';
 
 const defaultAuthService = new AuthService();
 
@@ -189,6 +190,9 @@ export function App({ initialPath }: AppProps) {
         break;
       case 'admin-roles-index':
                  screenNode = <AdminManagementScreen onNavigate={navigate} onLogout={handleLogout} userName={fullName} />;
+        break;
+      case 'reports-index':
+                 screenNode = <ReportsScreen onNavigate={navigate} onLogout={handleLogout} userName={fullName} />;
         break;
       default:
                  screenNode = <ProtectedScreenPlaceholder screen={resolution.screen} onLogout={handleLogout} userName={fullName} />;

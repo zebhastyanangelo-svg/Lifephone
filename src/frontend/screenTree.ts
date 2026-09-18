@@ -19,7 +19,8 @@ export type ExpoScreenKey =
   | 'cart'
   | 'my-orders-index'
   | 'my-orders-detail'
-  | 'admin-roles-index';
+  | 'admin-roles-index'
+  | 'reports-index';
 
 export type ScreenArea = 'auth' | 'expansion' | 'products' | 'orders' | 'catalog' | 'admin';
 export type AvatarProvider = 'profile' | 'store';
@@ -51,7 +52,8 @@ export const SCREEN_PATHS: readonly ScreenPath[] = [
   '/cart',
   '/my-orders',
   '/my-orders/[orderId]',
-  '/admin/roles'
+  '/admin/roles',
+  '/reports'
 ];
 
 export function isScreenPath(value: string): value is ScreenPath {
@@ -175,6 +177,15 @@ export const SCREEN_TREE: readonly ScreenMeta[] = [
     segment: '(protected)/(admin)/admin/roles',
     title: 'Administradores',
     area: 'admin',
+    protected: true,
+    avatar: profileAvatar
+  },
+  {
+    screen: 'reports-index',
+    path: '/reports',
+    segment: '(protected)/(admin)/reports/index',
+    title: 'Reportes',
+    area: 'expansion',
     protected: true,
     avatar: profileAvatar
   }
