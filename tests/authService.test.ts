@@ -31,7 +31,7 @@ describe('AuthService', () => {
   let service: AuthService;
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    vi.restoreAllMocks();
     service = new AuthService();
   });
 
@@ -48,6 +48,7 @@ describe('AuthService', () => {
       userId: 'user-uuid-123',
       email: 'admin@lifephone.test',
       role: 'super_admin',
+      fullName: null,
     });
   });
 
@@ -80,6 +81,7 @@ describe('AuthService', () => {
       userId: 'user-uuid-456',
       email: 'admin@lifephone.test',
       role: 'admin',
+      fullName: null,
     });
   });
 
@@ -105,5 +107,50 @@ describe('AuthService', () => {
     vi.spyOn(supabase.auth, 'signOut').mockResolvedValue({ error: null });
     await service.logout();
     expect(supabase.auth.signOut).toHaveBeenCalled();
+  });
+
+  it('getSession recupera full_name de la tabla profiles cuando está disponible', async () => {
+    const single = vi.fn().mockResolvedValue({
+      data: {
+        full_name: 'Ana Pérez',
+        roles: { name: 'admin' },
+      },
+      error: null,
+    });
+    const eq = vi.fn().mockReturnValue({ single });
+    const select = vi.fn().mockReturnValue({ eq });
+    vi.spyOn(supabase, 'from').mockReturnValue({ select } as never);
+
+    vi.spyOn(supabase.auth, 'getSession').mockResolvedValue({
+      data: { session: mockSession('user-uuid-456', 'admin') },
+      error: null,
+    } as never);
+
+    const result = await service.getSession();
+    expect(result).toEqual({
+      userId: 'user-uuid-456',
+      email: 'admin@lifephone.test',
+      role: 'admin',
+      fullName: 'Ana Pérez',
+    });
+    expect(supabase.from).toHaveBeenCalledWith('profiles');
+    expect(select).toHaveBeenCalledWith('full_name, roles(name)');
+    expect(eq).toHaveBeenCalledWith('id', 'user-uuid-456');
+  });
+
+  it('getSession usa user_metadata.full_name como fallback cuando profiles falla', async () => {
+    vi.spyOn(supabase.auth, 'getSession').mockResolvedValue({
+      data: { session: mockSession('user-uuid-789', 'admin') },
+      error: null,
+    } as never);
+    // supabase.from('profiles') no está mockeado → error de JWT → fallback a user_metadata
+
+    const result = await service.getSession();
+    expect(result).toEqual({
+      userId: 'user-uuid-789',
+      email: 'admin@lifephone.test',
+      role: 'admin',
+      fullName: null,
+    });
   });
 });

@@ -29,7 +29,7 @@ type ExpansionScreenState =
   | { status: 'empty' }
   | { status: 'data'; branches: BranchItem[]; metrics: ExpansionMetrics; growth: NationalGrowthMetrics };
 
-export function ExpansionScreen({ role, onNavigate, onLogout }: { role?: UserRole; onNavigate?: (to: string) => void; onLogout?: () => void }) {
+export function ExpansionScreen({ role, onNavigate, onLogout, userName }: { role?: UserRole; onNavigate?: (to: string) => void; onLogout?: () => void; userName?: string | null }) {
   const [state, setState] = useState<ExpansionScreenState>({ status: 'loading' });
   const [modalOpen, setModalOpen] = useState(false);
   const [editingBranch, setEditingBranch] = useState<BranchItem | null>(null);
@@ -120,7 +120,7 @@ export function ExpansionScreen({ role, onNavigate, onLogout }: { role?: UserRol
 
   return (
     <div className="min-h-screen bg-lp-base">
-      <LifeHeader model={model} onLogout={onLogout} />
+      <LifeHeader model={model} onLogout={onLogout} userName={userName} />
       <main className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
         <div className="mb-6 flex items-center justify-between">
           <div />

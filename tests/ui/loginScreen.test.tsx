@@ -36,7 +36,8 @@ function mockAuthService(role: string) {
     login: vi.fn().mockResolvedValue({
       userId: 'user-123',
       email: `${role}@lifephone.test`,
-      role
+      role,
+      fullName: null
     }),
     logout: vi.fn().mockResolvedValue(undefined),
     getSession: vi.fn().mockResolvedValue(null),
@@ -119,7 +120,7 @@ describe('LoginScreen (SPEC-07 §5.1)', () => {
 
   it('estado de carga: botón disabled + aria-busy + BrandMark en pulso pum-pum', async () => {
     const user = userEvent.setup();
-    let resolveLogin!: (value: { userId: string; email: string; role: string }) => void;
+    let resolveLogin!: (value: { userId: string; email: string; role: string; fullName: string | null }) => void;
     const authService = {
       login: vi.fn().mockImplementation(
         () =>
@@ -143,7 +144,7 @@ describe('LoginScreen (SPEC-07 §5.1)', () => {
     const marks = screen.getAllByTestId('lp-brand-mark');
     expect(marks.some((m) => m.className.includes('animate-lp-pulse'))).toBe(true);
 
-    resolveLogin({ userId: 'user-123', email: 'super_admin@lifephone.test', role: 'super_admin' });
+    resolveLogin({ userId: 'user-123', email: 'super_admin@lifephone.test', role: 'super_admin', fullName: null });
 
     await waitFor(() => expect(submit).not.toHaveAttribute('data-loading'));
   });
@@ -201,7 +202,7 @@ describe('LoginScreen (SPEC-07 §5.1)', () => {
     fireEvent.submit(document.querySelector('form')!);
     await screen.findByRole('alert');
 
-    authService.login.mockResolvedValue({ userId: 'user-123', email: 'super_admin@lifephone.test', role: 'super_admin' });
+    authService.login.mockResolvedValue({ userId: 'user-123', email: 'super_admin@lifephone.test', role: 'super_admin', fullName: null });
     fireEvent.submit(document.querySelector('form')!);
 
     await waitFor(() => {

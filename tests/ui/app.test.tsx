@@ -24,11 +24,14 @@ type AuthSessionShape = {
 const TEST_EMAIL_ADMIN = 'admin@lifephone.test';
 const TEST_PASSWORD = 'admin-password';
 
-function mockUser(id: string, role: string | undefined): AuthSessionShape['user'] {
+function mockUser(id: string, role: string | undefined, fullName?: string): AuthSessionShape['user'] {
+  const user_metadata: Record<string, unknown> = {};
+  if (role !== undefined) user_metadata.role = role;
+  if (fullName !== undefined) user_metadata.full_name = fullName;
   return {
     id,
     email: 'user@lifephone.test',
-    user_metadata: role === undefined ? {} : { role },
+    user_metadata,
     app_metadata: {},
     aud: 'authenticated',
     created_at: '2025-01-01T00:00:00.000Z'
@@ -52,13 +55,14 @@ let authServiceMock: AuthService;
 function mockAuthSource(session: AuthSessionShape | null) {
   currentGetSession = session;
   authServiceMock = new AuthService();
-  vi.spyOn(AuthService.prototype, 'getSession').mockImplementation(() => {
-    if (!currentGetSession) {
-      return Promise.resolve(null);
-    }
-    const user = currentGetSession.user;
-    const role = (user.user_metadata?.role as UserRole) || null;
-    return Promise.resolve({ userId: user.id, email: user.email || '', role });
+    vi.spyOn(AuthService.prototype, 'getSession').mockImplementation(() => {
+      if (!currentGetSession) {
+        return Promise.resolve(null);
+      }
+      const user = currentGetSession.user;
+      const role = (user.user_metadata?.role as UserRole) || null;
+      const fullName = (user.user_metadata?.full_name as string | undefined) || null;
+      return Promise.resolve({ userId: user.id, email: user.email || '', role, fullName });
   });
   vi.spyOn(supabase.auth, 'getSession').mockImplementation(() =>
     Promise.resolve({ data: { session: currentGetSession }, error: null } as never)
@@ -115,6 +119,23 @@ describe('App (shell raíz con router: SPEC-07 mount en main.tsx)', () => {
     render(<App initialPath="/expansion" />);
     expect(await screen.findByRole('heading', { name: 'Expansión' })).toBeInTheDocument();
     expect(screen.getByRole('banner')).toBeInTheDocument();
+  });
+
+  it('autenticado con full_name: muestra el mensaje de bienvenida en el header', async () => {
+    const session = mockSession(mockUser('user-1', 'super_admin', 'Ana Pérez'));
+    mockAuthSource(session);
+    render(<App initialPath="/expansion" />);
+    expect(await screen.findByRole('heading', { name: 'Expansión' })).toBeInTheDocument();
+    expect(screen.getByTestId('welcome-message')).toBeInTheDocument();
+    expect(screen.getByText('Bienvenido, Ana Pérez')).toBeInTheDocument();
+  });
+
+  it('autenticado sin full_name: no muestra el mensaje de bienvenida', async () => {
+    const session = mockSession(mockUser('user-1', 'super_admin'));
+    mockAuthSource(session);
+    render(<App initialPath="/expansion" />);
+    expect(await screen.findByRole('heading', { name: 'Expansión' })).toBeInTheDocument();
+    expect(screen.queryByTestId('welcome-message')).not.toBeInTheDocument();
   });
 
   it('login exitoso con rol conocido: navega al landing del rol (super_admin -> /expansion)', async () => {

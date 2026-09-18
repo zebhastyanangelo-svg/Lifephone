@@ -22,7 +22,7 @@ type AdminScreenState =
   | { status: 'data'; admins: AdminUser[] }
   | { status: 'error'; message: string };
 
-export function AdminManagementScreen({ onNavigate, onLogout }: { onNavigate?: (to: string) => void; onLogout?: () => void }) {
+export function AdminManagementScreen({ onNavigate, onLogout, userName }: { onNavigate?: (to: string) => void; onLogout?: () => void; userName?: string | null }) {
   const [state, setState] = useState<AdminScreenState>({ status: 'loading' });
   const [modalOpen, setModalOpen] = useState(false);
   const [editingAdmin, setEditingAdmin] = useState<AdminUser | null>(null);
@@ -51,7 +51,7 @@ export function AdminManagementScreen({ onNavigate, onLogout }: { onNavigate?: (
 
   return (
     <div className="min-h-screen bg-lp-base">
-      <LifeHeader model={model} onLogout={onLogout} />
+      <LifeHeader model={model} onLogout={onLogout} userName={userName} />
       <main className="mx-auto w-full max-w-5xl px-4 py-6 sm:px-6 lg:px-8">
         <div className="mb-6 flex items-center justify-between">
           <LifeButton

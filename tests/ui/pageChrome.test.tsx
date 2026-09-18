@@ -73,4 +73,23 @@ describe('LifeHeader (SPEC-07 §3.4 / §6.2)', () => {
     await user.click(screen.getByRole('button', { name: 'LifePhone' }));
     expect(onBrandPress).toHaveBeenCalledTimes(1);
   });
+
+  it('renderiza el mensaje de bienvenida con el nombre del usuario autenticado', () => {
+    const model = buildPageModel({ screen: 'catalog-index', viewState: loadingState(), avatarDisplayName: 'Mi Tienda' });
+    render(<LifeHeader model={model} userName="Ana Pérez" />);
+    expect(screen.getByTestId('welcome-message')).toBeInTheDocument();
+    expect(screen.getByText('Bienvenido, Ana Pérez')).toBeInTheDocument();
+  });
+
+  it('omite el mensaje de bienvenida cuando userName es null (carga o no disponible)', () => {
+    const model = buildPageModel({ screen: 'catalog-index', viewState: loadingState(), avatarDisplayName: 'Mi Tienda' });
+    render(<LifeHeader model={model} userName={null} />);
+    expect(screen.queryByTestId('welcome-message')).not.toBeInTheDocument();
+  });
+
+  it('omite el mensaje de bienvenida cuando userName es undefined', () => {
+    const model = buildPageModel({ screen: 'catalog-index', viewState: loadingState(), avatarDisplayName: 'Mi Tienda' });
+    render(<LifeHeader model={model} />);
+    expect(screen.queryByTestId('welcome-message')).not.toBeInTheDocument();
+  });
 });

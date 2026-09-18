@@ -27,32 +27,34 @@ export type AuthSession = {
   userId: string;
   email: string;
   role: UserRole | null;
+  fullName: string | null;
 };
 
 /**
- * Fetches the role name from public.profiles + public.roles.
+ * Fetches the role name and full_name from public.profiles + public.roles.
  * This is the source of truth — user_metadata may be stale.
  */
-async function fetchRoleFromProfile(userId: string): Promise<string | null> {
+async function fetchProfileData(userId: string): Promise<{ role: string | null; fullName: string | null }> {
   const { data, error } = await supabase
     .from('profiles')
-    .select('roles(name)')
+    .select('full_name, roles(name)')
     .eq('id', userId)
     .single();
 
   if (error || !data) {
-    console.warn('[AuthService] Could not fetch profile role:', error?.message);
-    return null;
+    console.warn('[AuthService] Could not fetch profile data:', error?.message);
+    return { role: null, fullName: null };
   }
   // data.roles may be a nested object or array depending on Supabase join
   const roles = (data as Record<string, unknown>).roles;
+  let role: string | null = null;
   if (Array.isArray(roles)) {
-    return (roles[0] as { name?: string })?.name ?? null;
+    role = (roles[0] as { name?: string })?.name ?? null;
+  } else if (roles && typeof roles === 'object') {
+    role = (roles as { name?: string }).name ?? null;
   }
-  if (roles && typeof roles === 'object') {
-    return (roles as { name?: string }).name ?? null;
-  }
-  return null;
+  const fullName = (data as Record<string, unknown>).full_name as string | null;
+  return { role, fullName };
 }
 
 export class AuthService {
@@ -87,20 +89,22 @@ export class AuthService {
       throw new Error('No session returned');
     }
 
-    // Primary: read role from profiles+roles (source of truth)
-    const profileRole = await fetchRoleFromProfile(session.user.id);
+    // Primary: read role + full_name from profiles+roles (source of truth)
+    const profileData = await fetchProfileData(session.user.id);
     // Fallback: user_metadata if profile not yet created
     const fallbackRole = session.user.user_metadata?.role as string | undefined;
-    const dbRole = profileRole || fallbackRole;
+    const dbRole = profileData.role || fallbackRole;
     const role = mapDatabaseRoleToCodeRole(dbRole);
     if (!role) {
       throw new Error('No role assigned to this account');
     }
-    console.log('[AuthService] Role mapped:', { profileRole, fallbackRole, codeRole: role });
+    const fullName = profileData.fullName || session.user.user_metadata?.full_name || null;
+    console.log('[AuthService] Role mapped:', { profileRole: profileData.role, fallbackRole, codeRole: role });
     return {
       userId: session.user.id,
       email: session.user.email || cleanEmail,
       role,
+      fullName,
     };
   }
 
@@ -117,16 +121,18 @@ export class AuthService {
       return null;
     }
 
-    // Primary: read role from profiles+roles (source of truth)
-    const profileRole = await fetchRoleFromProfile(session.user.id);
+    // Primary: read role + full_name from profiles+roles (source of truth)
+    const profileData = await fetchProfileData(session.user.id);
     // Fallback: user_metadata if profile not yet created
     const fallbackRole = session.user.user_metadata?.role as string | undefined;
-    const dbRole = profileRole || fallbackRole;
+    const dbRole = profileData.role || fallbackRole;
     const role = mapDatabaseRoleToCodeRole(dbRole);
+    const fullName = profileData.fullName || session.user.user_metadata?.full_name || null;
     return {
       userId: session.user.id,
       email: session.user.email || '',
       role,
+      fullName,
     };
   }
 
@@ -136,8 +142,8 @@ export class AuthService {
       return null;
     }
 
-    const profileRole = await fetchRoleFromProfile(session.user.id);
+    const profileData = await fetchProfileData(session.user.id);
     const fallbackRole = session.user.user_metadata?.role as string | undefined;
-    return mapDatabaseRoleToCodeRole(profileRole || fallbackRole);
+    return mapDatabaseRoleToCodeRole(profileData.role || fallbackRole);
   }
 }

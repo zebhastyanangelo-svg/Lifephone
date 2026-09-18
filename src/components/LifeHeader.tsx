@@ -13,9 +13,10 @@ export type LifeHeaderProps = {
   pulsing?: boolean;
   onBrandPress?: () => void;
   onLogout?: () => void;
+  userName?: string | null;
 };
 
-export function LifeHeader({ model, pulsing = false, onBrandPress, onLogout }: LifeHeaderProps) {
+export function LifeHeader({ model, pulsing = false, onBrandPress, onLogout, userName }: LifeHeaderProps) {
   return (
     <header data-testid="life-header" className="flex items-center justify-between gap-3 bg-lp-base/80 px-4 py-3 backdrop-blur-md">
       <div className="flex min-w-0 items-center gap-3">
@@ -33,6 +34,14 @@ export function LifeHeader({ model, pulsing = false, onBrandPress, onLogout }: L
         </h1>
       </div>
       <div className="flex items-center gap-3">
+        {!!userName && (
+          <span
+            data-testid="welcome-message"
+            className="truncate font-lp-body text-sm text-lp-muted"
+          >
+            Bienvenido, {userName}
+          </span>
+        )}
         {model.avatar !== null && (
           <Avatar spec={model.avatar} motion="hover" ariaLabel={`Avatar de ${model.avatar.seed}`} />
         )}

@@ -27,12 +27,13 @@ const defaultAuthService = new AuthService();
  * (fuente de verdad) vía AuthService; user_metadata es solo fallback.
  * Un valor ausente/desconocido deriva en invalid_role, SPEC-05 §2.
  */
-function useSessionPhase(): SessionPhase {
+function useSessionPhase(): { phase: SessionPhase; fullName: string | null } {
   const [input, setInput] = useState<SessionInput>({
     sessionActive: true,
     roleLoading: true,
     role: null
   });
+  const [fullName, setFullName] = useState<string | null>(null);
 
   useEffect(() => {
     let subscribed = true;
@@ -43,11 +44,16 @@ function useSessionPhase(): SessionPhase {
         if (!subscribed) return;
         if (!authSession) {
           setInput({ sessionActive: false, roleLoading: false, role: null });
+          setFullName(null);
         } else {
           setInput({ sessionActive: true, roleLoading: false, role: authSession.role });
+          setFullName(authSession.fullName ?? null);
         }
       } catch {
-        if (subscribed) setInput({ sessionActive: false, roleLoading: false, role: null });
+        if (subscribed) {
+          setInput({ sessionActive: false, roleLoading: false, role: null });
+          setFullName(null);
+        }
       }
     }
 
@@ -66,7 +72,7 @@ function useSessionPhase(): SessionPhase {
     };
   }, []);
 
-  return resolveSessionPhase(input);
+  return { phase: resolveSessionPhase(input), fullName };
 }
 
 /**
@@ -114,12 +120,12 @@ function AppLoading() {
  * el título del ScreenPageModel + tarjeta de módulo en preparación. Las pantallas
  * funcionales específicas llegan por Spec en la Phase 2 (SPEC-06).
  */
-function ProtectedScreenPlaceholder({ screen, onLogout }: { screen: ExpoScreenKey; onLogout?: () => void }) {
+function ProtectedScreenPlaceholder({ screen, onLogout, userName }: { screen: ExpoScreenKey; onLogout?: () => void; userName?: string | null }) {
   const model = buildPageModel({ screen, viewState: loadingState() });
 
   return (
     <div className="min-h-screen bg-lp-base">
-      <LifeHeader model={model} onLogout={onLogout} />
+      <LifeHeader model={model} onLogout={onLogout} userName={userName} />
       <main className="mx-auto w-full max-w-3xl p-4 sm:p-6">
         <LifeCard description="Este módulo estará disponible en la próxima fase del sistema.">
           <div className="flex items-center gap-3">
@@ -143,7 +149,7 @@ export type AppProps = {
  * la pantalla estilizada de sign-in. Es el shell que main.tsx monta en #app.
  */
 export function App({ initialPath }: AppProps) {
-  const phase = useSessionPhase();
+  const { phase, fullName } = useSessionPhase();
   const { path, navigate } = usePath(initialPath);
   const resolution = resolveScreenRoute({ phase, path });
 
@@ -179,13 +185,13 @@ export function App({ initialPath }: AppProps) {
         break;
       case 'expansion-index':
       case 'lead-detail':
-        screenNode = <ExpansionScreen role={phase.phase === 'authenticated' ? phase.role : undefined} onNavigate={navigate} onLogout={handleLogout} />;
+                 screenNode = <ExpansionScreen role={phase.phase === 'authenticated' ? phase.role : undefined} onNavigate={navigate} onLogout={handleLogout} userName={fullName} />;
         break;
       case 'admin-roles-index':
-        screenNode = <AdminManagementScreen onNavigate={navigate} onLogout={handleLogout} />;
+                 screenNode = <AdminManagementScreen onNavigate={navigate} onLogout={handleLogout} userName={fullName} />;
         break;
       default:
-        screenNode = <ProtectedScreenPlaceholder screen={resolution.screen} onLogout={handleLogout} />;
+                 screenNode = <ProtectedScreenPlaceholder screen={resolution.screen} onLogout={handleLogout} userName={fullName} />;
     }
   }
 
