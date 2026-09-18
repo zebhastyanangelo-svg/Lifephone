@@ -3,12 +3,13 @@
 -- Previously only super_admin could create/update/delete admins.
 
 -- =============================================================================
--- 1. FUNCTION: create_admin_user - now callable by super_admin or admin
+-- 1. FUNCTION: create_admin_user - now callable by super_admin or admin with role parameter
 -- =============================================================================
 CREATE OR REPLACE FUNCTION public.create_admin_user(
   p_email text,
   p_password text,
-  p_full_name text
+  p_full_name text,
+  p_role text DEFAULT 'admin'
 )
 RETURNS json
 LANGUAGE plpgsql
@@ -18,7 +19,7 @@ AS $$
 DECLARE
   v_caller_role text;
   v_new_user_id uuid;
-  v_admin_role_id uuid;
+  v_target_role_id uuid;
   v_user_record record;
 BEGIN
   -- Authorization check: super_admin or admin
@@ -31,32 +32,32 @@ BEGIN
     RAISE EXCEPTION 'Only super_admin or admin can create admin users';
   END IF;
 
-  -- Create the auth user with admin role in metadata
+  -- Validate the requested role exists
+  SELECT id INTO v_target_role_id FROM public.roles WHERE name = p_role;
+  IF v_target_role_id IS NULL THEN
+    RAISE EXCEPTION 'Invalid role: %', p_role;
+  END IF;
+
+  -- Create the auth user with the specified role in metadata
   v_user_record := auth.admin.create_user(
     email := p_email,
     password := p_password,
     email_confirm := true,
-    user_metadata := jsonb_build_object('role', 'admin')
+    user_metadata := jsonb_build_object('role', p_role)
   );
 
   v_new_user_id := v_user_record.id;
 
-  -- Get admin role ID
-  SELECT id INTO v_admin_role_id FROM public.roles WHERE name = 'admin';
-  IF v_admin_role_id IS NULL THEN
-    RAISE EXCEPTION 'admin role not found in roles table';
-  END IF;
-
-  -- Create profile record
+  -- Create profile record with the specified role
   INSERT INTO public.profiles (id, role_id, full_name)
-  VALUES (v_new_user_id, v_admin_role_id, p_full_name);
+  VALUES (v_new_user_id, v_target_role_id, p_full_name);
 
   RETURN json_build_object(
     'success', true,
     'user_id', v_new_user_id,
     'email', p_email,
     'full_name', p_full_name,
-    'role', 'admin'
+    'role', p_role
   );
 END;
 $$;

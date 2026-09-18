@@ -141,6 +141,7 @@ export function ExpansionScreen({ role, onNavigate, onLogout, userName }: { role
                 accessibilityLabel="Gestionar administradores"
               />
             )}
+            {(role === 'super_admin' || role === 'admin') && (
             <LifeButton
               label="+ Registrar Sucursal"
               onPress={() => {
@@ -151,6 +152,7 @@ export function ExpansionScreen({ role, onNavigate, onLogout, userName }: { role
               size="sm"
               accessibilityLabel="Registrar nueva sucursal"
             />
+          )}
           </div>
         </div>
 

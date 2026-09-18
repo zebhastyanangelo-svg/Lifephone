@@ -7,6 +7,7 @@ import { LifeInput } from './LifeInput';
 import { BrandMark } from './BrandMark';
 import { buildPageModel } from '../frontend/pageModel';
 import { loadingState } from '../frontend/viewState';
+import type { UserRole } from '../lib/database.types';
 
 type AdminUser = {
   id: string;
@@ -246,12 +247,19 @@ type AdminUserModalProps = {
   onClose: () => void;
   onSuccess: () => void;
   admin: AdminUser | null;
+  onRoleChange?: (role: UserRole) => void;
 };
 
-function AdminUserModal({ isOpen, onClose, onSuccess, admin }: AdminUserModalProps) {
+type RoleSelection = {
+  label: string;
+  value: UserRole;
+};
+
+function AdminUserModal({ isOpen, onClose, onSuccess, admin, onRoleChange }: AdminUserModalProps) {
   const [fullName, setFullName] = useState(admin?.full_name ?? '');
   const [email, setEmail] = useState(admin?.email ?? '');
   const [password, setPassword] = useState('');
+  const [role, setRole] = useState<UserRole>(admin?.role as UserRole ?? 'admin');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -261,10 +269,12 @@ function AdminUserModal({ isOpen, onClose, onSuccess, admin }: AdminUserModalPro
     if (admin) {
       setFullName(admin.full_name);
       setEmail(admin.email);
+      setRole(admin.role as UserRole);
     } else {
       setFullName('');
       setEmail('');
       setPassword('');
+      setRole('admin');
     }
   }, [admin, isOpen]);
 
@@ -284,13 +294,22 @@ function AdminUserModal({ isOpen, onClose, onSuccess, admin }: AdminUserModalPro
     try {
       if (isEditing && admin) {
         const trimmedPassword = password.trim();
+        // Update basic user info first
         const { data, error: updateError } = await supabase.rpc('update_admin_user', {
           p_user_id: admin.id,
           p_full_name: fullName.trim(),
           p_email: email.trim(),
-          ...(trimmedPassword ? { p_new_password: trimmedPassword } : {})
+          p_new_password: trimmedPassword || undefined
         });
         if (updateError) throw updateError;
+
+        // Then update the role if it has changed
+        if (role !== admin.role) {
+          await supabase.rpc('update_admin_role', {
+            p_user_id: admin.id,
+            p_new_role: role
+          });
+        }
 
         const result = data as Record<string, unknown> | null;
         if (result && result.success === false) {
@@ -301,7 +320,7 @@ function AdminUserModal({ isOpen, onClose, onSuccess, admin }: AdminUserModalPro
           payload: {
             full_name: fullName.trim(),
             email: email.trim(),
-            role_name: 'admin',
+            role_name: role,
             password: password
           }
         });
@@ -395,15 +414,21 @@ function AdminUserModal({ isOpen, onClose, onSuccess, admin }: AdminUserModalPro
             disabled={loading || isEditing}
             accessibilityLabel="Correo electrónico del administrador"
           />
-          {!isEditing && (
-            <LifeInput
-              label="Nombre de usuario / Rol"
-              value="Administrador"
-              onChange={() => {}}
-              disabled
-              accessibilityLabel="Rol del nuevo administrador"
-            />
-          )}
+          <div className="mt-2">
+            <label className="sr-only">Rol del administrador</label>
+            <select
+              value={role}
+              onChange={(e) => setRole(e.target.value as UserRole)}
+              disabled={loading}
+              className="block w-full rounded-lp bg-lp-glass-bg border-lp-border text-lp-primary py-2 px-3 ls-5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lp-cyan/55 file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder-abbr-other focus:ring-lp-cyan/55 sm:max-w-xs"
+            >
+              <option value="super_admin">Super Admin</option>
+              <option value="admin">Admin</option>
+              <option value="staff_orders">Staff Orders</option>
+              <option value="read_only">Solo Lectura</option>
+              <option value="store_user">Usuario Tienda</option>
+            </select>
+          </div>
           <LifeInput
             label={isEditing ? 'Nueva contraseña (opcional)' : 'Contraseña inicial'}
             value={password}
