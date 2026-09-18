@@ -139,7 +139,9 @@ export function AdminManagementScreen({ onNavigate, onLogout }: { onNavigate?: (
                     onDelete={async () => {
                       if (!confirm(`¿Eliminar a ${admin.full_name}? Esta acción no se puede deshacer.`)) return;
                       try {
-                        const { error } = await supabase.rpc('delete_admin_user', { p_user_id: admin.id });
+                        const { error } = await supabase.rpc('delete_admin_user', {
+                          payload: { user_id: admin.id }
+                        });
                         if (error) throw error;
                         void fetchAdmins();
                       } catch (err) {
@@ -299,6 +301,7 @@ function AdminUserModal({ isOpen, onClose, onSuccess, admin }: AdminUserModalPro
           payload: {
             full_name: fullName.trim(),
             email: email.trim(),
+            role_name: 'admin',
             password: password
           }
         });

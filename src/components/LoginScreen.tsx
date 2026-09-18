@@ -43,6 +43,9 @@ export function LoginScreen({
 
     try {
       const session = await authService.login(email, password);
+      if (!session.role) {
+        throw new Error('No role assigned to this account');
+      }
       const landingPath = resolveRoleLanding(session.role);
       onLoginSuccess?.(session, landingPath);
     } catch (err) {
@@ -61,7 +64,7 @@ export function LoginScreen({
       >
         <div className="flex flex-col items-center gap-6">
           <BrandMark size={72} pulsing={loading} decorative />
-          <form onSubmit={(e) => e.preventDefault()} className="w-full space-y-4">
+          <form onSubmit={(e) => { e.preventDefault(); handleSubmit(); }} className="w-full space-y-4">
             <LifeInput
               label="Correo electrónico"
               value={email}

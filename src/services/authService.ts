@@ -1,9 +1,9 @@
-// AuthService v2.1.0 — 2026-09-14T20:42:00Z — Force bundle invalidation
+// AuthService v2.2.0 — 2026-09-17 — Read role from profiles+roles tables
 
 import { supabase } from '../lib/supabase';
 import type { UserRole } from '../lib/database.types';
 
-console.log('[AuthService] v2.1.0 loaded — fresh bundle deployed');
+console.log('[AuthService] v2.2.0 loaded — role from profiles+roles');
 
 const DB_ROLE_TO_CODE_ROLE: Record<string, UserRole> = {
   superadmin: 'super_admin',
@@ -18,16 +18,42 @@ const DB_ROLE_TO_CODE_ROLE: Record<string, UserRole> = {
   store_user: 'store_user',
 };
 
-function mapDatabaseRoleToCodeRole(dbRole: string | undefined): UserRole {
-  if (!dbRole) return 'read_only';
-  return DB_ROLE_TO_CODE_ROLE[dbRole] || 'read_only';
+function mapDatabaseRoleToCodeRole(dbRole: string | undefined): UserRole | null {
+  if (!dbRole) return null;
+  return DB_ROLE_TO_CODE_ROLE[dbRole] || null;
 }
 
 export type AuthSession = {
   userId: string;
   email: string;
-  role: UserRole;
+  role: UserRole | null;
 };
+
+/**
+ * Fetches the role name from public.profiles + public.roles.
+ * This is the source of truth — user_metadata may be stale.
+ */
+async function fetchRoleFromProfile(userId: string): Promise<string | null> {
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('roles(name)')
+    .eq('id', userId)
+    .single();
+
+  if (error || !data) {
+    console.warn('[AuthService] Could not fetch profile role:', error?.message);
+    return null;
+  }
+  // data.roles may be a nested object or array depending on Supabase join
+  const roles = (data as Record<string, unknown>).roles;
+  if (Array.isArray(roles)) {
+    return (roles[0] as { name?: string })?.name ?? null;
+  }
+  if (roles && typeof roles === 'object') {
+    return (roles as { name?: string }).name ?? null;
+  }
+  return null;
+}
 
 export class AuthService {
   public async login(email: string, password: string): Promise<AuthSession> {
@@ -61,9 +87,16 @@ export class AuthService {
       throw new Error('No session returned');
     }
 
-    const dbRole = session.user.user_metadata?.role as string | undefined;
+    // Primary: read role from profiles+roles (source of truth)
+    const profileRole = await fetchRoleFromProfile(session.user.id);
+    // Fallback: user_metadata if profile not yet created
+    const fallbackRole = session.user.user_metadata?.role as string | undefined;
+    const dbRole = profileRole || fallbackRole;
     const role = mapDatabaseRoleToCodeRole(dbRole);
-    console.log('[AuthService] Role mapped:', { dbRole, codeRole: role });
+    if (!role) {
+      throw new Error('No role assigned to this account');
+    }
+    console.log('[AuthService] Role mapped:', { profileRole, fallbackRole, codeRole: role });
     return {
       userId: session.user.id,
       email: session.user.email || cleanEmail,
@@ -84,7 +117,11 @@ export class AuthService {
       return null;
     }
 
-    const dbRole = session.user.user_metadata?.role as string | undefined;
+    // Primary: read role from profiles+roles (source of truth)
+    const profileRole = await fetchRoleFromProfile(session.user.id);
+    // Fallback: user_metadata if profile not yet created
+    const fallbackRole = session.user.user_metadata?.role as string | undefined;
+    const dbRole = profileRole || fallbackRole;
     const role = mapDatabaseRoleToCodeRole(dbRole);
     return {
       userId: session.user.id,
@@ -99,7 +136,8 @@ export class AuthService {
       return null;
     }
 
-    const dbRole = session.user.user_metadata?.role as string | undefined;
-    return mapDatabaseRoleToCodeRole(dbRole);
+    const profileRole = await fetchRoleFromProfile(session.user.id);
+    const fallbackRole = session.user.user_metadata?.role as string | undefined;
+    return mapDatabaseRoleToCodeRole(profileRole || fallbackRole);
   }
 }

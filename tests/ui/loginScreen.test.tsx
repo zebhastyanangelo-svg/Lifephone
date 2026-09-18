@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { AuthError } from '@supabase/supabase-js';
@@ -30,14 +30,19 @@ function mockSession(id: string, role: string) {
   };
 }
 
-function mockSignInSuccess(role: string) {
-  vi.spyOn(supabase.auth, 'signInWithPassword').mockResolvedValue({
-    data: {
-      user: mockUser('user-123', role),
-      session: mockSession('user-123', role)
-    },
-    error: null
-  });
+function mockAuthService(role: string) {
+  const session = mockSession('user-123', role);
+  const authService = {
+    login: vi.fn().mockResolvedValue({
+      userId: 'user-123',
+      email: `${role}@lifephone.test`,
+      role
+    }),
+    logout: vi.fn().mockResolvedValue(undefined),
+    getSession: vi.fn().mockResolvedValue(null),
+    getCurrentRole: vi.fn().mockResolvedValue(role)
+  };
+  return { authService, session };
 }
 
 function mockSignInError(message: string) {
@@ -49,6 +54,7 @@ function mockSignInError(message: string) {
 
 describe('LoginScreen (SPEC-07 §5.1)', () => {
   beforeEach(() => {
+    vi.restoreAllMocks();
     vi.clearAllMocks();
   });
 
@@ -67,20 +73,16 @@ describe('LoginScreen (SPEC-07 §5.1)', () => {
   it('envía credenciales al AuthService y, en success, llama onLoginSuccess con sesión + landing por rol', async () => {
     const user = userEvent.setup();
     const onSuccess = vi.fn();
-    mockSignInSuccess('super_admin');
-    render(<LoginScreen onLoginSuccess={onSuccess} />);
+    const { authService } = mockAuthService('super_admin');
+    render(<LoginScreen authService={authService} onLoginSuccess={onSuccess} />);
 
     await user.type(screen.getByLabelText('Correo electrónico'), TEST_EMAIL_ADMIN);
     await user.type(screen.getByLabelText('Contraseña'), TEST_PASSWORD);
-    await user.click(screen.getByRole('button', { name: 'Iniciar sesión' }));
+    fireEvent.submit(document.querySelector('form')!);
 
     await waitFor(() => {
-      expect(supabase.auth.signInWithPassword).toHaveBeenCalledWith({
-        email: TEST_EMAIL_ADMIN,
-        password: TEST_PASSWORD
-      });
+      expect(authService.login).toHaveBeenCalledWith(TEST_EMAIL_ADMIN, TEST_PASSWORD);
     });
-
     await waitFor(() => {
       expect(onSuccess).toHaveBeenCalledTimes(1);
     });
@@ -101,12 +103,12 @@ describe('LoginScreen (SPEC-07 §5.1)', () => {
   ])('redirige role=%s al landing %s', async (role, landing) => {
     const user = userEvent.setup();
     const onSuccess = vi.fn();
-    mockSignInSuccess(role);
-    render(<LoginScreen onLoginSuccess={onSuccess} />);
+    const { authService } = mockAuthService(role);
+    render(<LoginScreen authService={authService} onLoginSuccess={onSuccess} />);
 
     await user.type(screen.getByLabelText('Correo electrónico'), `${role}@test.com`);
     await user.type(screen.getByLabelText('Contraseña'), 'pw');
-    await user.click(screen.getByRole('button', { name: 'Iniciar sesión' }));
+    fireEvent.submit(document.querySelector('form')!);
 
     await waitFor(() => {
       expect(onSuccess).toHaveBeenCalledTimes(1);
@@ -117,59 +119,68 @@ describe('LoginScreen (SPEC-07 §5.1)', () => {
 
   it('estado de carga: botón disabled + aria-busy + BrandMark en pulso pum-pum', async () => {
     const user = userEvent.setup();
-    let resolveLogin!: (value: { data: { user: any; session: any }; error: null }) => void;
-    vi.spyOn(supabase.auth, 'signInWithPassword').mockImplementation(
-      () =>
-        new Promise((resolve) => {
-          resolveLogin = resolve;
-        })
-    );
+    let resolveLogin!: (value: { userId: string; email: string; role: string }) => void;
+    const authService = {
+      login: vi.fn().mockImplementation(
+        () =>
+          new Promise((resolve) => {
+            resolveLogin = resolve;
+          })
+      ),
+      logout: vi.fn(),
+      getSession: vi.fn().mockResolvedValue(null),
+      getCurrentRole: vi.fn().mockResolvedValue('super_admin')
+    };
 
-    render(<LoginScreen />);
+    render(<LoginScreen authService={authService} />);
     await user.type(screen.getByLabelText('Correo electrónico'), 'admin@test.com');
     await user.type(screen.getByLabelText('Contraseña'), 'pw');
     const submit = screen.getByRole('button', { name: 'Iniciar sesión' });
-
-    await user.click(submit);
+    fireEvent.submit(document.querySelector('form')!);
 
     expect(submit).toHaveAttribute('data-loading', 'true');
     expect(submit).toBeDisabled();
     const marks = screen.getAllByTestId('lp-brand-mark');
     expect(marks.some((m) => m.className.includes('animate-lp-pulse'))).toBe(true);
 
-    resolveLogin({
-      data: { user: mockUser('user-123', 'super_admin'), session: mockSession('user-123', 'super_admin') },
-      error: null
-    });
+    resolveLogin({ userId: 'user-123', email: 'super_admin@lifephone.test', role: 'super_admin' });
 
     await waitFor(() => expect(submit).not.toHaveAttribute('data-loading'));
   });
 
   it('error de login: muestra mensaje seguro (no filtra el mensaje interno)', async () => {
     const user = userEvent.setup();
-    mockSignInError('Invalid login credentials');
-    render(<LoginScreen />);
+    const authService = {
+      login: vi.fn().mockRejectedValue(new Error('Error de autenticación')),
+      logout: vi.fn(),
+      getSession: vi.fn().mockResolvedValue(null),
+      getCurrentRole: vi.fn().mockResolvedValue(null)
+    };
+    render(<LoginScreen authService={authService} />);
 
     await user.type(screen.getByLabelText('Correo electrónico'), 'wrong@email.com');
     await user.type(screen.getByLabelText('Contraseña'), 'wrong-password');
-    await user.click(screen.getByRole('button', { name: 'Iniciar sesión' }));
+    fireEvent.submit(document.querySelector('form')!);
 
     const alert = await screen.findByRole('alert');
     expect(alert).toBeInTheDocument();
-    expect(alert.textContent).not.toContain('Invalid login credentials');
+    expect(alert.textContent).not.toContain('Error de autenticación');
     expect(alert.textContent).toMatch(/credencial|inválicas|inténtalo|error/i);
   });
 
   it('error de red: mensaje seguro y reintentable', async () => {
     const user = userEvent.setup();
-    vi.spyOn(supabase.auth, 'signInWithPassword').mockRejectedValue(
-      new TypeError('Failed to fetch')
-    );
-    render(<LoginScreen />);
+    const authService = {
+      login: vi.fn().mockRejectedValue(new TypeError('Failed to fetch')),
+      logout: vi.fn(),
+      getSession: vi.fn().mockResolvedValue(null),
+      getCurrentRole: vi.fn().mockResolvedValue(null)
+    };
+    render(<LoginScreen authService={authService} />);
 
     await user.type(screen.getByLabelText('Correo electrónico'), 'a@b.com');
     await user.type(screen.getByLabelText('Contraseña'), 'pw');
-    await user.click(screen.getByRole('button', { name: 'Iniciar sesión' }));
+    fireEvent.submit(document.querySelector('form')!);
 
     const alert = await screen.findByRole('alert');
     expect(alert).toBeInTheDocument();
@@ -177,16 +188,21 @@ describe('LoginScreen (SPEC-07 §5.1)', () => {
 
   it('el error se limpia al reenviar exitosamente el formulario', async () => {
     const user = userEvent.setup();
-    mockSignInError('Invalid login credentials');
-    render(<LoginScreen />);
+    const authService = {
+      login: vi.fn(),
+      logout: vi.fn(),
+      getSession: vi.fn().mockResolvedValue(null),
+      getCurrentRole: vi.fn().mockResolvedValue(null)
+    };
+    render(<LoginScreen authService={authService} />);
 
     await user.type(screen.getByLabelText('Correo electrónico'), 'wrong@email.com');
     await user.type(screen.getByLabelText('Contraseña'), 'wrong-password');
-    await user.click(screen.getByRole('button', { name: 'Iniciar sesión' }));
+    fireEvent.submit(document.querySelector('form')!);
     await screen.findByRole('alert');
 
-    mockSignInSuccess('super_admin');
-    await user.click(screen.getByRole('button', { name: 'Iniciar sesión' }));
+    authService.login.mockResolvedValue({ userId: 'user-123', email: 'super_admin@lifephone.test', role: 'super_admin' });
+    fireEvent.submit(document.querySelector('form')!);
 
     await waitFor(() => {
       expect(screen.queryByRole('alert')).not.toBeInTheDocument();

@@ -299,7 +299,7 @@ export type Database = {
       list_admin_users: { Args: Record<never, never>; Returns: Json }
       update_admin_role: { Args: { p_user_id: string; p_new_role: string }; Returns: Json }
       update_admin_user: { Args: { p_user_id: string; p_full_name: string; p_email: string; p_new_password?: string }; Returns: Json }
-      delete_admin_user: { Args: { p_user_id: string }; Returns: Json }
+      delete_admin_user: { Args: { payload: { user_id: string } }; Returns: Json }
       get_current_user_role: { Args: Record<never, never>; Returns: string }
     }
     Enums: {

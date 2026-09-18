@@ -18,7 +18,7 @@ export type RouteResolution =
     };
 
 function normalizePath(raw: string): string {
-  const trimmed = raw.trim();
+  const trimmed = (raw || '').toString().trim();
   const leading = trimmed.startsWith('/') ? trimmed : `/${trimmed}`;
   const collapsed = leading.replace(/\/+$/, '');
   return collapsed === '' ? '/' : collapsed;

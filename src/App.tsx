@@ -2,7 +2,6 @@ import { useCallback, useEffect, useState, type ReactNode } from 'react';
 import { supabase } from './lib/supabase';
 import { AuthService, type AuthSession } from './services/authService';
 import {
-  normalizeSessionRole,
   resolveSessionPhase,
   type SessionInput,
   type SessionPhase
@@ -24,9 +23,9 @@ const defaultAuthService = new AuthService();
 /**
  * Máquina de fase de sesión (SPEC-04 §3) alimentada por Supabase Auth:
  * `getSession` al montar + suscripción `onAuthStateChange` (SIGNED_IN /
- * SIGNED_OUT / TOKEN_REFRESHED). El rol se normaliza con
- * `normalizeSessionRole` sobre `user_metadata` — nunca se inventa un rol
- * (un valor ausente/desconocido deriva en invalid_role, SPEC-05 §2).
+ * SIGNED_OUT / TOKEN_REFRESHED). El rol se obtiene de profiles+roles
+ * (fuente de verdad) vía AuthService; user_metadata es solo fallback.
+ * Un valor ausente/desconocido deriva en invalid_role, SPEC-05 §2.
  */
 function useSessionPhase(): SessionPhase {
   const [input, setInput] = useState<SessionInput>({
@@ -38,29 +37,27 @@ function useSessionPhase(): SessionPhase {
   useEffect(() => {
     let subscribed = true;
 
-    function inputFromSession(
-      session: { user?: { user_metadata?: Record<string, unknown> } | null } | null
-    ): SessionInput {
-      if (!session?.user) {
-        return { sessionActive: false, roleLoading: false, role: null };
+    async function resolveFromSession() {
+      try {
+        const authSession = await defaultAuthService.getSession();
+        if (!subscribed) return;
+        if (!authSession) {
+          setInput({ sessionActive: false, roleLoading: false, role: null });
+        } else {
+          setInput({ sessionActive: true, roleLoading: false, role: authSession.role });
+        }
+      } catch {
+        if (subscribed) setInput({ sessionActive: false, roleLoading: false, role: null });
       }
-      const role = normalizeSessionRole(session.user.user_metadata?.role);
-      return { sessionActive: true, roleLoading: false, role };
     }
 
-    void supabase.auth
-      .getSession()
-      .then(({ data }) => {
-        if (subscribed) setInput(inputFromSession(data.session));
-      })
-      .catch(() => {
-        if (subscribed) setInput({ sessionActive: false, roleLoading: false, role: null });
-      });
+    void resolveFromSession();
 
     const {
       data: { subscription }
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (subscribed) setInput(inputFromSession(session));
+    } = supabase.auth.onAuthStateChange((_event, _session) => {
+      // Re-resolve from DB on any auth state change (SIGNED_IN, TOKEN_REFRESHED, etc.)
+      void resolveFromSession();
     });
 
     return () => {
