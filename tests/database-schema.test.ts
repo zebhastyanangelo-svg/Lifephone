@@ -99,6 +99,43 @@ describe('Migración de rol en create_admin_user (013)', () => {
   });
 });
 
+describe('Migración de referencia cruzada en create_admin_user (014)', () => {
+  const fixCrossDbPath = new URL('../supabase/migrations/014_fix_cross_database_create_user.sql', import.meta.url);
+
+  it('no invoca auth.admin.create_user (referencia cruzada de base de datos no soportada)', async () => {
+    const migration = await readFile(fixCrossDbPath, 'utf8');
+
+    expect(migration).not.toMatch(/auth\.admin\.create_user/i);
+  });
+
+  it('crea el usuario insertando directamente en auth.users con contraseña bcrypt', async () => {
+    const migration = await readFile(fixCrossDbPath, 'utf8');
+
+    expect(migration).toMatch(/INSERT INTO auth\.users/i);
+    expect(migration).toMatch(/crypt\(p_password, gen_salt\('bf'\)\)/i);
+    expect(migration).toMatch(/INSERT INTO auth\.identities/i);
+  });
+
+  it('mantiene la firma RPC con p_role y el insert del perfil con el rol solicitado', async () => {
+    const migration = await readFile(fixCrossDbPath, 'utf8');
+
+    expect(migration).toMatch(
+      /create or replace function public\.create_admin_user\s*\(\s*p_email\s+text\s*,\s*p_password\s+text\s*,\s*p_full_name\s+text\s*,\s*p_role\s+text/i
+    );
+    expect(migration).toMatch(/SELECT id INTO v_target_role_id FROM public\.roles WHERE name = p_role/i);
+    expect(migration).toMatch(
+      /INSERT INTO public\.profiles\s*\(\s*id\s*,\s*role_id\s*,\s*full_name\s*\)\s*VALUES\s*\(\s*v_new_user_id\s*,\s*v_target_role_id/i
+    );
+  });
+
+  it('mantiene la metadata de usuario con el rol solicitado (sin valor quemado)', async () => {
+    const migration = await readFile(fixCrossDbPath, 'utf8');
+
+    expect(migration).toMatch(/jsonb_build_object\('role', p_role/i);
+    expect(migration).not.toMatch(/jsonb_build_object\('role',\s*'admin'\)/i);
+  });
+});
+
 describe('Migración de campos de sucursal (003)', () => {
   it('agrega las columnas rif y google_maps_url a expansion_leads', async () => {
     const migration = await readFile(branchFieldsPath, 'utf8');
