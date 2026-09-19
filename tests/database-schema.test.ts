@@ -136,6 +136,26 @@ describe('Migración de referencia cruzada en create_admin_user (014)', () => {
   });
 });
 
+describe('Migración de listado de administradores (015)', () => {
+  const fixListPath = new URL('../supabase/migrations/015_fix_list_admin_users_roles.sql', import.meta.url);
+
+  it('no filtra los perfiles por una lista blanca de roles (incluye read_only, staff_orders, store_user)', async () => {
+    const migration = await readFile(fixListPath, 'utf8');
+
+    expect(migration).not.toMatch(/WHERE\s+r\.name\s+IN/i);
+  });
+
+  it('mantiene el contrato del RPC: join perfiles/roles/auth.users con nombre de rol', async () => {
+    const migration = await readFile(fixListPath, 'utf8');
+
+    expect(migration).toMatch(/create or replace function public\.list_admin_users\s*\(\s*\)/i);
+    expect(migration).toMatch(/FROM public\.profiles p/i);
+    expect(migration).toMatch(/JOIN public\.roles r ON r\.id = p\.role_id/i);
+    expect(migration).toMatch(/JOIN auth\.users u ON u\.id = p\.id/i);
+    expect(migration).toMatch(/'role', r\.name/i);
+  });
+});
+
 describe('Migración de campos de sucursal (003)', () => {
   it('agrega las columnas rif y google_maps_url a expansion_leads', async () => {
     const migration = await readFile(branchFieldsPath, 'utf8');
