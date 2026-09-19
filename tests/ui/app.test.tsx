@@ -54,6 +54,27 @@ function mockAuthSource(session: AuthSessionShape | null) {
     onAuthStateListener = listener;
     return { data: { subscription: { unsubscribe: vi.fn() } } };
   }) as never);
+
+  // Mock the Supabase REST + Realtime client so AuthService.fetchProfileData
+  // and ExpansionScreen data fetching resolve without real network calls.
+  // fetchProfileData calls from('profiles').select(...).eq(...).single(),
+  // while ExpansionScreen calls from('expansion_leads').select('*') (awaited
+  // directly). Without this, the real HTTP call to profiles keeps the session
+  // in the loading phase long enough to make findByRole time out (400/timeout).
+  const dbRole = session?.user?.user_metadata?.role as string | undefined;
+  const single = vi.fn().mockResolvedValue({
+    data: dbRole ? { full_name: null, roles: { name: dbRole } } : null,
+    error: dbRole ? null : { message: 'profile not found' }
+  });
+  const eq = vi.fn().mockReturnValue({ single });
+  const select = vi.fn().mockReturnValue({ eq });
+  vi.spyOn(supabase, 'from').mockReturnValue({ select } as never);
+
+  vi.spyOn(supabase, 'channel').mockReturnValue({
+    on: vi.fn().mockReturnThis(),
+    subscribe: vi.fn().mockReturnThis(),
+    unsubscribe: vi.fn().mockReturnThis()
+  } as never);
 }
 
 function emitAuthState(event: string, session: AuthSessionShape | null): void {
