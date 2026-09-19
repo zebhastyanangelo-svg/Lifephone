@@ -27,6 +27,8 @@ export function AdminManagementScreen({ onNavigate, onLogout, userName }: { onNa
   const [state, setState] = useState<AdminScreenState>({ status: 'loading' });
   const [modalOpen, setModalOpen] = useState(false);
   const [editingAdmin, setEditingAdmin] = useState<AdminUser | null>(null);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [deletingAdminId, setDeletingAdminId] = useState<string | null>(null);
 
   const fetchAdmins = useCallback(async () => {
     try {
@@ -42,6 +44,39 @@ export function AdminManagementScreen({ onNavigate, onLogout, userName }: { onNa
 
   useEffect(() => {
     void fetchAdmins();
+  }, [fetchAdmins]);
+
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      try {
+        const { data, error } = await supabase.auth.getUser();
+        if (error) throw error;
+        if (!cancelled) setCurrentUserId(data.user?.id ?? null);
+      } catch (err) {
+        console.error('[AdminManagement] Error fetching current user:', err);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const handleDelete = useCallback(async (admin: AdminUser) => {
+    if (!confirm(`¿Eliminar a ${admin.full_name}? Esta acción no se puede deshacer.`)) return;
+    setDeletingAdminId(admin.id);
+    try {
+      const { error } = await supabase.rpc('delete_admin_user', {
+        payload: { user_id: admin.id }
+      });
+      if (error) throw error;
+      await fetchAdmins();
+    } catch (err) {
+      console.error('[AdminManagement] Error deleting admin:', err);
+      alert('No se pudo eliminar el administrador.');
+    } finally {
+      setDeletingAdminId(null);
+    }
   }, [fetchAdmins]);
 
   const model = buildPageModel({
@@ -133,23 +168,13 @@ export function AdminManagementScreen({ onNavigate, onLogout, userName }: { onNa
                   <AdminTableRow
                     key={admin.id}
                     admin={admin}
+                    isCurrentUser={admin.id === currentUserId}
+                    deleting={deletingAdminId === admin.id}
                     onEdit={() => {
                       setEditingAdmin(admin);
                       setModalOpen(true);
                     }}
-                    onDelete={async () => {
-                      if (!confirm(`¿Eliminar a ${admin.full_name}? Esta acción no se puede deshacer.`)) return;
-                      try {
-                        const { error } = await supabase.rpc('delete_admin_user', {
-                          payload: { user_id: admin.id }
-                        });
-                        if (error) throw error;
-                        void fetchAdmins();
-                      } catch (err) {
-                        console.error('[AdminManagement] Error deleting admin:', err);
-                        alert('No se pudo eliminar el administrador.');
-                      }
-                    }}
+                    onDelete={() => void handleDelete(admin)}
                   />
                 ))}
               </tbody>
@@ -180,11 +205,15 @@ export function AdminManagementScreen({ onNavigate, onLogout, userName }: { onNa
 function AdminTableRow({
   admin,
   onEdit,
-  onDelete
+  onDelete,
+  isCurrentUser = false,
+  deleting = false
 }: {
   admin: AdminUser;
   onEdit: () => void;
   onDelete: () => void;
+  isCurrentUser?: boolean;
+  deleting?: boolean;
 }) {
   const isSuperAdmin = admin.role === 'super_admin';
   const roleBadge = isSuperAdmin
@@ -225,14 +254,17 @@ function AdminTableRow({
             onPress={onEdit}
             variant="ghost"
             size="sm"
+            disabled={deleting}
             accessibilityLabel={`Editar ${admin.full_name}`}
           />
-          {!isSuperAdmin && (
+          {!isCurrentUser && (
             <LifeButton
               label="Eliminar"
               onPress={onDelete}
               variant="ghost"
               size="sm"
+              loading={deleting}
+              disabled={deleting}
               accessibilityLabel={`Eliminar ${admin.full_name}`}
             />
           )}
@@ -305,10 +337,11 @@ function AdminUserModal({ isOpen, onClose, onSuccess, admin, onRoleChange }: Adm
 
         // Then update the role if it has changed
         if (role !== admin.role) {
-          await supabase.rpc('update_admin_role', {
+          const { error: roleError } = await supabase.rpc('update_admin_role', {
             p_user_id: admin.id,
             p_new_role: role
           });
+          if (roleError) throw roleError;
         }
 
         const result = data as Record<string, unknown> | null;
