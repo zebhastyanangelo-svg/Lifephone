@@ -1,8 +1,7 @@
 import { useCallback, useEffect, useState, type ReactNode } from 'react';
 import { supabase } from './lib/supabase';
-import { AuthService, type AuthSession } from './services/authService';
+import { AuthService, type AuthSession, mapDatabaseRoleToCodeRole } from './services/authService';
 import {
-  normalizeSessionRole,
   resolveSessionPhase,
   type SessionInput,
   type SessionPhase
@@ -23,14 +22,14 @@ import { ReportsScreen } from './components/ReportsScreen';
 const defaultAuthService = new AuthService();
 
 /**
- * Máquina de fase de sesión (SPEC-04 §3) alimentada por Supabase Auth:
- * `getSession` al montar + suscripción `onAuthStateChange` (SIGNED_IN /
- * SIGNED_OUT / TOKEN_REFRESHED). El estado se deriva directamente del
- * parámetro `session` del callback (fuente de verdad de la sesión activa);
- * el rol se normaliza con `normalizeSessionRole` sobre `user_metadata` —
- * nunca se inventa un rol (un valor ausente/desconocido deriva en
- * invalid_role, SPEC-05 §2).
- */
+  * Máquina de fase de sesión (SPEC-04 §3) alimentada por Supabase Auth:
+  * `getSession` al montar + suscripción `onAuthStateChange` (SIGNED_IN /
+  * SIGNED_OUT / TOKEN_REFRESHED). El estado se deriva directamente del
+  * parámetro `session` del callback (fuente de verdad de la sesión activa);
+  * el rol se normaliza con `mapDatabaseRoleToCodeRole` sobre `user_metadata` —
+  * nunca se inventa un rol (un valor ausente/desconocido deriva en
+  * invalid_role, SPEC-05 §2).
+  */
 function useSessionPhase(): { phase: SessionPhase; fullName: string | null } {
   const [input, setInput] = useState<SessionInput>({
     sessionActive: true,
@@ -42,17 +41,17 @@ function useSessionPhase(): { phase: SessionPhase; fullName: string | null } {
   useEffect(() => {
     let subscribed = true;
 
-    function applySession(
-      session: { user?: { user_metadata?: Record<string, unknown> } | null } | null
-    ) {
+    async function resolveRole(session: { user?: { user_metadata?: Record<string, unknown> } | null } | null) {
       if (!subscribed) return;
       if (!session?.user) {
         setInput({ sessionActive: false, roleLoading: false, role: null });
         setFullName(null);
-      } else {
-        const role = normalizeSessionRole(session.user.user_metadata?.role);
-        const fullName =
-          (session.user.user_metadata?.full_name as string | undefined) || null;
+        return;
+      }
+      const role = mapDatabaseRoleToCodeRole(session.user.user_metadata?.role as string | undefined);
+      const fullName =
+        (session.user.user_metadata?.full_name as string | undefined) || null;
+      if (subscribed) {
         setInput({ sessionActive: true, roleLoading: false, role });
         setFullName(fullName);
       }
@@ -61,7 +60,7 @@ function useSessionPhase(): { phase: SessionPhase; fullName: string | null } {
     void supabase.auth
       .getSession()
       .then(({ data }) => {
-        applySession(data.session);
+        void resolveRole(data.session);
       })
       .catch(() => {
         if (subscribed) {
@@ -73,12 +72,7 @@ function useSessionPhase(): { phase: SessionPhase; fullName: string | null } {
     const {
       data: { subscription }
     } = supabase.auth.onAuthStateChange((_event, session) => {
-      // Derive state directly from the callback's session parameter instead of
-      // re-resolving via getSession(). After SIGNED_OUT the cached session
-      // returned by getSession() may still be non-null (e.g. in tests where it
-      // is mocked with a fixed value), so the session parameter is the source
-      // of truth for auth state transitions (SPEC-04 §3).
-      applySession(session);
+      void resolveRole(session);
     });
 
     return () => {

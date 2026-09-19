@@ -18,7 +18,7 @@ const DB_ROLE_TO_CODE_ROLE: Record<string, UserRole> = {
   store_user: 'store_user',
 };
 
-function mapDatabaseRoleToCodeRole(dbRole: string | undefined): UserRole | null {
+export function mapDatabaseRoleToCodeRole(dbRole: string | undefined): UserRole | null {
   if (!dbRole) return null;
   return DB_ROLE_TO_CODE_ROLE[dbRole] || null;
 }
