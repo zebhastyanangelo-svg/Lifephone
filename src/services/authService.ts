@@ -1,6 +1,7 @@
 // AuthService v2.2.0 — 2026-09-17 — Read role from profiles+roles tables
 
 import { supabase } from '../lib/supabase';
+import type { Session } from '@supabase/supabase-js';
 import type { UserRole } from '../lib/database.types';
 
 console.log('[AuthService] v2.2.0 loaded — role from profiles+roles');
@@ -115,8 +116,8 @@ export class AuthService {
     }
   }
 
-  public async getSession(): Promise<AuthSession | null> {
-    const { data: { session } } = await supabase.auth.getSession();
+  public async getSession(existingSession?: Session | null): Promise<AuthSession | null> {
+    const session = existingSession || (await supabase.auth.getSession()).data.session;
     if (!session) {
       return null;
     }

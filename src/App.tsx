@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState, type ReactNode } from 'react';
 import { supabase } from './lib/supabase';
-import { AuthService, type AuthSession, mapDatabaseRoleToCodeRole } from './services/authService';
+import { AuthService, type AuthSession } from './services/authService';
+import type { Session } from '@supabase/supabase-js';
 import {
   resolveSessionPhase,
   type SessionInput,
@@ -26,9 +27,9 @@ const defaultAuthService = new AuthService();
   * `getSession` al montar + suscripción `onAuthStateChange` (SIGNED_IN /
   * SIGNED_OUT / TOKEN_REFRESHED). El estado se deriva directamente del
   * parámetro `session` del callback (fuente de verdad de la sesión activa);
-  * el rol se normaliza con `mapDatabaseRoleToCodeRole` sobre `user_metadata` —
-  * nunca se inventa un rol (un valor ausente/desconocido deriva en
-  * invalid_role, SPEC-05 §2).
+  * el rol se resuelve a través de AuthService (fuente de verdad:
+  * profiles+roles) — nunca se inventa un rol (un valor ausente/desconocido
+  * deriva en invalid_role, SPEC-05 §2).
   */
 function useSessionPhase(): { phase: SessionPhase; fullName: string | null } {
   const [input, setInput] = useState<SessionInput>({
@@ -41,20 +42,22 @@ function useSessionPhase(): { phase: SessionPhase; fullName: string | null } {
   useEffect(() => {
     let subscribed = true;
 
-    async function resolveRole(session: { user?: { user_metadata?: Record<string, unknown> } | null } | null) {
+    async function resolveRole(session: Session | null) {
       if (!subscribed) return;
       if (!session?.user) {
         setInput({ sessionActive: false, roleLoading: false, role: null });
         setFullName(null);
         return;
       }
-      const role = mapDatabaseRoleToCodeRole(session.user.user_metadata?.role as string | undefined);
-      const fullName =
-        (session.user.user_metadata?.full_name as string | undefined) || null;
-      if (subscribed) {
-        setInput({ sessionActive: true, roleLoading: false, role });
-        setFullName(fullName);
+      const authSession = await defaultAuthService.getSession(session);
+      if (!subscribed) return;
+      if (!authSession) {
+        setInput({ sessionActive: false, roleLoading: false, role: null });
+        setFullName(null);
+        return;
       }
+      setInput({ sessionActive: true, roleLoading: false, role: authSession.role });
+      setFullName(authSession.fullName);
     }
 
     void supabase.auth
