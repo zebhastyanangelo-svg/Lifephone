@@ -26,6 +26,7 @@ export function BranchModal({ isOpen, onClose, onSuccess, branch = null, onDelet
   const [city, setCity] = useState('');
   const [state, setState] = useState('');
   const [rif, setRif] = useState('');
+  const [phone, setPhone] = useState('');
   const [googleMapsUrl, setGoogleMapsUrl] = useState('');
   const [status, setStatus] = useState<ExpansionLeadStatus>('new');
   const [fechaCreacion, setFechaCreacion] = useState('');

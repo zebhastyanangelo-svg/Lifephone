@@ -13,6 +13,7 @@ export type NewExpansionLead = {
   };
   status: ExpansionLeadStatus;
   rif?: string | null;
+  phone?: string | null;
   google_maps_url?: string | null;
   latitude?: number | null;
   longitude?: number | null;

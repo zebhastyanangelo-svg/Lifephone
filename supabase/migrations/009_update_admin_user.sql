@@ -71,37 +71,17 @@ BEGIN
       updated_at = now()
   WHERE id = p_user_id;
 
-  -- Update auth.users: email (always) and password (if provided)
+  -- Update auth.users: email and password (if provided) via direct SQL
+  UPDATE auth.users
+  SET email = trim(p_email),
+      raw_user_meta_data = jsonb_build_object('full_name', trim(p_full_name))
+  WHERE id = p_user_id;
+
+  -- If password is provided, update it
   IF p_new_password IS NOT NULL AND trim(p_new_password) != '' THEN
-    -- Update both email and password
-    PERFORM auth.admin.update_user(
-      user_id := p_user_id,
-      user_metadata := jsonb_build_object(
-        'full_name', trim(p_full_name)
-      )
-    );
-    -- Email update via admin API
-    PERFORM auth.admin.update_user(
-      user_id := p_user_id,
-      email := trim(p_email)
-    );
-    -- Password update via admin API
-    PERFORM auth.admin.update_user(
-      user_id := p_user_id,
-      password := p_new_password
-    );
-  ELSE
-    -- Update email only (no password change)
-    PERFORM auth.admin.update_user(
-      user_id := p_user_id,
-      user_metadata := jsonb_build_object(
-        'full_name', trim(p_full_name)
-      )
-    );
-    PERFORM auth.admin.update_user(
-      user_id := p_user_id,
-      email := trim(p_email)
-    );
+    UPDATE auth.users
+    SET password = p_new_password
+    WHERE id = p_user_id;
   END IF;
 
   RETURN json_build_object(

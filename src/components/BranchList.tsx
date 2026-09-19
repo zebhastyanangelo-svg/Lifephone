@@ -16,6 +16,7 @@ export type BranchItem = {
   latitude: number | null;
   longitude: number | null;
   owner_name: string;
+  phone?: string | null;
   fecha_creacion: string;
   fecha_negociacion: string | null;
   fecha_apertura: string | null;
