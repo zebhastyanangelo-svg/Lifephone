@@ -420,13 +420,13 @@ function AdminUserModal({ isOpen, onClose, onSuccess, admin, onRoleChange }: Adm
               value={role}
               onChange={(e) => setRole(e.target.value as UserRole)}
               disabled={loading}
-              className="block w-full rounded-lp bg-lp-glass-bg border-lp-border text-lp-primary py-2 px-3 ls-5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lp-cyan/55 file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder-abbr-other focus:ring-lp-cyan/55 sm:max-w-xs"
+              className="block w-full rounded-lp bg-lp-glass-bg border border-lp-glass-border text-lp-primary py-2 px-3 placeholder:text-lp-muted/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lp-cyan/55 focus:ring-lp-cyan/55 sm:max-w-xs"
             >
-              <option value="super_admin">Super Admin</option>
-              <option value="admin">Admin</option>
-              <option value="staff_orders">Staff Orders</option>
-              <option value="read_only">Solo Lectura</option>
-              <option value="store_user">Usuario Tienda</option>
+              <option value="super_admin" className="text-lp-base">Super Admin</option>
+              <option value="admin" className="text-lp-base">Admin</option>
+              <option value="staff_orders" className="text-lp-base">Staff Orders</option>
+              <option value="read_only" className="text-lp-base">Solo Lectura</option>
+              <option value="store_user" className="text-lp-base">Usuario Tienda</option>
             </select>
           </div>
           <LifeInput
