@@ -368,18 +368,28 @@ function AdminUserModal({ isOpen, onClose, onSuccess, admin, onRoleChange }: Adm
       setEmail('');
       setPassword('');
     } catch (err) {
-      console.error('[AdminUserModal] Error:', err);
-      const message = err instanceof Error ? err.message : 'Error desconocido';
-      if (message.includes('already registered') || message.includes('already exists') || message.includes('already registered to another')) {
+      const supaErr = err as { message?: string; details?: string; hint?: string; code?: string } | null;
+      const rawMessage = typeof supaErr?.message === 'string' && supaErr.message
+        ? supaErr.message
+        : err instanceof Error ? err.message : 'Error desconocido';
+      console.error('[AdminUserModal] Error de Supabase:', {
+        message: rawMessage,
+        details: supaErr?.details,
+        hint: supaErr?.hint,
+        code: supaErr?.code,
+        raw: err,
+      });
+      if (rawMessage.includes('already registered') || rawMessage.includes('already exists') || rawMessage.includes('already registered to another')) {
         setError('Este correo electrónico ya está registrado.');
-      } else if (message.includes('valid email')) {
+      } else if (rawMessage.includes('valid email')) {
         setError('El correo electrónico no es válido.');
-      } else if (message.includes('at least 6')) {
+      } else if (rawMessage.includes('at least 6')) {
         setError('La contraseña debe tener al menos 6 caracteres.');
-      } else if (message.includes('empty')) {
+      } else if (rawMessage.includes('empty')) {
         setError('El nombre y el correo son obligatorios.');
       } else {
-        setError('No se pudo guardar. Intenta nuevamente.');
+        const detail = typeof supaErr?.details === 'string' && supaErr.details ? ` (${supaErr.details})` : '';
+        setError(`No se pudo guardar: ${rawMessage}${detail}`);
       }
     } finally {
       setLoading(false);

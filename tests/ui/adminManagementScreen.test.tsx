@@ -221,9 +221,9 @@ describe('AdminManagementScreen — creación de administrador con rol', () => {
     await user.selectOptions(select, 'read_only');
     await user.click(screen.getByRole('button', { name: 'Crear administrador' }));
 
-    expect(await screen.findByRole('alert')).toHaveTextContent(
-      'No se pudo guardar. Intenta nuevamente.'
-    );
+    const alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent('No se pudo guardar');
+    expect(alert).toHaveTextContent('forbidden');
     expect(modal).toBeInTheDocument();
   });
 });
@@ -281,9 +281,9 @@ describe('AdminManagementScreen — edición de rol', () => {
     await user.selectOptions(select, 'read_only');
     await user.click(screen.getByRole('button', { name: 'Guardar cambios' }));
 
-    expect(await screen.findByRole('alert')).toHaveTextContent(
-      'No se pudo guardar. Intenta nuevamente.'
-    );
+    const alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent('No se pudo guardar');
+    expect(alert).toHaveTextContent('forbidden');
     expect(modal).toBeInTheDocument();
   });
 });
