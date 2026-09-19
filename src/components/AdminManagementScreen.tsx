@@ -349,13 +349,11 @@ function AdminUserModal({ isOpen, onClose, onSuccess, admin, onRoleChange }: Adm
           throw new Error((result.error as string) || 'Error updating user');
         }
       } else {
-        const { data, error: createError } = await supabase.rpc('create_new_administrator', {
-          payload: {
-            full_name: fullName.trim(),
-            email: email.trim(),
-            role_name: role,
-            password: password
-          }
+        const { data, error: createError } = await supabase.rpc('create_admin_user', {
+          p_email: email.trim(),
+          p_password: password.trim(),
+          p_full_name: fullName.trim(),
+          p_role: role
         });
         if (createError) throw createError;
 

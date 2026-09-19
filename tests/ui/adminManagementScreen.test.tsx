@@ -141,6 +141,93 @@ describe('AdminManagementScreen — flujo de eliminación', () => {
   });
 });
 
+describe('AdminManagementScreen — creación de administrador con rol', () => {
+  async function openCreateModal(rpcImpl?: (fn: string) => unknown) {
+    mocks.rpc.mockImplementation(async (fn: string) => {
+      if (rpcImpl) return rpcImpl(fn);
+      if (fn === 'create_admin_user') return { data: { success: true }, error: null };
+      return { data: [], error: null };
+    });
+    const user = userEvent.setup();
+    render(<AdminManagementScreen onNavigate={vi.fn()} onLogout={vi.fn()} userName="Ana" />);
+
+    await user.click(await screen.findByRole('button', { name: 'Crear nuevo administrador' }));
+    const modal = await screen.findByTestId('admin-modal');
+    const select = modal.querySelector('select') as HTMLSelectElement;
+    const nameInput = screen.getByLabelText('Nombre completo del administrador');
+    const emailInput = screen.getByLabelText('Correo electrónico del administrador');
+    const passwordInput = screen.getByLabelText('Contraseña del administrador');
+    return { user, modal, select, nameInput, emailInput, passwordInput };
+  }
+
+  it('envía create_admin_user con el rol seleccionado read_only como p_role', async () => {
+    const { user, select, nameInput, emailInput, passwordInput } = await openCreateModal();
+
+    await user.type(nameInput, 'Lector Prueba');
+    await user.type(emailInput, 'lector@empresa.com');
+    await user.type(passwordInput, 'secreta123');
+    await user.selectOptions(select, 'read_only');
+    await user.click(screen.getByRole('button', { name: 'Crear administrador' }));
+
+    expect(mocks.rpc).toHaveBeenCalledWith('create_admin_user', {
+      p_email: 'lector@empresa.com',
+      p_password: 'secreta123',
+      p_full_name: 'Lector Prueba',
+      p_role: 'read_only'
+    });
+  });
+
+  it.each([
+    ['staff_orders'],
+    ['store_user'],
+    ['admin']
+  ])('envía el rol seleccionado %s sin ser reemplazado por super_admin', async (selectedRole) => {
+    const { user, select, nameInput, emailInput, passwordInput } = await openCreateModal();
+
+    await user.type(nameInput, 'Usuario Prueba');
+    await user.type(emailInput, 'prueba@empresa.com');
+    await user.type(passwordInput, 'secreta123');
+    await user.selectOptions(select, selectedRole);
+    await user.click(screen.getByRole('button', { name: 'Crear administrador' }));
+
+    expect(mocks.rpc).toHaveBeenCalledWith('create_admin_user', expect.objectContaining({
+      p_role: selectedRole
+    }));
+  });
+
+  it('cierra el modal y refresca la lista tras crear exitosamente', async () => {
+    const { user, select, nameInput, emailInput, passwordInput, modal } = await openCreateModal();
+
+    await user.type(nameInput, 'Nuevo Admin');
+    await user.type(emailInput, 'nuevo@empresa.com');
+    await user.type(passwordInput, 'secreta123');
+    await user.selectOptions(select, 'read_only');
+    await user.click(screen.getByRole('button', { name: 'Crear administrador' }));
+
+    expect(modal).not.toBeInTheDocument();
+    const listCalls = mocks.rpc.mock.calls.filter(([fn]) => fn === 'list_admin_users');
+    expect(listCalls.length).toBeGreaterThanOrEqual(1);
+  });
+
+  it('muestra error y no cierra el modal cuando create_admin_user falla', async () => {
+    const { user, select, nameInput, emailInput, passwordInput, modal } = await openCreateModal((fn: string) => {
+      if (fn === 'create_admin_user') return { data: null, error: { message: 'forbidden' } };
+      return { data: [], error: null };
+    });
+
+    await user.type(nameInput, 'Nuevo Admin');
+    await user.type(emailInput, 'nuevo@empresa.com');
+    await user.type(passwordInput, 'secreta123');
+    await user.selectOptions(select, 'read_only');
+    await user.click(screen.getByRole('button', { name: 'Crear administrador' }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'No se pudo guardar. Intenta nuevamente.'
+    );
+    expect(modal).toBeInTheDocument();
+  });
+});
+
 describe('AdminManagementScreen — edición de rol', () => {
   async function openEditModal(rpcImpl?: (fn: string) => unknown) {
     mocks.rpc.mockImplementation(async (fn: string) => {

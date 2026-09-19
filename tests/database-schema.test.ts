@@ -61,6 +61,44 @@ describe('Migración de usuario administrador supremo', () => {
   });
 });
 
+describe('Migración de rol en create_admin_user (013)', () => {
+  const fixRolePath = new URL('../supabase/migrations/013_fix_create_admin_user_role.sql', import.meta.url);
+
+  it('define create_admin_user con el parámetro de rol p_role', async () => {
+    const migration = await readFile(fixRolePath, 'utf8');
+
+    expect(migration).toMatch(
+      /create or replace function public\.create_admin_user\s*\(\s*p_email\s+text\s*,\s*p_password\s+text\s*,\s*p_full_name\s+text\s*,\s*p_role\s+text/i
+    );
+  });
+
+  it('inserta el perfil con el rol solicitado (role_id proveniente de p_role, sin valor quemado)', async () => {
+    const migration = await readFile(fixRolePath, 'utf8');
+
+    expect(migration).toMatch(/SELECT id INTO v_target_role_id FROM public\.roles WHERE name = p_role/i);
+    expect(migration).toMatch(
+      /INSERT INTO public\.profiles\s*\(\s*id\s*,\s*role_id\s*,\s*full_name\s*\)\s*VALUES\s*\(\s*v_new_user_id\s*,\s*v_target_role_id/i
+    );
+    expect(migration).toMatch(/user_metadata := jsonb_build_object\('role', p_role/i);
+    expect(migration).not.toMatch(/jsonb_build_object\('role',\s*'admin'\)/i);
+  });
+
+  it('elimina el RPC roto create_new_administrator y la sobrecarga de 3 argumentos', async () => {
+    const migration = await readFile(fixRolePath, 'utf8');
+
+    expect(migration).toMatch(/drop function if exists public\.create_new_administrator\(payload json\)/i);
+    expect(migration).toMatch(/drop function if exists public\.create_admin_user\(text, text, text\)/i);
+  });
+
+  it('valida el rol con coincidencia exacta (sin ILIKE parcial que ignore el rol solicitado)', async () => {
+    const migration = await readFile(fixRolePath, 'utf8');
+    const functionBody = migration.split('AS $$')[1] ?? '';
+
+    expect(functionBody).not.toMatch(/ILIKE/i);
+    expect(functionBody).not.toMatch(/ORDER BY id LIMIT 1/i);
+  });
+});
+
 describe('Migración de campos de sucursal (003)', () => {
   it('agrega las columnas rif y google_maps_url a expansion_leads', async () => {
     const migration = await readFile(branchFieldsPath, 'utf8');
