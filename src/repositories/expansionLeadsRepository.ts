@@ -198,6 +198,74 @@ function isWithinWindow(dateStr: string, start: number, end: number): boolean {
   return Number.isFinite(timestamp) && timestamp >= start && timestamp <= end;
 }
 
+export type MonthlyGrowthPoint = {
+  key: string;
+  label: string;
+  year: number;
+  month: number;
+  newStores: number;
+  openedStores: number;
+};
+
+const MONTH_SHORT_LABELS = [
+  'Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun',
+  'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'
+];
+
+function monthKey(date: Date): string {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+}
+
+export function calculateMonthlyGrowthSeries(
+  leads: GrowthLead[],
+  monthCount = 6,
+  referenceDate = new Date()
+): MonthlyGrowthPoint[] {
+  const safeMonthCount = Number.isFinite(monthCount) && monthCount > 0
+    ? Math.floor(monthCount)
+    : 6;
+
+  const points: MonthlyGrowthPoint[] = [];
+  const pointByKey = new Map<string, MonthlyGrowthPoint>();
+
+  for (let offset = safeMonthCount - 1; offset >= 0; offset -= 1) {
+    const bucketDate = new Date(referenceDate.getFullYear(), referenceDate.getMonth() - offset, 1);
+    const year = bucketDate.getFullYear();
+    const month = bucketDate.getMonth();
+    const point: MonthlyGrowthPoint = {
+      key: monthKey(bucketDate),
+      label: `${MONTH_SHORT_LABELS[month]} ${year}`,
+      year,
+      month,
+      newStores: 0,
+      openedStores: 0
+    };
+    points.push(point);
+    pointByKey.set(point.key, point);
+  }
+
+  for (const lead of leads) {
+    const createdAt = Date.parse(lead.fecha_creacion);
+    if (Number.isFinite(createdAt)) {
+      const point = pointByKey.get(monthKey(new Date(createdAt)));
+      if (point) {
+        point.newStores += 1;
+      }
+    }
+    if (lead.fecha_apertura) {
+      const openedAt = Date.parse(lead.fecha_apertura);
+      if (Number.isFinite(openedAt)) {
+        const point = pointByKey.get(monthKey(new Date(openedAt)));
+        if (point) {
+          point.openedStores += 1;
+        }
+      }
+    }
+  }
+
+  return points;
+}
+
 export function calculateNationalGrowthMetrics(
   leads: GrowthLead[],
   referenceDate = new Date()

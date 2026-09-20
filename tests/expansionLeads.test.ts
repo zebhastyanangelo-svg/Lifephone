@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import {
   createExpansionLead,
   calculateNationalGrowthMetrics,
+  calculateMonthlyGrowthSeries,
   getExpansionMetrics,
   listExpansionLeads,
   updateExpansionLead,
@@ -219,5 +220,44 @@ describe('Expansion Leads Repository', () => {
       totalInNegotiation: 1,
       totalApprovedActive: 1
     });
+  });
+
+  it('genera la serie mensual contando nuevas tiendas y aperturas por mes', () => {
+    const referenceDate = new Date(2026, 8, 20, 12, 0, 0); // Sep 2026
+
+    const series = calculateMonthlyGrowthSeries([
+      { status: 'new', created_at: '2026-09-05T12:00:00.000Z', fecha_creacion: '2026-09-05T12:00:00.000Z', fecha_negociacion: null, fecha_apertura: null },
+      { status: 'won', created_at: '2026-09-10T12:00:00.000Z', fecha_creacion: '2026-09-10T12:00:00.000Z', fecha_negociacion: null, fecha_apertura: '2026-09-18T12:00:00.000Z' },
+      { status: 'negotiating', created_at: '2026-08-03T12:00:00.000Z', fecha_creacion: '2026-08-03T12:00:00.000Z', fecha_negociacion: null, fecha_apertura: null },
+      { status: 'won', created_at: '2026-03-15T12:00:00.000Z', fecha_creacion: '2026-03-15T12:00:00.000Z', fecha_negociacion: null, fecha_apertura: '2026-04-02T12:00:00.000Z' }
+    ], 3, referenceDate);
+
+    expect(series.map((p) => p.key)).toEqual(['2026-07', '2026-08', '2026-09']);
+    expect(series.map((p) => p.label)).toEqual(['Jul 2026', 'Ago 2026', 'Sep 2026']);
+    expect(series.map((p) => p.newStores)).toEqual([0, 1, 2]);
+    expect(series.map((p) => p.openedStores)).toEqual([0, 0, 1]);
+  });
+
+  it('usa 6 meses por defecto abarcando el mes de referencia', () => {
+    const referenceDate = new Date(2026, 0, 15, 12, 0, 0); // Ene 2026
+
+    const series = calculateMonthlyGrowthSeries([], 6, referenceDate);
+
+    expect(series).toHaveLength(6);
+    expect(series[0].key).toBe('2025-08');
+    expect(series[5].key).toBe('2026-01');
+    expect(series.every((p) => p.newStores === 0 && p.openedStores === 0)).toBe(true);
+  });
+
+  it('ignora fechas inválidas y respeta el conteo de meses solicitado', () => {
+    const referenceDate = new Date(2026, 8, 20, 12, 0, 0);
+
+    const series = calculateMonthlyGrowthSeries([
+      { status: 'new', created_at: 'invalid', fecha_creacion: 'no-es-fecha', fecha_negociacion: null, fecha_apertura: 'tampoco' }
+    ], 2, referenceDate);
+
+    expect(series.map((p) => p.key)).toEqual(['2026-08', '2026-09']);
+    expect(series.map((p) => p.newStores)).toEqual([0, 0]);
+    expect(series.map((p) => p.openedStores)).toEqual([0, 0]);
   });
 });

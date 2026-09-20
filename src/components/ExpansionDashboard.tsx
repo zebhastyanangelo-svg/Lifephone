@@ -1,9 +1,11 @@
-import type { ReactNode } from 'react';
+import { useMemo, type ReactNode } from 'react';
 import type { NationalGrowthMetrics, ExpansionMetrics } from '../repositories/expansionLeadsRepository';
+import { calculateMonthlyGrowthSeries } from '../repositories/expansionLeadsRepository';
 import type { BranchItem } from './BranchList';
 import { LifeCard } from './LifeCard';
 import { BrandMark } from './BrandMark';
 import { StatusDonutChart } from './StatusDonutChart';
+import { MonthlyGrowthRows } from './MonthlyGrowthRows';
 
 export type ExpansionDashboardProps = {
   metrics: ExpansionMetrics;
@@ -27,7 +29,7 @@ function MetricCard({ label, value, change, changeType = 'neutral', icon }: Metr
     'text-lp-muted';
 
   return (
-    <LifeCard className="flex flex-col gap-2 p-4" interactive={false}>
+    <LifeCard className="flex h-full snap-start flex-col gap-2 p-4" interactive={false}>
       <div className="flex items-center justify-between">
         <span className="font-lp-body text-xs tracking-wider text-lp-muted uppercase">
           {label}
@@ -85,6 +87,7 @@ export function ExpansionDashboard({ metrics, growth, branches = [], loading = f
   const percentageMet = metrics.totalApprovedActive + metrics.totalInNegotiation > 0
     ? Math.round((metrics.totalApprovedActive / (metrics.totalApprovedActive + metrics.totalInNegotiation)) * 100)
     : 0;
+  const monthlySeries = useMemo(() => calculateMonthlyGrowthSeries(branches), [branches]);
 
   return (
     <section data-testid="expansion-dashboard" className="space-y-4">
@@ -95,9 +98,12 @@ export function ExpansionDashboard({ metrics, growth, branches = [], loading = f
         </h2>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
-        <div className="sm:col-span-2 lg:col-span-1">
-          <LifeCard className="flex items-center justify-center p-4" interactive={false}>
+      <div
+        data-testid="growth-cards-container"
+        className="grid grid-flow-col auto-cols-[minmax(220px,78%)] snap-x snap-mandatory gap-4 overflow-x-auto pb-2 sm:auto-cols-auto sm:grid-flow-row sm:grid-cols-[repeat(auto-fit,minmax(180px,1fr))] sm:overflow-visible sm:pb-0 lg:grid-cols-5"
+      >
+        <div className="snap-start lg:col-span-1">
+          <LifeCard className="flex h-full items-center justify-center p-4" interactive={false}>
             <StatusDonutChart branches={branches} />
           </LifeCard>
         </div>
@@ -130,6 +136,8 @@ export function ExpansionDashboard({ metrics, growth, branches = [], loading = f
           icon={<ShoppingIcon />}
         />
       </div>
+
+      <MonthlyGrowthRows points={monthlySeries} />
     </section>
   );
 }

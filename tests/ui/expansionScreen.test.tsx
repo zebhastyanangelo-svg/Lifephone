@@ -111,6 +111,71 @@ describe('ExpansionDashboard (KPI de crecimiento)', () => {
     );
     expect(screen.getByText('100%')).toBeInTheDocument();
   });
+
+  it('usa un carrusel horizontal con desplazamiento en móvil y grid adaptativo en desktop', () => {
+    render(<ExpansionDashboard metrics={expansionMetrics} growth={nationalGrowth} />);
+    const container = screen.getByTestId('growth-cards-container');
+    expect(container.className).toContain('snap-x');
+    expect(container.className).toContain('overflow-x-auto');
+    expect(container.className).toContain('auto-cols-[minmax(220px,78%)]');
+    expect(container.className).toContain('sm:grid-cols-[repeat(auto-fit,minmax(180px,1fr))]');
+    expect(container.className).toContain('lg:grid-cols-5');
+  });
+});
+
+describe('ExpansionDashboard (evolución mensual en filas)', () => {
+  function buildRelativeBranch(id: string, monthsAgo: number, opened: boolean) {
+    const now = new Date();
+    const created = new Date(now.getFullYear(), now.getMonth() - monthsAgo, 15, 12, 0, 0);
+    return {
+      id,
+      store_name: `Tienda ${id}`,
+      contact_name: 'Contacto',
+      state: 'Miranda',
+      city: 'Caracas',
+      status: (opened ? 'won' : 'new') as 'won' | 'new',
+      created_at: created.toISOString(),
+      rif: null,
+      google_maps_url: null,
+      latitude: null,
+      longitude: null,
+      owner_name: 'Contacto',
+      fecha_creacion: created.toISOString(),
+      fecha_negociacion: null,
+      fecha_apertura: opened ? created.toISOString() : null
+    };
+  }
+
+  it('renderiza la sección de evolución mensual con una fila por mes', () => {
+    render(<ExpansionDashboard metrics={expansionMetrics} growth={nationalGrowth} />);
+    expect(screen.getByTestId('monthly-growth-rows')).toBeInTheDocument();
+    expect(screen.getByText('Evolución Mensual')).toBeInTheDocument();
+    expect(screen.getAllByTestId('monthly-growth-row')).toHaveLength(6);
+  });
+
+  it('agrupa las tiendas nuevas por mes y compara contra el mes anterior', () => {
+    const branches = [
+      buildRelativeBranch('a', 0, false),
+      buildRelativeBranch('b', 0, true),
+      buildRelativeBranch('c', 1, false)
+    ];
+    render(
+      <ExpansionDashboard
+        metrics={expansionMetrics}
+        growth={nationalGrowth}
+        branches={branches}
+      />
+    );
+    expect(
+      screen.getByRole('progressbar', { name: /: 2 nuevas tiendas$/ })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('progressbar', { name: /: 1 nuevas tiendas$/ })
+    ).toBeInTheDocument();
+    // Dos meses consecutivos con delta +1 (0→1 y 1→2).
+    expect(screen.getAllByText('▲ +1')).toHaveLength(2);
+    expect(screen.getByText('1 apertura')).toBeInTheDocument();
+  });
 });
 
 describe('BranchList (gestión de sucursales)', () => {
