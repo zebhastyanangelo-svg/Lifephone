@@ -1,12 +1,15 @@
 import type { ScreenPageModel } from '../frontend/pageModel';
 import { Avatar } from './Avatar';
 import { BrandMark } from './BrandMark';
+import { PwaInstallButton } from './PwaInstallButton';
 
 /**
  * Chrome de página (SPEC-07 §3.4): isotipo de marca + título del
- * ScreenPageModel + Avatar del manifiesto (SPEC-06 §6). Si `avatar === null`
- * no renderiza ningún avatar (sin ruido anónimo en headers). Puro: sin
- * Supabase ni lógica de negocio; `onBrandPress` llega por props.
+ * ScreenPageModel + Avatar del manifiesto (SPEC-06 §6) + botón de instalación
+ * PWA (solo visible cuando el navegador ofrece `beforeinstallprompt` y la app
+ * no está instalada). Si `avatar === null` no renderiza ningún avatar (sin
+ * ruido anónimo en headers). Sin Supabase ni lógica de negocio; `onBrandPress`
+ * llega por props.
  */
 export type LifeHeaderProps = {
   model: ScreenPageModel;
@@ -34,6 +37,7 @@ export function LifeHeader({ model, pulsing = false, onBrandPress, onLogout, use
         </h1>
       </div>
       <div className="flex items-center gap-3">
+        <PwaInstallButton />
         {!!userName && (
           <span
             data-testid="welcome-message"
