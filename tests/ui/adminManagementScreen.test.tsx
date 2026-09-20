@@ -80,6 +80,43 @@ describe('AdminManagementScreen — select de rol (SPEC-07 contraste de dropdown
   });
 });
 
+describe('AdminManagementScreen — insignias de rol en la tabla', () => {
+  async function renderWithRoles(roles: Array<{ id: string; full_name: string; email: string; role: string }>) {
+    mocks.rpc.mockImplementation(async (fn: string) => {
+      if (fn === 'list_admin_users') return { data: roles, error: null };
+      return { data: null, error: null };
+    });
+    render(<AdminManagementScreen onNavigate={vi.fn()} onLogout={vi.fn()} userName="Ana" />);
+    await screen.findByText(roles[0].full_name);
+  }
+
+  it('muestra la etiqueta y no la genérica "Admin" para cada rol real del usuario', async () => {
+    await renderWithRoles([
+      { id: 'u1', full_name: 'Root User', email: 'root@x.com', role: 'super_admin' },
+      { id: 'u2', full_name: 'Admin User', email: 'admin@x.com', role: 'admin' },
+      { id: 'u3', full_name: 'Staff User', email: 'staff@x.com', role: 'staff_orders' },
+      { id: 'u4', full_name: 'Readonly User', email: 'ro@x.com', role: 'read_only' },
+      { id: 'u5', full_name: 'Store User', email: 'store@x.com', role: 'store_user' }
+    ]);
+
+    expect(screen.getByText('Super Admin')).toBeInTheDocument();
+    expect(screen.getByText('Admin')).toBeInTheDocument();
+    expect(screen.getByText('Staff Orders')).toBeInTheDocument();
+    expect(screen.getByText('Solo Lectura')).toBeInTheDocument();
+    expect(screen.getByText('Usuario Tienda')).toBeInTheDocument();
+  });
+
+  it('nunca colapsa roles conocidos como read_only en la etiqueta genérica Admin', async () => {
+    await renderWithRoles([
+      { id: 'u1', full_name: 'Solo Lectura User', email: 'ro@x.com', role: 'read_only' }
+    ]);
+
+    const badge = screen.getByText('Solo Lectura');
+    expect(badge).toBeInTheDocument();
+    expect(screen.queryByText('Admin')).not.toBeInTheDocument();
+  });
+});
+
 describe('AdminManagementScreen — flujo de eliminación', () => {
   async function renderWithAdmins(rpcImpl?: (fn: string) => unknown) {
     mocks.rpc.mockImplementation(async (fn: string) => {

@@ -202,6 +202,29 @@ export function AdminManagementScreen({ onNavigate, onLogout, userName }: { onNa
   );
 }
 
+const ROLE_BADGES: Record<string, { label: string; classes: string }> = {
+  super_admin: {
+    label: 'Super Admin',
+    classes: 'bg-lp-electric/20 text-lp-electric ring-1 ring-lp-electric/40'
+  },
+  admin: {
+    label: 'Admin',
+    classes: 'bg-lp-cyan/20 text-lp-cyan ring-1 ring-lp-cyan/40'
+  },
+  staff_orders: {
+    label: 'Staff Orders',
+    classes: 'bg-lp-cyan/10 text-lp-cyan ring-1 ring-lp-cyan/30'
+  },
+  read_only: {
+    label: 'Solo Lectura',
+    classes: 'bg-lp-muted/20 text-lp-muted ring-1 ring-lp-muted/40'
+  },
+  store_user: {
+    label: 'Usuario Tienda',
+    classes: 'bg-lp-primary/10 text-lp-primary ring-1 ring-lp-primary/30'
+  }
+};
+
 function AdminTableRow({
   admin,
   onEdit,
@@ -215,10 +238,10 @@ function AdminTableRow({
   isCurrentUser?: boolean;
   deleting?: boolean;
 }) {
-  const isSuperAdmin = admin.role === 'super_admin';
-  const roleBadge = isSuperAdmin
-    ? 'bg-lp-electric/20 text-lp-electric ring-1 ring-lp-electric/40'
-    : 'bg-lp-cyan/20 text-lp-cyan ring-1 ring-lp-cyan/40';
+  const badge = ROLE_BADGES[admin.role] ?? {
+    label: admin.role,
+    classes: 'bg-lp-glass-bg text-lp-primary ring-1 ring-lp-glass-border'
+  };
 
   const createdDate = admin.created_at
     ? new Date(admin.created_at).toLocaleDateString('es-VE', { day: '2-digit', month: 'short', year: 'numeric' })
@@ -240,8 +263,8 @@ function AdminTableRow({
         <span className="truncate">{admin.email}</span>
       </td>
       <td className="px-4 py-3">
-        <span className={`inline-block shrink-0 rounded-full px-2 py-0.5 text-[11px] font-medium ${roleBadge}`}>
-          {isSuperAdmin ? 'Super Admin' : 'Admin'}
+        <span className={`inline-block shrink-0 rounded-full px-2 py-0.5 text-[11px] font-medium ${badge.classes}`}>
+          {badge.label}
         </span>
       </td>
       <td className="px-4 py-3 font-lp-body text-xs text-lp-muted">
@@ -353,7 +376,7 @@ function AdminUserModal({ isOpen, onClose, onSuccess, admin, onRoleChange }: Adm
           p_email: email.trim(),
           p_password: password.trim(),
           p_full_name: fullName.trim(),
-          p_role: role
+          p_role: role.trim().toLowerCase() as UserRole
         });
         if (createError) throw createError;
 
@@ -379,7 +402,9 @@ function AdminUserModal({ isOpen, onClose, onSuccess, admin, onRoleChange }: Adm
         code: supaErr?.code,
         raw: err,
       });
-      if (rawMessage.includes('already registered') || rawMessage.includes('already exists') || rawMessage.includes('already registered to another')) {
+      if (rawMessage.includes('Failed to fetch') || rawMessage.includes('NetworkError') || rawMessage.includes('Network request failed') || rawMessage.includes('connection')) {
+        setError('No se pudo conectar con el servidor. Revisa tu conexión e inténtalo de nuevo.');
+      } else if (rawMessage.includes('already registered') || rawMessage.includes('already exists') || rawMessage.includes('already registered to another')) {
         setError('Este correo electrónico ya está registrado.');
       } else if (rawMessage.includes('valid email')) {
         setError('El correo electrónico no es válido.');

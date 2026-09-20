@@ -156,6 +156,25 @@ describe('Migración de listado de administradores (015)', () => {
   });
 });
 
+describe('Migración de normalización de rol en create_admin_user (018)', () => {
+  const fixRoleNormPath = new URL('../supabase/migrations/018_normalize_create_admin_user_role.sql', import.meta.url);
+
+  it('normaliza p_role con lower+trim antes de validarlo contra roles', async () => {
+    const migration = await readFile(fixRoleNormPath, 'utf8');
+
+    expect(migration).toMatch(/lower\s*\(\s*trim\s*\(\s*(?:coalesce\s*\(\s*)?p_role/i);
+    expect(migration).toMatch(/FROM public\.roles WHERE name = v_role/i);
+    expect(migration).not.toMatch(/WHERE name = p_role/i);
+  });
+
+  it('usa el rol normalizado en la metadata del usuario y en la respuesta', async () => {
+    const migration = await readFile(fixRoleNormPath, 'utf8');
+
+    expect(migration).toMatch(/jsonb_build_object\('role', v_role/i);
+    expect(migration).toMatch(/'role', v_role/i);
+  });
+});
+
 describe('Migración de campos de sucursal (003)', () => {
   it('agrega las columnas rif y google_maps_url a expansion_leads', async () => {
     const migration = await readFile(branchFieldsPath, 'utf8');
