@@ -1,8 +1,11 @@
 /**
- * Isotipo de marca "Volvatar" (SPEC-07 §2.5): símbolo simétrico de líneas
- * angulares y cruzadas con nodo cian/eléctrico. Puro y decorativo por defecto;
- * `pulsing` activa el pulso *pum-pum* para estados de carga/sincronización
- * (respeta prefers-reduced-motion vía `.animate-lp-pulse`).
+ * Isotipo de marca LifePhone (SPEC-07 §2.5): imagen de marca oficial
+ * (`public/icons/brand-icon.png`) dentro de un contenedor con esquinas
+ * redondeadas y fondo oscuro. El glifo (negro sobre blanco) se adapta al
+ * tema oscuro vía `invert` + `mix-blend-screen`. Puro y decorativo por
+ * defecto; `pulsing` activa el pulso *pum-pum* para estados de
+ * carga/sincronización (respeta prefers-reduced-motion vía
+ * `.animate-lp-pulse`).
  */
 export type IsotipoGlyphProps = {
   size?: number;
@@ -29,35 +32,13 @@ function IsotipoGlyphInner({
       aria-label={decorative ? undefined : label}
       aria-hidden={decorative || undefined}
     >
-      <svg viewBox="0 0 40 40" fill="none" aria-hidden="true" className="h-full w-full">
-        <rect
-          x="1.25"
-          y="1.25"
-          width="37.5"
-          height="37.5"
-          rx="11"
-          stroke="currentColor"
-          strokeOpacity="0.16"
-          strokeWidth="1.5"
-        />
-        <path
-          d="M11.5 29v-17h17"
-          stroke="currentColor"
-          strokeWidth="2.6"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-        <path
-          d="M14 25.5h12l-3.5-6.5h-5.5"
-          stroke="currentColor"
-          strokeWidth="1.4"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeOpacity="0.55"
-        />
-        <circle cx="17.5" cy="17.5" r="2.6" fill="var(--lp-accent-cyan)" />
-        <circle cx="25.5" cy="25" r="1.7" fill="var(--lp-accent-electric)" />
-      </svg>
+      <img
+        src="/icons/brand-icon.png"
+        alt=""
+        aria-hidden="true"
+        draggable={false}
+        className="h-full w-full select-none object-contain invert mix-blend-screen"
+      />
     </span>
   );
 }
