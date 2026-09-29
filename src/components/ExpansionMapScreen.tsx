@@ -2,6 +2,7 @@ import { useEffect, useRef, useCallback } from 'react';
 import * as maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { DEFAULT_COORDS } from '../utils/googleMapsUrl';
+import { resolveBranchCoordinates } from '../utils/fallbackCoords';
 import { STATUS_COLORS, STATUS_LABELS } from '../constants/statusColors';
 import type { BranchItem, BranchStatus } from './BranchList';
 
@@ -27,6 +28,12 @@ const OSM_STYLE: maplibregl.StyleSpecification = {
 type ExpansionMapScreenProps = {
   branches: BranchItem[];
   onEdit?: (branch: BranchItem) => void;
+};
+
+type BranchWithCoords = {
+  branch: BranchItem;
+  latitude: number;
+  longitude: number;
 };
 
 function createMarkerElement(status: BranchStatus): HTMLElement {
@@ -100,14 +107,22 @@ function createPopupContent(branch: BranchItem): string {
   `;
 }
 
+function resolveBranchesWithCoords(branches: BranchItem[]): BranchWithCoords[] {
+  return branches
+    .map((b) => {
+      const coords = resolveBranchCoordinates(b);
+      if (!coords) return null;
+      return { branch: b, latitude: coords.latitude, longitude: coords.longitude };
+    })
+    .filter((item): item is BranchWithCoords => item !== null);
+}
+
 export function ExpansionMapScreen({ branches, onEdit }: ExpansionMapScreenProps) {
   const mapContainer = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
   const markersRef = useRef<maplibregl.Marker[]>([]);
 
-  const branchesWithCoords = branches.filter(
-    (b) => b.latitude != null && b.longitude != null
-  );
+  const branchesWithCoords = resolveBranchesWithCoords(branches);
 
   const removeMarkers = useCallback(() => {
     markersRef.current.forEach((m) => m.remove());
@@ -119,7 +134,7 @@ export function ExpansionMapScreen({ branches, onEdit }: ExpansionMapScreenProps
 
     const center: [number, number] =
       branchesWithCoords.length > 0
-        ? [branchesWithCoords[0].longitude!, branchesWithCoords[0].latitude!]
+        ? [branchesWithCoords[0].longitude, branchesWithCoords[0].latitude]
         : [DEFAULT_COORDS.longitude, DEFAULT_COORDS.latitude];
 
     const map = new maplibregl.Map({
@@ -172,8 +187,8 @@ export function ExpansionMapScreen({ branches, onEdit }: ExpansionMapScreenProps
 
     removeMarkers();
 
-    branchesWithCoords.forEach((branch) => {
-      const el = createMarkerElement(branch.status as BranchStatus);
+    branchesWithCoords.forEach((entry) => {
+      const el = createMarkerElement(entry.branch.status as BranchStatus);
 
       const popup = new maplibregl.Popup({
         offset: 20,
@@ -181,15 +196,15 @@ export function ExpansionMapScreen({ branches, onEdit }: ExpansionMapScreenProps
         closeOnClick: false,
         maxWidth: '320px',
         className: 'expansion-map-popup'
-      }).setHTML(createPopupContent(branch));
+      }).setHTML(createPopupContent(entry.branch));
 
       const marker = new maplibregl.Marker({ element: el })
-        .setLngLat([branch.longitude!, branch.latitude!])
+        .setLngLat([entry.longitude, entry.latitude])
         .setPopup(popup)
         .addTo(map);
 
       el.addEventListener('click', () => {
-        if (onEdit) onEdit(branch);
+        if (onEdit) onEdit(entry.branch);
       });
 
       markersRef.current.push(marker);
@@ -198,7 +213,7 @@ export function ExpansionMapScreen({ branches, onEdit }: ExpansionMapScreenProps
     if (branchesWithCoords.length > 0) {
       const bounds = new maplibregl.LngLatBounds();
       branchesWithCoords.forEach((b) => {
-        bounds.extend([b.longitude!, b.latitude!]);
+        bounds.extend([b.longitude, b.latitude]);
       });
       map.fitBounds(bounds, { padding: 60, maxZoom: 14, duration: 800 });
     }
@@ -211,43 +226,30 @@ export function ExpansionMapScreen({ branches, onEdit }: ExpansionMapScreenProps
           Mapa de Sucursales
         </h2>
         <span className="font-lp-body text-xs text-lp-muted">
-          {branchesWithCoords.length} ubicacion{branchesWithCoords.length !== 1 ? 'es' : ''}
+          {branchesWithCoords.length} de {branches.length} sucursales mapeadas
         </span>
       </div>
 
-      {branchesWithCoords.length === 0 ? (
-        <div className="life-glass rounded-lp-lg p-12 text-center">
-          <p className="font-lp-body text-sm text-lp-muted">
-            No hay sucursales con coordenadas registradas aún.
-          </p>
-          <p className="font-lp-body text-xs text-lp-muted mt-2">
-            Agrega una URL de Google Maps al registrar una sucursal para verla en el mapa.
-          </p>
-        </div>
-      ) : (
-        <div
-          ref={mapContainer}
-          className="w-full rounded-lp-lg overflow-hidden"
-          style={{ height: '550px' }}
-        />
-      )}
+      <div
+        ref={mapContainer}
+        className="w-full rounded-lp-lg overflow-hidden"
+        style={{ height: '550px' }}
+      />
 
-      {branchesWithCoords.length > 0 && (
-        <div className="flex flex-wrap items-center gap-4 life-glass rounded-lp p-3">
-          <span className="font-lp-body text-xs text-lp-muted">Leyenda:</span>
-          {(['new', 'negotiating', 'won'] as BranchStatus[]).map((status) => (
-            <div key={status} className="flex items-center gap-1.5">
-              <span
-                className="inline-block w-3 h-3 rounded-full"
-                style={{ backgroundColor: STATUS_COLORS[status] }}
-              />
-              <span className="font-lp-body text-xs text-lp-muted">
-                {STATUS_LABELS[status]}
-              </span>
-            </div>
-          ))}
-        </div>
-      )}
+      <div className="flex flex-wrap items-center gap-4 life-glass rounded-lp p-3">
+        <span className="font-lp-body text-xs text-lp-muted">Leyenda:</span>
+        {(['new', 'negotiating', 'won'] as BranchStatus[]).map((status) => (
+          <div key={status} className="flex items-center gap-1.5">
+            <span
+              className="inline-block w-3 h-3 rounded-full"
+              style={{ backgroundColor: STATUS_COLORS[status] }}
+            />
+            <span className="font-lp-body text-xs text-lp-muted">
+              {STATUS_LABELS[status]}
+            </span>
+          </div>
+        ))}
+      </div>
     </section>
   );
 }

@@ -25,7 +25,7 @@ export type LifeCardProps = {
 };
 
 const baseCardClasses =
-  'life-glass flex flex-col gap-4 rounded-lp p-6 ' +
+  'life-glass flex flex-col gap-3 rounded-lp p-5 ' +
   'transition-[transform,border-color,box-shadow] duration-[var(--lp-motion-base)] ease-out';
 
 export function LifeCard({
@@ -75,7 +75,7 @@ export function LifeCard({
         )}
         {description && <p className="font-lp-body text-sm text-lp-muted">{description}</p>}
       </div>
-      <div className="mt-2 flex-1">{children}</div>
+      <div className="mt-1 flex-1">{children}</div>
       {footer && <div data-testid="life-card-footer" className="mt-auto">{footer}</div>}
     </section>
   );

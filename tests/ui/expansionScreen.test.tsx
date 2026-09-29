@@ -130,8 +130,8 @@ describe('ExpansionDashboard (KPI de crecimiento)', () => {
     const container = screen.getByTestId('growth-cards-container');
     expect(container.className).toContain('snap-x');
     expect(container.className).toContain('overflow-x-auto');
-    expect(container.className).toContain('auto-cols-[minmax(220px,78%)]');
-    expect(container.className).toContain('sm:grid-cols-[repeat(auto-fit,minmax(180px,1fr))]');
+    expect(container.className).toContain('auto-cols-[minmax(200px,78%)]');
+    expect(container.className).toContain('sm:grid-cols-[repeat(auto-fit,minmax(160px,1fr))]');
     expect(container.className).toContain('lg:grid-cols-5');
   });
 });

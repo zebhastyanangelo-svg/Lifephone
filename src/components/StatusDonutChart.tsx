@@ -137,7 +137,7 @@ export function StatusDonutChart({ branches }: Props) {
   const hovered = hoveredKey ? segments.find((s) => s.key === hoveredKey) : null;
 
   return (
-    <div className="flex flex-col items-center gap-4">
+    <div className="flex flex-col items-center gap-3">
       <div className="relative">
         <svg
           viewBox="0 0 180 180"

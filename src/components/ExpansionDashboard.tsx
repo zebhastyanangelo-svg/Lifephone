@@ -29,7 +29,7 @@ function MetricCard({ label, value, change, changeType = 'neutral', icon }: Metr
     'text-lp-muted';
 
   return (
-    <LifeCard className="flex h-full snap-start flex-col gap-2 p-4" interactive={false}>
+    <LifeCard className="flex w-full snap-start flex-col gap-1.5 p-3 min-h-[90px]" interactive={false}>
       <div className="flex items-center justify-between">
         <span className="font-lp-body text-xs tracking-wider text-lp-muted uppercase">
           {label}
@@ -98,7 +98,7 @@ function ExpansionGoalProgressBar({
   const remaining = Math.max(target - current, 0);
 
   return (
-    <LifeCard className="snap-start p-4" interactive={false}>
+    <LifeCard className="snap-start p-3" interactive={false}>
       <div className="mb-2 flex items-center justify-between">
         <span className="font-lp-body text-xs tracking-wider text-lp-muted uppercase">
           Meta de Expansión Asignada
@@ -171,10 +171,10 @@ export function ExpansionDashboard({ metrics, growth, branches = [], loading = f
 
       <div
         data-testid="growth-cards-container"
-        className="grid grid-flow-col auto-cols-[minmax(220px,78%)] snap-x snap-mandatory gap-4 overflow-x-auto pb-2 sm:auto-cols-auto sm:grid-flow-row sm:grid-cols-[repeat(auto-fit,minmax(180px,1fr))] sm:overflow-visible sm:pb-0 lg:grid-cols-5"
+        className="grid grid-flow-col auto-cols-[minmax(200px,78%)] snap-x snap-mandatory gap-3 overflow-x-auto pb-2 sm:auto-cols-auto sm:grid-flow-row sm:grid-cols-[repeat(auto-fit,minmax(160px,1fr))] sm:overflow-visible sm:pb-0 lg:grid-cols-5"
       >
         <div className="snap-start lg:col-span-1">
-          <LifeCard className="flex h-full items-center justify-center p-4" interactive={false}>
+          <LifeCard className="flex h-full items-center justify-center p-3" interactive={false}>
             <StatusDonutChart branches={branches} />
           </LifeCard>
         </div>

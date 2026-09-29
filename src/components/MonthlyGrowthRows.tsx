@@ -71,7 +71,7 @@ export function MonthlyGrowthRows({ points }: MonthlyGrowthRowsProps) {
     <section
       data-testid="monthly-growth-rows"
       aria-label="Evolución mensual de tiendas"
-      className="life-glass flex flex-col gap-3 rounded-lp p-4"
+      className="life-glass flex flex-col gap-2 rounded-lp p-3"
     >
       <div className="flex items-center justify-between">
         <h3 className="font-lp-display text-sm font-semibold tracking-[0.08em] text-lp-primary">
@@ -81,7 +81,7 @@ export function MonthlyGrowthRows({ points }: MonthlyGrowthRowsProps) {
           Nuevas tiendas por mes
         </span>
       </div>
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-1">
         {safePoints.map((point, index) => {
           const percentage = Math.round((point.newStores / maxValue) * 100);
           // Opacidad escalonada: los meses recientes se destacan sutilmente.
