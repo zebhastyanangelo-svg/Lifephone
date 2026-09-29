@@ -43,6 +43,59 @@ function computeSegments(branches: { status: BranchStatus }[]): Segment[] {
   });
 }
 
+/**
+ * Normaliza las proporciones para que siempre sumen exactamente 360°.
+ * Usa la razón real (count/total) en lugar del porcentaje redondeado, lo que
+ * evita que los arcos se solapen o dejen huecos cuando el redondeo acumula
+ * error (p. ej. 34%+33%+33% = 100% ≠ 360° exactos en radianes).
+ */
+function computeArcs(branches: { status: BranchStatus }[]): {
+  key: string;
+  count: number;
+  percentage: number;
+  color: string;
+  label: string;
+  startAngle: number;
+  endAngle: number;
+}[] {
+  const segments = computeSegments(branches);
+  const active = segments.filter((s) => s.count > 0);
+  const gapDeg = 1.5;
+
+  if (active.length === 0) return [];
+
+  const totalActive = active.reduce((sum, s) => sum + s.count, 0);
+  const arcs: ReturnType<typeof computeArcs> = [];
+  let currentAngle = 0;
+
+  active.forEach((seg, idx) => {
+    const isLast = idx === active.length - 1;
+    const ratio = totalActive > 0 ? seg.count / totalActive : 0;
+    let sweepDeg = ratio * 360;
+
+    if (isLast) {
+      sweepDeg = 360 - currentAngle;
+    }
+
+    const adjustedSweep = Math.max(sweepDeg - gapDeg, 0.5);
+    const start = currentAngle + gapDeg / 2;
+    const end = start + adjustedSweep;
+    currentAngle = currentAngle + sweepDeg;
+
+    arcs.push({
+      key: seg.key,
+      count: seg.count,
+      percentage: seg.percentage,
+      color: seg.color,
+      label: seg.label,
+      startAngle: start,
+      endAngle: end
+    });
+  });
+
+  return arcs;
+}
+
 function polarToCartesian(cx: number, cy: number, r: number, angleDeg: number) {
   const rad = ((angleDeg - 90) * Math.PI) / 180;
   return { x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad) };
@@ -73,26 +126,13 @@ type Props = {
 export function StatusDonutChart({ branches }: Props) {
   const [hoveredKey, setHoveredKey] = useState<string | null>(null);
   const segments = useMemo(() => computeSegments(branches), [branches]);
+  const arcs = useMemo(() => computeArcs(branches), [branches]);
   const total = branches.length;
 
   const cx = 90;
   const cy = 90;
   const outerR = 72;
   const innerR = 48;
-  const gapDeg = 1.5;
-
-  const activeSegments = segments.filter((s) => s.count > 0);
-  const hasSegments = activeSegments.length > 0;
-
-  let currentAngle = 0;
-  const arcs = activeSegments.map((seg) => {
-    const sweepDeg = (seg.percentage / 100) * 360;
-    const adjustedSweep = Math.max(sweepDeg - gapDeg, 0.5);
-    const start = currentAngle + gapDeg / 2;
-    const end = start + adjustedSweep;
-    currentAngle = currentAngle + sweepDeg;
-    return { ...seg, startAngle: start, endAngle: end };
-  });
 
   const hovered = hoveredKey ? segments.find((s) => s.key === hoveredKey) : null;
 

@@ -35,6 +35,22 @@ function createMarkerElement(status: BranchStatus): HTMLElement {
   el.className = 'expansion-map-marker';
   el.style.setProperty('--marker-bg', color);
   el.style.setProperty('--marker-glow', `${color}44`);
+  el.style.cssText = `
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: ${color};
+    border: 3px solid #fff;
+    box-shadow: 0 0 0 3px ${color}44, 0 4px 12px rgba(0,0,0,0.3);
+    cursor: pointer;
+    transition: transform 0.2s ease;
+  `;
+  el.addEventListener('mouseenter', () => {
+    el.style.transform = 'scale(1.2)';
+  });
+  el.addEventListener('mouseleave', () => {
+    el.style.transform = 'scale(1)';
+  });
   return el;
 }
 
@@ -43,28 +59,42 @@ function createPopupContent(branch: BranchItem): string {
   const statusLabel = STATUS_LABELS[branch.status as BranchStatus] || branch.status;
 
   return `
-    <div class="map-popup-header">
-      <h3 class="map-popup-title">${branch.store_name}</h3>
-      <span class="map-popup-badge" style="
-        --status-color: ${statusColor};
-        --status-bg: ${statusColor}18;
-        --status-border: ${statusColor}40;
-      ">${statusLabel}</span>
-    </div>
-    <div class="map-popup-body">
-      <div class="map-popup-row">
-        <span class="map-popup-label">Propietario</span>
-        <span class="map-popup-value">${branch.contact_name}</span>
+    <div style="padding: 12px; min-width: 200px; font-family: system-ui, -apple-system, sans-serif;">
+      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; gap: 12px;">
+        <h3 style="margin: 0; font-size: 15px; font-weight: 600; color: #1a1a2e;">${branch.store_name}</h3>
+        <span style="
+          display: inline-flex;
+          align-items: center;
+          padding: 2px 8px;
+          border-radius: 12px;
+          font-size: 11px;
+          font-weight: 500;
+          background: ${statusColor}18;
+          color: ${statusColor};
+          border: 1px solid ${statusColor}40;
+        ">${statusLabel}</span>
       </div>
-      ${branch.rif ? `
-      <div class="map-popup-row">
-        <span class="map-popup-label">RIF</span>
-        <span class="map-popup-value">${branch.rif}</span>
-      </div>
-      ` : ''}
-      <div class="map-popup-row">
-        <span class="map-popup-label">Ciudad</span>
-        <span class="map-popup-value">${branch.city}, ${branch.state}</span>
+      <div style="display: flex; flex-direction: column; gap: 6px; font-size: 13px;">
+        <div style="display: flex; justify-content: space-between; gap: 12px;">
+          <span style="color: #666;">Propietario</span>
+          <span style="color: #1a1a2e; font-weight: 500;">${branch.contact_name}</span>
+        </div>
+        ${branch.rif ? `
+        <div style="display: flex; justify-content: space-between; gap: 12px;">
+          <span style="color: #666;">RIF</span>
+          <span style="color: #1a1a2e; font-weight: 500;">${branch.rif}</span>
+        </div>
+        ` : ''}
+        <div style="display: flex; justify-content: space-between; gap: 12px;">
+          <span style="color: #666;">Ubicación</span>
+          <span style="color: #1a1a2e; font-weight: 500;">${branch.city}, ${branch.state}</span>
+        </div>
+        ${branch.fecha_apertura ? `
+        <div style="display: flex; justify-content: space-between; gap: 12px;">
+          <span style="color: #666;">Apertura</span>
+          <span style="color: #1a1a2e; font-weight: 500;">${new Date(branch.fecha_apertura).toLocaleDateString('es-VE')}</span>
+        </div>
+        ` : ''}
       </div>
     </div>
   `;
@@ -96,15 +126,30 @@ export function ExpansionMapScreen({ branches, onEdit }: ExpansionMapScreenProps
       container: mapContainer.current,
       style: OSM_STYLE,
       center,
-      zoom: branchesWithCoords.length > 0 ? 11 : 6
+      zoom: branchesWithCoords.length > 0 ? 11 : 6,
+      dragRotate: false,
+      pitchWithRotate: false,
+      touchZoomRotate: true,
+      doubleClickZoom: true,
+      scrollZoom: true,
+      boxZoom: true,
+      keyboard: true,
+      fadeDuration: 300,
+      crossSourceCollisions: false
     });
 
-    map.addControl(new maplibregl.NavigationControl(), 'top-right');
+    map.addControl(new maplibregl.NavigationControl({ visualizePitch: true }), 'top-right');
     map.addControl(new maplibregl.AttributionControl({ compact: true }), 'bottom-left');
     map.addControl(new maplibregl.ScaleControl({ unit: 'metric' }), 'bottom-right');
+    map.addControl(new maplibregl.GeolocateControl({
+      positionOptions: { enableHighAccuracy: true },
+      trackUserLocation: true,
+      showUserLocation: true
+    }), 'top-right');
 
     map.on('load', () => {
       map.resize();
+      map.touchZoomRotate.enableRotation();
     });
 
     const resizeTimer = setTimeout(() => {

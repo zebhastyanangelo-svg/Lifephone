@@ -139,7 +139,7 @@ describe('BranchModal (registro de sucursal)', () => {
       'https://maps.google.com/?q=10.5.1.2'
     );
     await user.type(screen.getByLabelText('Ciudad'), 'Maracaibo');
-    await user.type(screen.getByLabelText('Estado'), 'Zulia');
+    await user.selectOptions(screen.getByLabelText('Estado'), 'Zulia');
 
     await user.click(screen.getByTestId('status-option-won'));
 
@@ -167,7 +167,7 @@ describe('BranchModal (registro de sucursal)', () => {
     await user.type(screen.getByLabelText('Nombre de la sucursal'), 'Sucursal Test');
     await user.type(screen.getByLabelText('Nombre del propietario'), 'Propietario Test');
     await user.type(screen.getByLabelText('Ciudad'), 'Caracas');
-    await user.type(screen.getByLabelText('Estado'), 'Miranda');
+    await user.selectOptions(screen.getByLabelText('Estado'), 'Miranda');
 
     const form = screen.getByTestId('branch-modal').querySelector('form')!;
     await act(async () => {

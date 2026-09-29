@@ -99,7 +99,9 @@ describe('Expansion Leads Repository', () => {
 
     await expect(getExpansionMetrics(client)).resolves.toEqual({
       totalInNegotiation: 1,
-      totalApprovedActive: 2
+      totalApprovedActive: 2,
+      expansionTarget: 4,
+      totalRegistered: 4
     });
     expect(select).toHaveBeenCalledWith('status');
   });

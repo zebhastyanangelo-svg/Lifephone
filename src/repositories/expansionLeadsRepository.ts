@@ -25,6 +25,8 @@ export type NewExpansionLead = {
 export type ExpansionMetrics = {
   totalInNegotiation: number;
   totalApprovedActive: number;
+  expansionTarget: number;
+  totalRegistered: number;
 };
 
 export type ExpansionLeadFilters = {
@@ -95,7 +97,8 @@ export async function getExpansionMetrics(
     throw error;
   }
 
-  return data.reduce(
+  const totalRegistered = data.length;
+  const metrics = data.reduce(
     (metrics, lead) => {
       if (lead.status === 'negotiating') {
         metrics.totalInNegotiation += 1;
@@ -105,8 +108,10 @@ export async function getExpansionMetrics(
       }
       return metrics;
     },
-    { totalInNegotiation: 0, totalApprovedActive: 0 }
+    { totalInNegotiation: 0, totalApprovedActive: 0, expansionTarget: totalRegistered, totalRegistered }
   );
+
+  return metrics;
 }
 
 type ExpansionLeadUpdate = Database['public']['Tables']['expansion_leads']['Update'];

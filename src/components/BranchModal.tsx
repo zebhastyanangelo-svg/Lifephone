@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { LifeInput } from './LifeInput';
 import { LifeButton } from './LifeButton';
 import { BrandMark } from './BrandMark';
@@ -11,6 +11,23 @@ import {
 } from '../features/expansion/leadsRepository';
 import { extractCoordinatesFromGoogleMapsUrl } from '../utils/googleMapsUrl';
 import type { BranchItem } from './BranchList';
+
+const VENEZUELA_CITIES = [
+  'Caracas', 'Maracaibo', 'Valencia', 'Barquisimeto', 'Ciudad Guayana',
+  'Maracay', 'Petare', 'Barcelona', 'Maturín', 'Ciudad Bolívar',
+  'Cumaná', 'Mérida', 'San Cristóbal', 'Puerto La Cruz', 'Los Teques',
+  'Guarenas', 'Coro', 'Guanare', 'Trujillo', 'Valera',
+  'Tucupita', 'La Guaira', 'Porlamar', 'El Tigre', 'Cabimas',
+  'Guatire', 'Carora', 'Los Guayos', 'Santa Teresa', 'Tocuyito'
+];
+
+const VENEZUELA_STATES = [
+  'Amazonas', 'Anzoátegui', 'Apure', 'Aragua', 'Barinas',
+  'Bolívar', 'Carabobo', 'Cojedes', 'Delta Amacuro', 'Distrito Capital',
+  'Falcón', 'Guárico', 'Lara', 'Mérida', 'Miranda',
+  'Monagas', 'Nueva Esparta', 'Portuguesa', 'Sucre', 'Táchira',
+  'Trujillo', 'Vargas', 'Yaracuy', 'Zulia'
+];
 
 type BranchModalProps = {
   isOpen: boolean;
@@ -37,6 +54,9 @@ export function BranchModal({ isOpen, onClose, onSuccess, branch = null, onDelet
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [addressQuery, setAddressQuery] = useState('');
+  const [showAddressSuggestions, setShowAddressSuggestions] = useState(false);
+  const addressInputRef = useRef<HTMLInputElement>(null);
 
   const isEditing = !!branch;
 
@@ -48,6 +68,7 @@ export function BranchModal({ isOpen, onClose, onSuccess, branch = null, onDelet
       setState(branch.state);
       setRif(branch.rif || '');
       setGoogleMapsUrl(branch.google_maps_url || '');
+      setAddressQuery(branch.city || '');
       setStatus(branch.status as ExpansionLeadStatus);
       setFechaCreacion(branch.fecha_creacion ? branch.fecha_creacion.substring(0, 10) : '');
       setFechaNegociacion(branch.fecha_negociacion ? branch.fecha_negociacion.substring(0, 10) : '');
@@ -61,6 +82,7 @@ export function BranchModal({ isOpen, onClose, onSuccess, branch = null, onDelet
       setState('');
       setRif('');
       setGoogleMapsUrl('');
+      setAddressQuery('');
       setStatus('new');
       setFechaCreacion(new Date().toISOString().substring(0, 10));
       setFechaNegociacion('');
@@ -166,6 +188,18 @@ export function BranchModal({ isOpen, onClose, onSuccess, branch = null, onDelet
     }
   }
 
+  const addressSuggestions = addressQuery.length > 0
+    ? VENEZUELA_CITIES.filter(city =>
+        city.toLowerCase().includes(addressQuery.toLowerCase())
+      ).slice(0, 5)
+    : [];
+
+  function handleAddressSelect(city: string) {
+    setAddressQuery(city);
+    setCity(city);
+    setShowAddressSuggestions(false);
+  }
+
   const hasCoordinates = latitude !== null && longitude !== null;
 
   return (
@@ -184,10 +218,15 @@ export function BranchModal({ isOpen, onClose, onSuccess, branch = null, onDelet
       >
         <div className="mb-6 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <BrandMark size={28} pulsing decorative />
-            <h2 className="font-lp-display text-xl font-semibold tracking-[0.08em] text-lp-primary">
-              {isEditing ? 'Editar Sucursal' : 'Registrar Sucursal'}
-            </h2>
+            <BrandMark size={36} pulsing decorative />
+            <div className="flex flex-col">
+              <span className="font-lp-body text-[10px] font-medium tracking-[0.2em] text-lp-cyan uppercase">
+                Lifephone
+              </span>
+              <h2 className="font-lp-display text-xl font-semibold tracking-[0.08em] text-lp-primary">
+                {isEditing ? 'Editar Sucursal' : 'Registrar Sucursal'}
+              </h2>
+            </div>
           </div>
           <button
             type="button"
@@ -260,8 +299,48 @@ export function BranchModal({ isOpen, onClose, onSuccess, branch = null, onDelet
               disabled={loading}
               accessibilityLabel="RIF fiscal de la sucursal"
             />
+            <div className="space-y-2">
+              <label htmlFor="direccion-input" className="font-lp-body text-[13px] font-medium text-lp-muted">
+                Dirección / Ubicación
+              </label>
+              <div className="relative">
+                <input
+                  id="direccion-input"
+                  ref={addressInputRef}
+                  type="text"
+                  value={addressQuery}
+                  onChange={(e) => {
+                    setAddressQuery(e.target.value);
+                    setShowAddressSuggestions(true);
+                  }}
+                  onFocus={() => setShowAddressSuggestions(true)}
+                  onBlur={() => setTimeout(() => setShowAddressSuggestions(false), 200)}
+                  placeholder="Ej. Caracas, Centro Comercial..."
+                  disabled={loading}
+                  className="w-full rounded-lp bg-lp-surface/50 px-4 py-2.5 font-lp-body text-sm text-lp-primary placeholder:text-lp-muted/50 ring-1 ring-lp-glass-border focus:outline-none focus:ring-2 focus:ring-lp-cyan/55"
+                  aria-label="Dirección o ubicación de la sucursal"
+                />
+                {showAddressSuggestions && addressSuggestions.length > 0 && (
+                  <div className="absolute z-10 mt-1 w-full rounded-lp bg-lp-base ring-1 ring-lp-glass-border shadow-lg">
+                    {addressSuggestions.map((city) => (
+                      <button
+                        key={city}
+                        type="button"
+                        onMouseDown={() => handleAddressSelect(city)}
+                        className="block w-full px-4 py-2 text-left font-lp-body text-sm text-lp-primary hover:bg-lp-glass-bg"
+                      >
+                        {city}, Venezuela
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <p className="font-lp-body text-[11px] text-lp-muted">
+                Escribe una ciudad o ubicación para ver sugerencias
+              </p>
+            </div>
             <LifeInput
-              label="Dirección (Google Maps)"
+              label="URL de Google Maps (opcional)"
               value={googleMapsUrl}
               onChange={handleGoogleMapsUrlChange}
               placeholder="Ej. https://maps.google.com/?q=..."
@@ -282,14 +361,23 @@ export function BranchModal({ isOpen, onClose, onSuccess, branch = null, onDelet
                 disabled={loading}
                 accessibilityLabel="Ciudad"
               />
-              <LifeInput
-                label="Estado"
-                value={state}
-                onChange={setState}
-                placeholder="Ej. Miranda"
-                disabled={loading}
-                accessibilityLabel="Estado"
-              />
+              <div className="space-y-1">
+                <label htmlFor="estado-select" className="font-lp-body text-[13px] font-medium text-lp-muted">
+                  Estado
+                </label>
+                <select
+                  id="estado-select"
+                  value={state}
+                  onChange={(e) => setState(e.target.value)}
+                  disabled={loading}
+                  className="w-full rounded-lp bg-lp-surface/50 px-4 py-2.5 font-lp-body text-sm text-lp-primary ring-1 ring-lp-glass-border focus:outline-none focus:ring-2 focus:ring-lp-cyan/55"
+                >
+                  <option value="">Seleccionar...</option>
+                  {VENEZUELA_STATES.map((s) => (
+                    <option key={s} value={s}>{s}</option>
+                  ))}
+                </select>
+              </div>
             </div>
             <div className="space-y-2">
               <label className="font-lp-body text-[13px] font-medium text-lp-muted">

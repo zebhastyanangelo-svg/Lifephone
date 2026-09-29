@@ -83,18 +83,89 @@ const RocketIcon = () => (
   </svg>
 );
 
+const ManagementIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-lp-cyan">
+    <path d="M12 2v20M3 10h18M7 15l5 5 5-5"/>
+  </svg>
+);
+
+function ExpansionGoalProgressBar({
+  current,
+  target
+}: { current: number; target: number }) {
+  const ratio = target > 0 ? Math.min(current / target, 1) : 0;
+  const percentage = Math.round(ratio * 100);
+  const remaining = Math.max(target - current, 0);
+
+  return (
+    <LifeCard className="snap-start p-4" interactive={false}>
+      <div className="mb-2 flex items-center justify-between">
+        <span className="font-lp-body text-xs tracking-wider text-lp-muted uppercase">
+          Meta de Expansión Asignada
+        </span>
+        <span
+          data-testid="lp-management-indicator"
+          className="inline-flex items-center gap-1 rounded-full bg-lp-cyan/10 px-2 py-0.5 text-[10px] font-medium text-lp-cyan ring-1 ring-lp-cyan/30"
+          title="Función de gestión: metas de expansión vs progreso actual"
+        >
+          <ManagementIcon />
+          <span>Función de gestión</span>
+        </span>
+      </div>
+
+      <div className="flex items-baseline justify-between">
+        <span className="font-lp-display text-2xl font-bold text-lp-electric">
+          {percentage}%
+        </span>
+        <span className="font-lp-body text-xs text-lp-muted">
+          {current} de {target} activas
+        </span>
+      </div>
+
+      <div
+        className="mt-2 h-2.5 overflow-hidden rounded-full bg-lp-surface/70"
+        role="progressbar"
+        aria-label={`Progreso de meta de expansión: ${current} de ${target} (${percentage}%)`}
+        aria-valuenow={percentage}
+        aria-valuemin={0}
+        aria-valuemax={100}
+      >
+        <div
+          className="h-full rounded-full bg-gradient-to-r from-lp-electric to-lp-cyan transition-[width] duration-[var(--lp-motion-base)]"
+          style={{ width: `${percentage}%` }}
+        />
+      </div>
+
+      <div className="mt-2 flex items-center justify-between">
+        <span className="font-lp-body text-xs text-lp-muted">
+          {percentage}% de la meta alcanzada
+        </span>
+        {remaining > 0 ? (
+          <span className="font-lp-body text-xs text-lp-electric">
+            +{remaining} pendientes
+          </span>
+        ) : (
+          <span className="font-lp-body text-xs text-emerald-400">
+            ¡Meta alcanzada!
+          </span>
+        )}
+      </div>
+    </LifeCard>
+  );
+}
+
 export function ExpansionDashboard({ metrics, growth, branches = [], loading = false }: ExpansionDashboardProps) {
-  const percentageMet = metrics.totalApprovedActive + metrics.totalInNegotiation > 0
-    ? Math.round((metrics.totalApprovedActive / (metrics.totalApprovedActive + metrics.totalInNegotiation)) * 100)
-    : 0;
+  const target = metrics.expansionTarget ?? (metrics.totalApprovedActive + metrics.totalInNegotiation);
+  const current = metrics.totalApprovedActive;
+  const percentageMet = target > 0 ? Math.round((current / target) * 100) : 0;
   const monthlySeries = useMemo(() => calculateMonthlyGrowthSeries(branches), [branches]);
 
   return (
     <section data-testid="expansion-dashboard" className="space-y-4">
       <div className="flex items-center gap-3">
-        <BrandMark size={24} pulsing={loading} decorative />
+        <BrandMark size={28} pulsing={loading} decorative />
         <h2 className="font-lp-display text-lg font-semibold tracking-[0.08em] text-lp-primary">
-          Panel de Crecimiento
+          Panel de Crecimiento — Gestión de Expansión
         </h2>
       </div>
 
@@ -107,13 +178,9 @@ export function ExpansionDashboard({ metrics, growth, branches = [], loading = f
             <StatusDonutChart branches={branches} />
           </LifeCard>
         </div>
-        <MetricCard
-          label="Meta de Expansión"
-          value={`${percentageMet}%`}
-          change={metrics.totalApprovedActive > 0 ? '✓ Cumplimiento activo' : '⏳ En proceso'}
-          changeType={percentageMet >= 50 ? 'positive' : 'neutral'}
-          icon={<TrendingIcon />}
-        />
+        <div className="snap-start">
+          <ExpansionGoalProgressBar current={current} target={target} />
+        </div>
         <MetricCard
           label="Sucursales Activas"
           value={metrics.totalApprovedActive}

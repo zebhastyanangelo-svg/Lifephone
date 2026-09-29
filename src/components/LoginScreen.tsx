@@ -58,12 +58,15 @@ export function LoginScreen({
   return (
     <main className="flex min-h-screen w-full items-center justify-center bg-lp-base p-4">
       <LifeCard
-        title="Iniciar sesión v2.1"
+        title="Bienvenidos a Lifephone"
         description="Ingresa tus credenciales para continuar"
         className="w-full max-w-md"
       >
         <div className="flex flex-col items-center gap-6">
-          <BrandMark size={72} pulsing={loading} decorative />
+          <BrandMark size={80} pulsing={loading} decorative />
+          <p className="font-lp-body text-sm text-lp-muted text-center -mt-4">
+            Sistema de gestión de expansión y franquicias
+          </p>
           <form onSubmit={(e) => { e.preventDefault(); handleSubmit(); }} className="w-full space-y-4">
             <LifeInput
               label="Correo electrónico"

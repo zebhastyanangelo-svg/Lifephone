@@ -30,11 +30,16 @@ export function LifeHeader({ model, pulsing = false, onBrandPress, onLogout, use
           data-testid="life-header-brand"
           className="shrink-0 rounded-lp transition-[filter,transform] duration-[var(--lp-motion-fast)] ease-out hover:brightness-125 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lp-cyan/55 focus-visible:ring-offset-2 focus-visible:ring-offset-lp-base"
         >
-          <BrandMark size={36} pulsing={pulsing} decorative />
+          <BrandMark size={40} pulsing={pulsing} decorative />
         </button>
-        <h1 className="truncate font-lp-display text-lg font-semibold tracking-[0.08em] text-lp-primary sm:text-xl">
-          {model.title}
-        </h1>
+        <div className="flex flex-col min-w-0">
+          <span className="font-lp-body text-[10px] font-medium tracking-[0.2em] text-lp-cyan uppercase">
+            Lifephone
+          </span>
+          <h1 className="truncate font-lp-display text-lg font-semibold tracking-[0.08em] text-lp-primary sm:text-xl">
+            {model.title}
+          </h1>
+        </div>
       </div>
       <div className="flex items-center gap-3">
         <PwaInstallButton />

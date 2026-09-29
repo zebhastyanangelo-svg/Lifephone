@@ -14,7 +14,7 @@ import { LifeCard } from './LifeCard';
 import { LifeButton } from './LifeButton';
 import { BrandMark } from './BrandMark';
 import { BranchList, type BranchItem } from './BranchList';
-import { STATUS_LABELS } from '../constants/statusColors';
+import { STATUS_LABELS, STATUS_COLORS } from '../constants/statusColors';
 import {
   generateBranchesCsv,
   generateBranchesXlsx,
@@ -238,10 +238,13 @@ export function ReportsScreen({
             </section>
 
             <section aria-label="Estado por sucursal" className="mb-6">
-              <div className="life-glass overflow-hidden rounded-lp">
-                <table className="w-full text-left font-lp-body text-sm">
+              <div className="life-glass overflow-x-auto rounded-lp">
+                <table className="w-full text-left font-lp-body text-sm min-w-[800px]">
                   <thead>
                     <tr className="border-b border-lp-glass-border/40">
+                      <th scope="col" className="px-4 py-3 text-xs font-medium uppercase tracking-wide text-lp-muted">
+                        #
+                      </th>
                       <th scope="col" className="px-4 py-3 text-xs font-medium uppercase tracking-wide text-lp-muted">
                         Sucursal
                       </th>
@@ -249,27 +252,57 @@ export function ReportsScreen({
                         Contacto
                       </th>
                       <th scope="col" className="px-4 py-3 text-xs font-medium uppercase tracking-wide text-lp-muted">
+                        RIF
+                      </th>
+                      <th scope="col" className="px-4 py-3 text-xs font-medium uppercase tracking-wide text-lp-muted">
                         Ubicación
                       </th>
                       <th scope="col" className="px-4 py-3 text-xs font-medium uppercase tracking-wide text-lp-muted">
                         Estatus
                       </th>
+                      <th scope="col" className="px-4 py-3 text-xs font-medium uppercase tracking-wide text-lp-muted">
+                        Fecha Creación
+                      </th>
+                      <th scope="col" className="px-4 py-3 text-xs font-medium uppercase tracking-wide text-lp-muted">
+                        Fecha Negociación
+                      </th>
+                      <th scope="col" className="px-4 py-3 text-xs font-medium uppercase tracking-wide text-lp-muted">
+                        Fecha Apertura
+                      </th>
+                      <th scope="col" className="px-4 py-3 text-xs font-medium uppercase tracking-wide text-lp-muted">
+                        Coordenadas
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
-                    {state.branches.map((branch) => (
+                    {state.branches.map((branch, index) => (
                       <tr
                         key={branch.id}
                         data-testid="report-table-row"
                         className="border-b border-lp-glass-border/20 transition-colors duration-[var(--lp-motion-fast)] last:border-0 hover:bg-lp-glass-bg"
                       >
-                        <td className="px-4 py-3 text-lp-primary">{branch.store_name}</td>
+                        <td className="px-4 py-3 text-lp-muted">{index + 1}</td>
+                        <td className="px-4 py-3 text-lp-primary font-medium">{branch.store_name}</td>
                         <td className="px-4 py-3 text-lp-muted">{branch.contact_name}</td>
+                        <td className="px-4 py-3 text-lp-muted">{branch.rif || '—'}</td>
                         <td className="px-4 py-3 text-lp-muted">
                           {branch.city}, {branch.state}
                         </td>
-                        <td className="px-4 py-3 text-lp-primary">
-                          {STATUS_LABELS[branch.status]}
+                        <td className="px-4 py-3">
+                          <span className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium" style={{
+                            backgroundColor: `${STATUS_COLORS[branch.status]}18`,
+                            color: STATUS_COLORS[branch.status]
+                          }}>
+                            {STATUS_LABELS[branch.status]}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-lp-muted">{branch.fecha_creacion ? new Date(branch.fecha_creacion).toLocaleDateString('es-VE') : '—'}</td>
+                        <td className="px-4 py-3 text-lp-muted">{branch.fecha_negociacion ? new Date(branch.fecha_negociacion).toLocaleDateString('es-VE') : '—'}</td>
+                        <td className="px-4 py-3 text-lp-muted">{branch.fecha_apertura ? new Date(branch.fecha_apertura).toLocaleDateString('es-VE') : '—'}</td>
+                        <td className="px-4 py-3 text-lp-muted text-xs">
+                          {branch.latitude && branch.longitude
+                            ? `${branch.latitude.toFixed(4)}, ${branch.longitude.toFixed(4)}`
+                            : '—'}
                         </td>
                       </tr>
                     ))}

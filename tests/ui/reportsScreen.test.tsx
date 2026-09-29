@@ -82,7 +82,8 @@ describe('ReportsScreen (vista de reportes y exportación /reports)', () => {
     expect(screen.getByText('Tiendas activas')).toBeInTheDocument();
     expect(screen.getByText('En negociación')).toBeInTheDocument();
     expect(screen.getByText('Tasa de apertura')).toBeInTheDocument();
-    expect(screen.getByText('3')).toBeInTheDocument();
+    const registeredCard = cards.find((card) => card.textContent?.includes('Sucursales registradas'));
+    expect(registeredCard?.textContent).toContain('3');
   });
 
   it('renderiza la tabla tabular con las sucursales registradas', async () => {

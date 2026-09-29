@@ -6,7 +6,9 @@ import { BranchList } from '../../src/components/BranchList';
 
 const expansionMetrics = {
   totalInNegotiation: 3,
-  totalApprovedActive: 5
+  totalApprovedActive: 5,
+  expansionTarget: 8,
+  totalRegistered: 8
 };
 
 const nationalGrowth = {
@@ -73,7 +75,18 @@ const sampleBranches = [
 describe('ExpansionDashboard (KPI de crecimiento)', () => {
   it('renderiza el título del panel de crecimiento', () => {
     render(<ExpansionDashboard metrics={expansionMetrics} growth={nationalGrowth} />);
-    expect(screen.getByText('Panel de Crecimiento')).toBeInTheDocument();
+    expect(screen.getByText(/Panel de Crecimiento/)).toBeInTheDocument();
+  });
+
+  it('muestra el indicador visual de función de gestión en el panel', () => {
+    render(<ExpansionDashboard metrics={expansionMetrics} growth={nationalGrowth} />);
+    expect(screen.getByTestId('lp-management-indicator')).toBeInTheDocument();
+    expect(screen.getByText('Función de gestión')).toBeInTheDocument();
+  });
+
+  it('muestra la meta de expansión asignada con barra de progreso', () => {
+    render(<ExpansionDashboard metrics={expansionMetrics} growth={nationalGrowth} />);
+    expect(screen.getByLabelText('Progreso de meta de expansión: 5 de 8 (63%)')).toBeInTheDocument();
   });
 
   it('calcula y muestra el porcentaje de cumplimiento de meta', () => {
@@ -99,13 +112,13 @@ describe('ExpansionDashboard (KPI de crecimiento)', () => {
 
   it('renderiza con estado de carga cuando loading es true', () => {
     render(<ExpansionDashboard metrics={expansionMetrics} growth={nationalGrowth} loading />);
-    expect(screen.getByText('Panel de Crecimiento')).toBeInTheDocument();
+    expect(screen.getByText(/Panel de Crecimiento/)).toBeInTheDocument();
   });
 
   it('calcula 100% cuando no hay negociaciones pero hay tiendas activas', () => {
     render(
       <ExpansionDashboard
-        metrics={{ totalInNegotiation: 0, totalApprovedActive: 5 }}
+        metrics={{ totalInNegotiation: 0, totalApprovedActive: 5, expansionTarget: 5, totalRegistered: 5 }}
         growth={nationalGrowth}
       />
     );
